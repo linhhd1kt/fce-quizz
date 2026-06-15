@@ -2,11 +2,22 @@ import type { QuizSet } from '@/types/quiz';
 
 // Built-in quiz sets bundled with the app
 const BUILT_IN_IDS = [
-  'demo-part1',
-  'demo-part5',
-  'test1-use-of-english-part1',
-  'test1-reading-part5',
-  'test1-listening-part1',
+  // Test 1
+  'test1-part1',
+  'test1-part5',
+  'test1-listening',
+  // Test 2
+  'test2-part1',
+  'test2-part5',
+  'test2-listening',
+  // Test 3
+  'test3-part1',
+  'test3-part5',
+  'test3-listening',
+  // Test 4
+  'test4-part1',
+  'test4-part5',
+  'test4-listening',
 ];
 
 export async function loadBuiltInQuizSets(): Promise<QuizSet[]> {
