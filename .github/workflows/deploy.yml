@@ -21,6 +21,7 @@ jobs:
             git reset --hard origin/main
             cd web
             npm install
+            pm2 stop fce-quiz || true
             npm run build
-            pm2 restart fce-quiz --update-env
+            pm2 start fce-quiz --update-env || pm2 restart fce-quiz --update-env
             echo "Deploy done at $(date)"
