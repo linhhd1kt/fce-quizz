@@ -74,13 +74,18 @@ export default function HomePage() {
             </section>
           )}
 
-          <div className="border border-dashed border-slate-700 rounded-2xl p-5 text-center">
+          <div className="border border-dashed border-slate-700 rounded-2xl p-5 text-center space-y-1">
             <p className="text-slate-500 text-sm">
-              Have a quiz JSON?{' '}
-              <Link href="/import" className="text-blue-400 hover:underline">
-                Import it here
+              Have a PDF?{' '}
+              <Link href="/upload" className="text-blue-400 hover:underline">
+                Upload &amp; extract questions
               </Link>
-              {' '}or extract questions from the PDF extractor.
+            </p>
+            <p className="text-slate-600 text-xs">
+              or{' '}
+              <Link href="/import" className="hover:underline">
+                import a JSON file
+              </Link>
             </p>
           </div>
         </>

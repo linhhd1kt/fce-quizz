@@ -1,0 +1,98 @@
+[
+  {
+    "id": "test1-use-of-english-part1",
+    "title": "Test 1 — Use of English Part 1: Multiple-choice cloze",
+    "description": "Choose the correct word (A, B, C or D) to complete each gap.",
+    "part": "Use of English Part 1: multiple-choice cloze, questions 1-8. Answer key is on page 111.",
+    "pages": "10-11",
+    "output": "output/ai-test1-part1.json"
+  },
+  {
+    "id": "test1-reading-part5",
+    "title": "Test 1 — Reading Part 5: Multiple choice",
+    "description": "Read the text and choose the best answer (A, B, C or D) for each question.",
+    "part": "Reading Part 5: multiple choice comprehension, questions 31-36.",
+    "pages": "16-17",
+    "output": "output/ai-test1-part5.json"
+  },
+  {
+    "id": "test1-listening-part1",
+    "title": "Test 1 — Listening Part 1: Multiple choice",
+    "description": "Choose the best answer (A, B or C) for each listening situation.",
+    "part": "Listening Part 1: multiple choice, questions 1-8. Each question has a short extract description. Answer key is on page 112.",
+    "pages": "24-25",
+    "output": "output/ai-test1-listening.json"
+  },
+  {
+    "id": "test2-use-of-english-part1",
+    "title": "Test 2 — Use of English Part 1: Multiple-choice cloze",
+    "description": "Choose the correct word (A, B, C or D) to complete each gap.",
+    "part": "Use of English Part 1: multiple-choice cloze, questions 1-8.",
+    "pages": "30-31",
+    "output": "output/ai-test2-part1.json"
+  },
+  {
+    "id": "test2-reading-part5",
+    "title": "Test 2 — Reading Part 5: Multiple choice",
+    "description": "Read the text and choose the best answer (A, B, C or D) for each question.",
+    "part": "Reading Part 5: multiple choice comprehension, questions 31-36.",
+    "pages": "36-37",
+    "output": "output/ai-test2-part5.json"
+  },
+  {
+    "id": "test2-listening-part1",
+    "title": "Test 2 — Listening Part 1: Multiple choice",
+    "description": "Choose the best answer (A, B or C) for each listening situation.",
+    "part": "Listening Part 1: multiple choice, questions 1-8.",
+    "pages": "44-45",
+    "output": "output/ai-test2-listening.json"
+  },
+  {
+    "id": "test3-use-of-english-part1",
+    "title": "Test 3 — Use of English Part 1: Multiple-choice cloze",
+    "description": "Choose the correct word (A, B, C or D) to complete each gap.",
+    "part": "Use of English Part 1: multiple-choice cloze, questions 1-8.",
+    "pages": "50-51",
+    "output": "output/ai-test3-part1.json"
+  },
+  {
+    "id": "test3-reading-part5",
+    "title": "Test 3 — Reading Part 5: Multiple choice",
+    "description": "Read the text and choose the best answer (A, B, C or D) for each question.",
+    "part": "Reading Part 5: multiple choice comprehension, questions 31-36.",
+    "pages": "56-57",
+    "output": "output/ai-test3-part5.json"
+  },
+  {
+    "id": "test3-listening-part1",
+    "title": "Test 3 — Listening Part 1: Multiple choice",
+    "description": "Choose the best answer (A, B or C) for each listening situation.",
+    "part": "Listening Part 1: multiple choice, questions 1-8.",
+    "pages": "64-65",
+    "output": "output/ai-test3-listening.json"
+  },
+  {
+    "id": "test4-use-of-english-part1",
+    "title": "Test 4 — Use of English Part 1: Multiple-choice cloze",
+    "description": "Choose the correct word (A, B, C or D) to complete each gap.",
+    "part": "Use of English Part 1: multiple-choice cloze, questions 1-8.",
+    "pages": "70-71",
+    "output": "output/ai-test4-part1.json"
+  },
+  {
+    "id": "test4-reading-part5",
+    "title": "Test 4 — Reading Part 5: Multiple choice",
+    "description": "Read the text and choose the best answer (A, B, C or D) for each question.",
+    "part": "Reading Part 5: multiple choice comprehension, questions 31-36.",
+    "pages": "76-77",
+    "output": "output/ai-test4-part5.json"
+  },
+  {
+    "id": "test4-listening-part1",
+    "title": "Test 4 — Listening Part 1: Multiple choice",
+    "description": "Choose the best answer (A, B or C) for each listening situation.",
+    "part": "Listening Part 1: multiple choice, questions 1-8.",
+    "pages": "84-85",
+    "output": "output/ai-test4-listening.json"
+  }
+]
