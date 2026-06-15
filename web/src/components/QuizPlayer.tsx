@@ -25,6 +25,16 @@ interface State {
 
 const DEFAULT_TIME = 45;
 
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
   const router = useRouter();
   const timePerQ = quiz.timePerQuestion ?? DEFAULT_TIME;
@@ -122,7 +132,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
       if (nextIndex >= quiz.questions.length) {
         const allAnswers = prev.answers;
         const attempt: QuizAttempt = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           quizId: quiz.id,
           quizTitle: quiz.title,
           startedAt: Date.now() - allAnswers.reduce((s, a) => s + a.timeSpent, 0),
