@@ -107,35 +107,35 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
   }, [state.phase, state.timeLeft, submitAnswer]);
 
   const nextQuestion = useCallback(() => {
-    const nextIndex = state.questionIndex + 1;
-    if (nextIndex >= quiz.questions.length) {
-      // Save attempt
-      const allAnswers = state.answers;
-      const attempt = {
-        id: crypto.randomUUID(),
-        quizId: quiz.id,
-        quizTitle: quiz.title,
-        startedAt: Date.now() - allAnswers.reduce((s, a) => s + a.timeSpent, 0),
-        completedAt: Date.now(),
-        score: calculateScore(allAnswers),
-        totalQuestions: quiz.questions.length,
-        totalTimeSpent: allAnswers.reduce((s, a) => s + a.timeSpent, 0),
-        answers: allAnswers,
-      };
-      saveAttempt(attempt);
-      setState((prev) => ({ ...prev, phase: 'finished' }));
-      router.push(`/quiz/${quiz.id}/results?attemptId=${attempt.id}`);
-    } else {
-      setState((prev) => ({
+    setState((prev) => {
+      const nextIndex = prev.questionIndex + 1;
+      if (nextIndex >= quiz.questions.length) {
+        const allAnswers = prev.answers;
+        const attempt = {
+          id: crypto.randomUUID(),
+          quizId: quiz.id,
+          quizTitle: quiz.title,
+          startedAt: Date.now() - allAnswers.reduce((s, a) => s + a.timeSpent, 0),
+          completedAt: Date.now(),
+          score: calculateScore(allAnswers),
+          totalQuestions: quiz.questions.length,
+          totalTimeSpent: allAnswers.reduce((s, a) => s + a.timeSpent, 0),
+          answers: allAnswers,
+        };
+        saveAttempt(attempt);
+        router.push(`/quiz/${quiz.id}/results?attemptId=${attempt.id}`);
+        return { ...prev, phase: 'finished' };
+      }
+      return {
         ...prev,
         phase: 'question',
         questionIndex: nextIndex,
         selected: null,
         timeLeft: timePerQ,
         questionStartedAt: Date.now(),
-      }));
-    }
-  }, [state.questionIndex, state.answers, quiz, router, timePerQ]);
+      };
+    });
+  }, [quiz, router, timePerQ]);
 
   const currentQ = quiz.questions[state.questionIndex];
 
