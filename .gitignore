@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js build
+web/.next/
+web/out/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Large files / copyrighted material
+*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+extractor/output/
+
+# OCR-extracted quiz data (copyrighted Cambridge material — keep local only)
+web/src/data/test[0-9]-*.json
+
+# Logs
+*.log
+npm-debug.log*
