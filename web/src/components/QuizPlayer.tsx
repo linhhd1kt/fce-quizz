@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { QuizSet, QuizAttempt, UserAnswer } from '@/types/quiz';
 import { saveAttempt } from '@/lib/storage';
 import { calculateScore } from '@/lib/scoring';
@@ -19,6 +20,7 @@ interface State {
   answers: UserAnswer[];
   questionStartedAt: number;
   countdown: number;
+  completedAttemptId?: string;
 }
 
 const DEFAULT_TIME = 45;
@@ -133,7 +135,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           answers: allAnswers,
         };
         completedAttemptRef.current = attempt;
-        return { ...prev, phase: 'finished' };
+        return { ...prev, phase: 'finished', completedAttemptId: attempt.id };
       }
       return {
         ...prev,
@@ -159,10 +161,19 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
   }
 
   if (state.phase === 'finished') {
+    const resultsHref = state.completedAttemptId
+      ? `/quiz/${quiz.id}/results?attemptId=${state.completedAttemptId}`
+      : `/quiz/${quiz.id}/results`;
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
         <div className="text-4xl animate-spin">⏳</div>
-        <p className="text-slate-400 mt-4">Saving results…</p>
+        <p className="text-slate-400">Saving results…</p>
+        <Link
+          href={resultsHref}
+          className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors"
+        >
+          See Results →
+        </Link>
       </div>
     );
   }
