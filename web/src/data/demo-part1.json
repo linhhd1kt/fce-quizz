@@ -1,0 +1,82 @@
+{
+  "id": "demo-part1",
+  "title": "Use of English — Part 1: Multiple-choice cloze",
+  "description": "Choose the best word (A, B, C or D) to complete each gap in the text. This tests your vocabulary knowledge.",
+  "source": "FCE Practice",
+  "totalQuestions": 8,
+  "timePerQuestion": 45,
+  "questions": [
+    {
+      "id": "p1-1",
+      "type": "multiple-choice",
+      "context": "Wildlife photography has become increasingly popular in recent years. Many people are now (1) ___ their weekends exploring national parks with a camera.",
+      "text": "Question 1: Choose the correct word for gap (1).",
+      "options": ["spending", "passing", "wasting", "losing"],
+      "answer": "spending",
+      "explanation": "'Spending time' is the correct collocation. We 'spend' time doing activities."
+    },
+    {
+      "id": "p1-2",
+      "type": "multiple-choice",
+      "context": "The exhibition was a great (2) ___ for local artists, giving them a chance to display their work to a wide audience.",
+      "text": "Question 2: Choose the correct word for gap (2).",
+      "options": ["opportunity", "occasion", "chance", "possibility"],
+      "answer": "opportunity",
+      "explanation": "'Opportunity' collocates best with 'great' and implies a favourable set of circumstances."
+    },
+    {
+      "id": "p1-3",
+      "type": "multiple-choice",
+      "context": "She had always (3) ___ an interest in marine biology, so a career studying ocean life seemed a natural choice.",
+      "text": "Question 3: Choose the correct word for gap (3).",
+      "options": ["taken", "held", "shown", "made"],
+      "answer": "shown",
+      "explanation": "'Shown an interest' is the standard collocation in British English."
+    },
+    {
+      "id": "p1-4",
+      "type": "multiple-choice",
+      "context": "Despite the heavy rain, the outdoor concert went (4) ___ as planned and attracted thousands of fans.",
+      "text": "Question 4: Choose the correct word for gap (4).",
+      "options": ["ahead", "forward", "on", "through"],
+      "answer": "ahead",
+      "explanation": "'Go ahead' means to proceed or continue with a plan despite difficulties."
+    },
+    {
+      "id": "p1-5",
+      "type": "multiple-choice",
+      "context": "The new library is (5) ___ reach of the town centre, so most students can get there by bicycle.",
+      "text": "Question 5: Choose the correct word for gap (5).",
+      "options": ["within", "inside", "in", "into"],
+      "answer": "within",
+      "explanation": "'Within reach' is the correct fixed phrase meaning 'close enough to be accessed'."
+    },
+    {
+      "id": "p1-6",
+      "type": "multiple-choice",
+      "context": "The documentary (6) ___ light on the hidden dangers faced by deep-sea divers.",
+      "text": "Question 6: Choose the correct word for gap (6).",
+      "options": ["shed", "threw", "cast", "gave"],
+      "answer": "shed",
+      "explanation": "'Shed light on' is the correct phrasal idiom meaning to clarify or reveal something."
+    },
+    {
+      "id": "p1-7",
+      "type": "multiple-choice",
+      "context": "Although the team had trained hard, they (7) ___ to win the championship after a difficult final match.",
+      "text": "Question 7: Choose the correct word for gap (7).",
+      "options": ["failed", "missed", "lost", "avoided"],
+      "answer": "failed",
+      "explanation": "'Failed to win' means they did not succeed. 'Missed' needs an object; 'lost' needs 'the game'."
+    },
+    {
+      "id": "p1-8",
+      "type": "multiple-choice",
+      "context": "It is worth (8) ___ in mind that the deadline for applications is the end of this month.",
+      "text": "Question 8: Choose the correct word for gap (8).",
+      "options": ["bearing", "keeping", "holding", "taking"],
+      "answer": "bearing",
+      "explanation": "'Bear in mind' is the standard idiom meaning 'remember' or 'consider'."
+    }
+  ]
+}

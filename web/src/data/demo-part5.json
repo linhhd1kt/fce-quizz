@@ -1,0 +1,94 @@
+{
+  "id": "demo-part5",
+  "title": "Reading — Part 5: Multiple choice comprehension",
+  "description": "Read the article and choose the best answer (A, B, C or D) for each question. This tests reading comprehension.",
+  "source": "FCE Practice",
+  "totalQuestions": 6,
+  "timePerQuestion": 60,
+  "questions": [
+    {
+      "id": "p5-1",
+      "type": "multiple-choice",
+      "context": "PASSAGE — Urban Beekeeping\n\nUrban beekeeping has seen a remarkable rise over the past decade. City councils in many European capitals have begun actively encouraging residents to keep hives on rooftops and in gardens. Proponents argue that urban bees actually thrive in cities because the diversity of flowering plants found in parks and private gardens provides a richer food source than monoculture farmland. Critics, however, warn that the surge in urban hives may be putting pressure on wild bee populations by increasing competition for the same nectar sources.",
+      "text": "According to the passage, why might urban environments benefit honeybees?",
+      "options": [
+        "City regulations make it easier to register hives",
+        "Urban gardens offer a greater variety of food sources than farmland",
+        "Wild bees are absent from cities so there is no competition",
+        "Rooftop hives protect bees from bad weather"
+      ],
+      "answer": "Urban gardens offer a greater variety of food sources than farmland",
+      "explanation": "The passage states that 'the diversity of flowering plants found in parks and private gardens provides a richer food source than monoculture farmland'."
+    },
+    {
+      "id": "p5-2",
+      "type": "multiple-choice",
+      "context": "PASSAGE — Urban Beekeeping\n\nUrban beekeeping has seen a remarkable rise over the past decade. City councils in many European capitals have begun actively encouraging residents to keep hives on rooftops and in gardens. Proponents argue that urban bees actually thrive in cities because the diversity of flowering plants found in parks and private gardens provides a richer food source than monoculture farmland. Critics, however, warn that the surge in urban hives may be putting pressure on wild bee populations by increasing competition for the same nectar sources.",
+      "text": "What concern do critics raise about urban beekeeping?",
+      "options": [
+        "It is too expensive for ordinary residents",
+        "Hives on rooftops are dangerous to the public",
+        "It may harm wild bee populations through competition",
+        "City bees produce lower quality honey"
+      ],
+      "answer": "It may harm wild bee populations through competition",
+      "explanation": "Critics 'warn that the surge in urban hives may be putting pressure on wild bee populations by increasing competition for the same nectar sources'."
+    },
+    {
+      "id": "p5-3",
+      "type": "multiple-choice",
+      "context": "PASSAGE — The Science of Sleep\n\nScientists have long understood that sleep is essential for memory consolidation. During the deepest phases of sleep, the brain replays experiences from the day, strengthening neural pathways associated with newly learned information. Recent research suggests that even a short nap of 20 minutes can significantly improve performance on memory tasks, leading some educators to advocate for scheduled rest periods in schools. The findings challenge the widespread belief that students who study late into the night are making the best use of their time.",
+      "text": "What does recent research suggest about short naps?",
+      "options": [
+        "They are only effective for adults, not students",
+        "They can meaningfully improve memory performance",
+        "They should replace nighttime sleep entirely",
+        "They are beneficial only when taken before learning"
+      ],
+      "answer": "They can meaningfully improve memory performance",
+      "explanation": "The passage states that 'even a short nap of 20 minutes can significantly improve performance on memory tasks'."
+    },
+    {
+      "id": "p5-4",
+      "type": "multiple-choice",
+      "context": "PASSAGE — The Science of Sleep\n\nScientists have long understood that sleep is essential for memory consolidation. During the deepest phases of sleep, the brain replays experiences from the day, strengthening neural pathways associated with newly learned information. Recent research suggests that even a short nap of 20 minutes can significantly improve performance on memory tasks, leading some educators to advocate for scheduled rest periods in schools. The findings challenge the widespread belief that students who study late into the night are making the best use of their time.",
+      "text": "What assumption do the research findings challenge?",
+      "options": [
+        "That sleep is necessary for health",
+        "That studying at night is the most productive approach",
+        "That naps should be longer than 20 minutes",
+        "That memory tasks are a reliable measure of intelligence"
+      ],
+      "answer": "That studying at night is the most productive approach",
+      "explanation": "The findings 'challenge the widespread belief that students who study late into the night are making the best use of their time'."
+    },
+    {
+      "id": "p5-5",
+      "type": "multiple-choice",
+      "context": "PASSAGE — Rewilding Britain\n\nRewilding projects across Britain aim to restore natural ecosystems by reintroducing species that were once native to the region. The return of beavers to Scottish rivers is perhaps the most celebrated example. By building dams, beavers create wetlands that support a wide range of other wildlife and also help to reduce downstream flooding by slowing the flow of water. Farmers near rewilding zones have expressed mixed reactions: some welcome the ecological improvements, while others worry about flooding of agricultural land.",
+      "text": "How do beaver dams help communities downstream?",
+      "options": [
+        "They provide a source of clean drinking water",
+        "They slow water flow and reduce flood risk",
+        "They prevent fish from swimming into farmland",
+        "They filter agricultural pollutants from rivers"
+      ],
+      "answer": "They slow water flow and reduce flood risk",
+      "explanation": "The passage explains that beavers 'help to reduce downstream flooding by slowing the flow of water'."
+    },
+    {
+      "id": "p5-6",
+      "type": "multiple-choice",
+      "context": "PASSAGE — Rewilding Britain\n\nRewilding projects across Britain aim to restore natural ecosystems by reintroducing species that were once native to the region. The return of beavers to Scottish rivers is perhaps the most celebrated example. By building dams, beavers create wetlands that support a wide range of other wildlife and also help to reduce downstream flooding by slowing the flow of water. Farmers near rewilding zones have expressed mixed reactions: some welcome the ecological improvements, while others worry about flooding of agricultural land.",
+      "text": "Which of the following best describes farmers' attitudes towards rewilding?",
+      "options": [
+        "Universally positive because of improved soil quality",
+        "Divided, with some supportive and others concerned",
+        "Largely negative due to loss of farmland",
+        "Indifferent, as rewilding does not affect agriculture"
+      ],
+      "answer": "Divided, with some supportive and others concerned",
+      "explanation": "The passage says farmers 'expressed mixed reactions: some welcome the ecological improvements, while others worry about flooding'."
+    }
+  ]
+}
