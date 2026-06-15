@@ -112,9 +112,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
   // Navigate to results after quiz completes
   useEffect(() => {
     if (state.phase === 'finished' && completedAttemptRef.current) {
-      const attempt = completedAttemptRef.current;
-      saveAttempt(attempt);
-      router.push(`/quiz/${quiz.id}/results?attemptId=${attempt.id}`);
+      router.push(`/quiz/${quiz.id}/results?attemptId=${completedAttemptRef.current.id}`);
     }
   }, [state.phase, quiz.id, router]);
 
@@ -134,6 +132,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           totalTimeSpent: allAnswers.reduce((s, a) => s + a.timeSpent, 0),
           answers: allAnswers,
         };
+        saveAttempt(attempt);
         completedAttemptRef.current = attempt;
         return { ...prev, phase: 'finished', completedAttemptId: attempt.id };
       }
