@@ -90,7 +90,7 @@ export default function UploadPage() {
           <>
             <p className="text-4xl mb-3">📄</p>
             <p className="text-slate-400 text-sm">Drop a PDF here, or click to browse</p>
-            <p className="text-slate-600 text-xs mt-1">Text-based PDFs only · Max 20MB</p>
+            <p className="text-slate-600 text-xs mt-1">Text-based PDFs only · Max 100MB</p>
           </>
         )}
         <input
