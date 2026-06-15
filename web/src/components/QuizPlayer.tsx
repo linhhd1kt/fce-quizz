@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { QuizSet, UserAnswer } from '@/types/quiz';
+import type { QuizSet, QuizAttempt, UserAnswer } from '@/types/quiz';
 import { saveAttempt } from '@/lib/storage';
 import { calculateScore } from '@/lib/scoring';
 import QuestionMultipleChoice from './QuestionMultipleChoice';
@@ -26,6 +26,7 @@ const DEFAULT_TIME = 45;
 export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
   const router = useRouter();
   const timePerQ = quiz.timePerQuestion ?? DEFAULT_TIME;
+  const completedAttemptRef = useRef<QuizAttempt | null>(null);
 
   const [state, setState] = useState<State>({
     phase: 'countdown',
@@ -106,12 +107,21 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
     }
   }, [state.phase, state.timeLeft, submitAnswer]);
 
+  // Navigate to results after quiz completes
+  useEffect(() => {
+    if (state.phase === 'finished' && completedAttemptRef.current) {
+      const attempt = completedAttemptRef.current;
+      saveAttempt(attempt);
+      router.push(`/quiz/${quiz.id}/results?attemptId=${attempt.id}`);
+    }
+  }, [state.phase, quiz.id, router]);
+
   const nextQuestion = useCallback(() => {
     setState((prev) => {
       const nextIndex = prev.questionIndex + 1;
       if (nextIndex >= quiz.questions.length) {
         const allAnswers = prev.answers;
-        const attempt = {
+        const attempt: QuizAttempt = {
           id: crypto.randomUUID(),
           quizId: quiz.id,
           quizTitle: quiz.title,
@@ -122,8 +132,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           totalTimeSpent: allAnswers.reduce((s, a) => s + a.timeSpent, 0),
           answers: allAnswers,
         };
-        saveAttempt(attempt);
-        router.push(`/quiz/${quiz.id}/results?attemptId=${attempt.id}`);
+        completedAttemptRef.current = attempt;
         return { ...prev, phase: 'finished' };
       }
       return {
@@ -135,7 +144,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
         questionStartedAt: Date.now(),
       };
     });
-  }, [quiz, router, timePerQ]);
+  }, [quiz, timePerQ]);
 
   const currentQ = quiz.questions[state.questionIndex];
 
