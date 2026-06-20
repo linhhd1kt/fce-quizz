@@ -1,0 +1,626 @@
+{
+  "id": "nguyen-hue-1",
+  "title": "Đề chuyên Nguyễn Huệ – Đề 1",
+  "description": "Đề kiểm tra kiến thức vào lớp 10 THPT Chuyên · Môn: Tiếng Anh · 120 phút · 50 câu MCQ",
+  "source": "Trường THPT Chuyên Nguyễn Huệ",
+  "totalQuestions": 50,
+  "timePerQuestion": 45,
+  "skippedSections": [
+    {
+      "name": "III. Word Formation (Q26–35)",
+      "type": "word-formation",
+      "questionRange": "26–35",
+      "points": 10,
+      "description": "Dùng dạng đúng của từ trong ngoặc để hoàn thành câu. Không có options → không thể làm quiz trắc nghiệm.",
+      "examples": [
+        "26. Recently, health foods have increased in ______. (POPULAR) → popularity",
+        "27. She presented her ideas clearly and ______. (LOGIC) → logically",
+        "28. Nowadays ______ knowledge of English can be a problem. (SUFFICIENCY) → insufficient",
+        "29. Sorry about the mistakes, I ______ the instruction. (UNDERSTAND) → misunderstood",
+        "30. He is interested in the ______ of old building. (PRESERVE) → preservation"
+      ]
+    },
+    {
+      "name": "IV. Verb Forms (Q36–45)",
+      "type": "verb-form",
+      "questionRange": "36–45",
+      "points": 10,
+      "description": "Chia động từ đúng thì/dạng. Không có options → không thể làm quiz trắc nghiệm.",
+      "examples": [
+        "36. He (wear) ______ the same old coat since he (37. move) ______ here. → has been wearing / moved",
+        "38. A lot of people (kill) ______ by AIDS recently. → have been killed",
+        "42. We (have) ______ our house (43. repair) ______ next month. → are having / repaired"
+      ]
+    },
+    {
+      "name": "V. Prepositions (Q46–55)",
+      "type": "preposition",
+      "questionRange": "46–55",
+      "points": 10,
+      "description": "Điền giới từ thích hợp. Không có options → không thể làm quiz trắc nghiệm.",
+      "examples": [
+        "46. Wearing uniforms helps poor students feel equal ______ others. → to",
+        "48. Egypt is famous ______ ancient Pyramids. → for",
+        "53. We plan to impose limitations ______ the use of cars. → on"
+      ]
+    },
+    {
+      "name": "Part 2 – I. Open Cloze Reading (Q56–65)",
+      "type": "open-cloze",
+      "questionRange": "56–65",
+      "points": 10,
+      "description": "Đọc đoạn văn và điền MỘT từ thích hợp. Không có options → không thể làm quiz trắc nghiệm.",
+      "examples": [
+        "56. ...are capable (56) ______ benefiting from their mistakes. → of",
+        "57. They don't mind (57) ______ corrected by their teacher. → being",
+        "60. They would (60) ______ perfect something in small steps. → rather"
+      ]
+    },
+    {
+      "name": "Part 3 – III. Sentence Rewriting with Keyword (Q91–95)",
+      "type": "sentence-rewriting",
+      "questionRange": "91–95",
+      "points": 5,
+      "description": "Viết lại câu dùng từ cho sẵn. Dạng tự luận → không thể làm quiz trắc nghiệm.",
+      "examples": [
+        "91. It took us three hours to find a room. (SPENT) → We spent three hours finding a room.",
+        "92. Would you rather I stayed with you? (PREFER) → Would you prefer me to stay with you?",
+        "94. The police said Jim had stolen the money. (ACCUSED) → The police accused Jim of stealing the money."
+      ]
+    },
+    {
+      "name": "Part 3 – IV. Sentence Transformation (Q96–100)",
+      "type": "sentence-transformation",
+      "questionRange": "96–100",
+      "points": 5,
+      "description": "Viết lại câu với từ gợi ý. Dạng tự luận → không thể làm quiz trắc nghiệm.",
+      "examples": [
+        "96. New Year comes near. People are busy. → The nearer New Year comes, the busier people are.",
+        "97. Both Peter and John don't like tea. → Neither Peter nor John likes tea.",
+        "98. Mary will only come to the party if Peter is invited. → Unless Peter is invited, Mary won't come."
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "q-1",
+      "type": "multiple-choice",
+      "section": "Phát âm (Q1–5)",
+      "text": "Câu 1. Chọn từ có phần gạch chân được phát âm KHÁC với các từ còn lại.",
+      "options": ["there", "appear", "wear", "prepare"],
+      "answer": "appear",
+      "explanation": "'appear' has the vowel sound /ɪə/ (as in 'ear'), while 'there', 'wear', and 'prepare' all contain the /eə/ sound. Therefore 'appear' is pronounced differently."
+    },
+    {
+      "id": "q-2",
+      "type": "multiple-choice",
+      "section": "Phát âm (Q1–5)",
+      "text": "Câu 2. Chọn từ có phần gạch chân được phát âm KHÁC với các từ còn lại.",
+      "options": ["climate", "comprise", "notice", "divide"],
+      "answer": "notice",
+      "explanation": "In 'notice', the letter 'i' is pronounced as a short /ɪ/ sound. In 'climate', 'comprise', and 'divide', the 'i' is pronounced as a long /aɪ/ sound."
+    },
+    {
+      "id": "q-3",
+      "type": "multiple-choice",
+      "section": "Phát âm (Q1–5)",
+      "text": "Câu 3. Chọn từ có phần gạch chân được phát âm KHÁC với các từ còn lại.",
+      "options": ["kicked", "fixed", "pleased", "missed"],
+      "answer": "pleased",
+      "explanation": "The '-ed' ending in 'pleased' is pronounced /d/ because 'please' ends in a voiced sound /z/. In 'kicked', 'fixed', and 'missed', the '-ed' ending is pronounced /t/ because they end in voiceless sounds."
+    },
+    {
+      "id": "q-4",
+      "type": "multiple-choice",
+      "section": "Phát âm (Q1–5)",
+      "text": "Câu 4. Chọn từ có phần gạch chân được phát âm KHÁC với các từ còn lại.",
+      "options": ["ring", "benefit", "wander", "wonderful"],
+      "answer": "wonderful",
+      "explanation": "In 'wonderful', the underlined 'o' is pronounced /ʌ/ (as in 'fun'). In 'ring' (/ɪ/), 'benefit' (/e/), and 'wander' (/ɒ/), the vowels have different but short sounds, while 'wonderful' stands apart with the /ʌ/ sound."
+    },
+    {
+      "id": "q-5",
+      "type": "multiple-choice",
+      "section": "Phát âm (Q1–5)",
+      "text": "Câu 5. Chọn từ có phần gạch chân được phát âm KHÁC với các từ còn lại.",
+      "options": ["slavery", "last", "guest", "towards"],
+      "answer": "last",
+      "explanation": "In 'last', the 'a' is pronounced /ɑː/ (a long back vowel). In 'slavery' /eɪ/, 'guest' /e/, and 'towards' /ɔː/, the underlined letters have different vowel sounds, with 'last' being the clear outlier having the /ɑː/ sound."
+    },
+    {
+      "id": "q-6",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 6. That famous book _______ of five chapters.",
+      "options": ["comprises", "makes", "has", "consists"],
+      "answer": "consists",
+      "explanation": "'Consist of' is the correct collocation meaning 'to be made up of'. 'Comprises' would need no preposition ('comprises five chapters'). 'Makes' and 'has' don't work with 'of' in this structure."
+    },
+    {
+      "id": "q-7",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 7. He used to _______ his living by delivering vegetables to city hotels.",
+      "options": ["earn", "gain", "get", "make"],
+      "answer": "earn",
+      "explanation": "'Earn a living' is the fixed collocation meaning to support oneself financially through work. While 'make a living' also exists, 'earn' is more commonly used with 'by + gerund' to describe the method of earning."
+    },
+    {
+      "id": "q-8",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 8. The shop promised to keep the goods for me if I _______ a deposit.",
+      "options": ["made", "paid", "gave", "left"],
+      "answer": "paid",
+      "explanation": "'Pay a deposit' is the standard collocation. You pay a deposit (sum of money) as security. 'Made', 'gave', and 'left' are not used with 'deposit' in this context."
+    },
+    {
+      "id": "q-9",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 9. We'll play tennis and _______ we'll have lunch.",
+      "options": ["so", "so that", "then", "after"],
+      "answer": "then",
+      "explanation": "'Then' is used to indicate a sequence of events (first tennis, after that lunch). 'So' expresses result, 'so that' expresses purpose, and 'after' would need to be followed by a clause or noun phrase."
+    },
+    {
+      "id": "q-10",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 10. Nobody was injured in the accident, _______?",
+      "options": ["was he", "wasn't he", "were they", "weren't they"],
+      "answer": "were they",
+      "explanation": "When the subject is 'nobody' (a negative indefinite pronoun), the tag question uses 'they' as the pronoun and is affirmative: 'were they?'. The verb matches 'nobody' as a plural subject in informal usage."
+    },
+    {
+      "id": "q-11",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 11. I wouldn't like to have _______ a snake or a spider as a pet.",
+      "options": ["neither", "both", "nor", "either"],
+      "answer": "either",
+      "explanation": "'Either...or' is used in negative sentences and questions to present two options. 'Neither...nor' is already negative. 'Both' is affirmative. Here with 'or', 'either' is the correct choice: 'I wouldn't like to have either...or...'."
+    },
+    {
+      "id": "q-12",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 12. _______ being ill, she still went to class yesterday.",
+      "options": ["Even though", "Despite", "Because", "Since"],
+      "answer": "Despite",
+      "explanation": "'Despite' is a preposition and must be followed by a noun phrase or gerund ('Despite being ill'). 'Even though' is a conjunction requiring a full clause ('Even though she was ill'). 'Because' and 'Since' express reason, not concession."
+    },
+    {
+      "id": "q-13",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 13. On the _______ to the town, there is a beautiful wood.",
+      "options": ["way", "direction", "street", "entrance"],
+      "answer": "way",
+      "explanation": "'On the way to' is the fixed expression meaning 'while travelling towards'. 'Direction', 'street', and 'entrance' do not form this collocation with 'on the...to'."
+    },
+    {
+      "id": "q-14",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 14. We should try to study hard to _______ our knowledge.",
+      "options": ["better", "farther", "lessen", "strengthen"],
+      "answer": "better",
+      "explanation": "'To better something' means to improve it. 'Better our knowledge' means to improve and deepen what we know. 'Strengthen knowledge' is also used, but 'better' fits most naturally as a verb meaning 'to improve'."
+    },
+    {
+      "id": "q-15",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 15. I didn't _______ her as she was wearing a blond wig.",
+      "options": ["perceive", "know", "realize", "recognize"],
+      "answer": "recognize",
+      "explanation": "'Recognize' means to identify someone you have seen or known before. The wig disguised her appearance, so the speaker failed to recognize her. 'Perceive' is too general, 'know' and 'realize' don't fit the context of visual identification."
+    },
+    {
+      "id": "q-16",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 16. Women's Aid is a UK charity _______ aim is to end domestic violence against women and children.",
+      "options": ["who", "whose", "which", "whom"],
+      "answer": "whose",
+      "explanation": "'Whose' is the possessive relative pronoun used for both people and organizations. 'Whose aim' shows that the aim belongs to the charity. 'Who' and 'whom' are for people (subject/object), 'which' cannot show possession."
+    },
+    {
+      "id": "q-17",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 17. Passover is also an _______ spring festival.",
+      "options": ["ancient", "anxious", "annual", "official"],
+      "answer": "annual",
+      "explanation": "'Annual' means happening once a year. Passover is a Jewish festival that occurs yearly. 'Ancient' means very old (doesn't describe frequency), 'anxious' means worried, and 'official' means formally recognized."
+    },
+    {
+      "id": "q-18",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 18. The two friends always back _______ up in everything they do.",
+      "options": ["each other", "one another", "themselves", "ourselves"],
+      "answer": "each other",
+      "explanation": "'Back each other up' means to support one another. 'Each other' refers to two people. 'One another' typically refers to more than two people. 'Themselves/ourselves' are reflexive pronouns and don't express reciprocal action here."
+    },
+    {
+      "id": "q-19",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 19. Dinosaurs are believed to _______ millions of years ago.",
+      "options": ["have gone out", "have died out", "have run off", "died out"],
+      "answer": "have died out",
+      "explanation": "'Die out' is the phrasal verb meaning to become extinct. After 'believed to', we use the perfect infinitive ('have died out') to refer to a past event. 'Have gone out' and 'have run off' don't mean extinction."
+    },
+    {
+      "id": "q-20",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 20. – "I'm taking my first exam next week." – "_______."",
+      "options": ["Cheers", "Good luck", "Well done", "Congratulations"],
+      "answer": "Good luck",
+      "explanation": "'Good luck' is the appropriate response to someone who is about to do something challenging (like an exam). 'Cheers' is informal British for 'thank you', 'Well done' and 'Congratulations' are said AFTER success, not before."
+    },
+    {
+      "id": "q-21",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 21. – "Something is worrying me." – "_______."",
+      "options": ["Well, what are you doing?", "Well, tell me who's that?", "Well, tell me what's worrying you?", "Well, I know."],
+      "answer": "Well, tell me what's worrying you?",
+      "explanation": "The appropriate response to 'Something is worrying me' is to show concern and invite the person to share. 'Tell me what's worrying you?' directly addresses the statement with empathy and invites further conversation."
+    },
+    {
+      "id": "q-22",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 22. Wait _______ you get home before you unpack your parcel.",
+      "options": ["during", "until", "when", "after"],
+      "answer": "until",
+      "explanation": "'Wait until' means 'don't do something before a certain point in time'. It expresses the idea of waiting up to a moment. 'When' doesn't convey waiting, 'during' and 'after' don't fit the grammatical structure here."
+    },
+    {
+      "id": "q-23",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 23. The hotel has been built on the _______ of the lake.",
+      "options": ["border", "boundary", "edge", "front"],
+      "answer": "edge",
+      "explanation": "'Edge' refers to the line where a surface ends, used for lakes, cliffs, etc. 'Border' and 'boundary' refer to limits between areas/countries. 'Front' refers to the face of a building. 'Edge of the lake' is the natural collocation."
+    },
+    {
+      "id": "q-24",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 24. _______ does it take you to do the washing?",
+      "options": ["How fast", "What time", "How often", "How long"],
+      "answer": "How long",
+      "explanation": "'How long does it take' asks about the duration of an activity. 'How fast' asks about speed, 'What time' asks for a specific clock time, 'How often' asks about frequency."
+    },
+    {
+      "id": "q-25",
+      "type": "multiple-choice",
+      "section": "Ngữ pháp & Từ vựng (Q6–25)",
+      "text": "Câu 25. Due to bad weather, the picnic has been _______ until next Sunday.",
+      "options": ["put off", "taken off", "put down", "switched off"],
+      "answer": "put off",
+      "explanation": "'Put off' means to postpone or delay an event to a later time. 'Taken off' means removed or (for flights) departed. 'Put down' means to place something or suppress. 'Switched off' means to turn something off."
+    },
+    {
+      "id": "q-66",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "ENVIRONMENTAL CONCERNS\n\nEarth is the only (66)_______ we know of in the universe that can support human life. (67)_______ human activities are making the planet less fit to live on. As the western world (68)_______ on consuming two-thirds of the world's resources while half of the world's population do so (69)_______ to stay alive, we are rapidly destroying the very resource we have by which all people can survive and prosper. Everywhere fertile soil is (70)_______ built on or washed into the sea. Renewable resources are exploited so much that they will never be able to recover completely. We discharge pollutants into the atmosphere without any thought of the consequences. As a (71)_______ the planet's ability to support people is being reduced at the very time when rising human numbers and consumption are (72)_______ increasingly heavy demands on it. The Earth's natural resources are there for us to use. We need food, water, air, energy, medicines, warmth, shelter and minerals to (73)_______ us fed, comfortable, healthy and active. If we are sensible in how we use the resources they will (74)_______ indefinitely. But if we use them wastefully and excessively they will soon run (75)_______ and everyone will suffer.",
+      "text": "Câu 66. Earth is the only (66) _______ we know of in the universe that can support human life.",
+      "options": ["situation", "place", "position", "site"],
+      "answer": "place",
+      "explanation": "'Place' is the most natural word to describe a location in the universe. 'Site' refers to a specific location for construction. 'Position' is too formal. 'Situation' describes circumstances, not a physical location."
+    },
+    {
+      "id": "q-67",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "ENVIRONMENTAL CONCERNS\n\nEarth is the only (66)_______ we know of in the universe that can support human life. (67)_______ human activities are making the planet less fit to live on...",
+      "text": "Câu 67. (67) _______ human activities are making the planet less fit to live on.",
+      "options": ["Although", "Still", "Yet", "Despite"],
+      "answer": "Yet",
+      "explanation": "'Yet' functions as a sentence connector meaning 'however/nevertheless', contrasting the positive fact (Earth supports life) with the negative reality (human activities are damaging it). 'Despite' needs a noun/gerund. 'Although' needs a main clause to complete the sentence."
+    },
+    {
+      "id": "q-68",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...As the western world (68)_______ on consuming two-thirds of the world's resources while half of the world's population do so (69)_______ to stay alive...",
+      "text": "Câu 68. As the western world (68) _______ on consuming two-thirds of the world's resources...",
+      "options": ["continues", "repeats", "carries", "follows"],
+      "answer": "carries",
+      "explanation": "'Carry on + gerund' is the idiomatic phrasal verb meaning 'to continue doing something'. The phrase '(68)_______ on consuming' requires a verb that pairs with 'on'. 'Carries on consuming' is the correct idiomatic expression."
+    },
+    {
+      "id": "q-69",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...while half of the world's population do so (69)_______ to stay alive...",
+      "text": "Câu 69. ...while half of the world's population do so (69) _______ to stay alive.",
+      "options": ["already", "just", "for", "entirely"],
+      "answer": "just",
+      "explanation": "'Just to stay alive' means 'barely surviving / only to survive'. It emphasizes that half the world uses resources at a minimal survival level, contrasting with the western world's excess consumption."
+    },
+    {
+      "id": "q-70",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...Everywhere fertile soil is (70)_______ built on or washed into the sea...",
+      "text": "Câu 70. Everywhere fertile soil is (70) _______ built on or washed into the sea.",
+      "options": ["sooner", "neither", "either", "rather"],
+      "answer": "either",
+      "explanation": "'Either...or' is the correct conjunction pairing two options: 'either built on OR washed into the sea'. It means one of two things is happening to the soil. 'Neither...nor' would mean neither happens, which contradicts the passage."
+    },
+    {
+      "id": "q-71",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...As a (71)_______ the planet's ability to support people is being reduced...",
+      "text": "Câu 71. As a (71) _______ the planet's ability to support people is being reduced.",
+      "options": ["development", "result", "reaction", "product"],
+      "answer": "result",
+      "explanation": "'As a result' is the fixed linking phrase meaning 'consequently/therefore'. It connects the previous facts (pollution, exploitation) to the consequence (reduced ability to support life). 'Development', 'reaction', and 'product' don't form this set phrase."
+    },
+    {
+      "id": "q-72",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...rising human numbers and consumption are (72)_______ increasingly heavy demands on it...",
+      "text": "Câu 72. ...rising human numbers and consumption are (72) _______ increasingly heavy demands on it.",
+      "options": ["doing", "having", "taking", "making"],
+      "answer": "making",
+      "explanation": "'Make demands on something' is the correct collocation. We 'make demands' (not 'do', 'have', or 'take' demands). The phrase means that growing population and consumption are placing increasing pressure on the planet's resources."
+    },
+    {
+      "id": "q-73",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...We need food, water, air, energy, medicines, warmth, shelter and minerals to (73)_______ us fed, comfortable, healthy and active...",
+      "text": "Câu 73. We need resources to (73) _______ us fed, comfortable, healthy and active.",
+      "options": ["hold", "maintain", "stay", "keep"],
+      "answer": "keep",
+      "explanation": "'Keep someone + adjective' means to maintain a state. 'Keep us fed, comfortable, healthy and active' correctly follows this pattern. 'Maintain' cannot be followed directly by 'us + adjective'. 'Hold' and 'stay' don't fit this causative structure."
+    },
+    {
+      "id": "q-74",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...If we are sensible in how we use the resources they will (74)_______ indefinitely...",
+      "text": "Câu 74. If we are sensible in how we use the resources they will (74) _______ indefinitely.",
+      "options": ["last", "stand", "go", "remain"],
+      "answer": "last",
+      "explanation": "'Last indefinitely' means to continue to exist or be available for an unlimited period. 'Resources last' is the standard way to say they don't run out. 'Remain indefinitely' is possible but 'last' is the conventional choice for natural resources."
+    },
+    {
+      "id": "q-75",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Cloze MCQ (Q66–75)",
+      "context": "...But if we use them wastefully and excessively they will soon run (75)_______ and everyone will suffer.",
+      "text": "Câu 75. ...they will soon run (75) _______ and everyone will suffer.",
+      "options": ["out", "off", "over", "down"],
+      "answer": "out",
+      "explanation": "'Run out' means to be completely used up or exhausted. This is the correct phrasal verb for resources being depleted. 'Run off' means to leave quickly or copy. 'Run over' means to exceed or knock down. 'Run down' means to decline gradually."
+    },
+    {
+      "id": "q-76",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Chọn câu trả lời (Q76–80)",
+      "context": "Each nation has many good people who take care of others. For example, some high school and college students in the United States often spend many hours as volunteers in hospitals, orphanages or homes for the aged. They read books to the people in these places, or they just visit them, play games with them or listen to their problems.\n\nOther young volunteers work in the homes of people who are sick or old. They clean up their houses, do their shopping or mow their lawns. For boys who no longer have fathers, there is an organization called Big Brothers. College students and other men take these boys to baseball games or on fishing trips and help them to get to know things that boys usually learn from their fathers.\n\nSome high school students take part in helping disadvantaged or handicapped children. They give care and comfort to them and help them to overcome their difficulties. Young college and university students participate in helping the people who have suffered badly in wars or natural disasters. During summer vacations, they volunteer to work in remote mountainous areas to provide education for children.\n\nEach city has a number of clubs where boys and girls can go to play games or learn craft. Some of these clubs show movies or organize short trips to interest. Most of these clubs use a lot of high school and college students as volunteers because they are young enough to remember the problems of younger boys and girls.\n\nVolunteers believe that some of the happier people in the world are those who help to bring happiness to others.",
+      "text": "Câu 76. Volunteers usually help those who are sick or old in their homes by _______.",
+      "options": [
+        "moving the lawns, doing shopping and cleaning up their houses",
+        "telling them stories, and singing and dancing for them",
+        "cooking, sewing or washing their clothes",
+        "taking them to the baseball games"
+      ],
+      "answer": "moving the lawns, doing shopping and cleaning up their houses",
+      "explanation": "According to the passage: 'They clean up their houses, do their shopping or mow their lawns.' Option A matches this description (mowing lawns ≈ moving the lawns, doing shopping, cleaning up houses). The other options are not mentioned."
+    },
+    {
+      "id": "q-77",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Chọn câu trả lời (Q76–80)",
+      "context": "...For boys who no longer have fathers, there is an organization called Big Brothers. College students and other men take these boys to baseball games or on fishing trips...",
+      "text": "Câu 77. Big Brother is _______.",
+      "options": [
+        "the name of a club",
+        "a home for children who have no brothers",
+        "the name of a team",
+        "an organization for boys who no longer have fathers"
+      ],
+      "answer": "an organization for boys who no longer have fathers",
+      "explanation": "The passage clearly states: 'For boys who no longer have fathers, there is an organization called Big Brothers.' It is an organization (not a club, home, or team) specifically for fatherless boys."
+    },
+    {
+      "id": "q-78",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Chọn câu trả lời (Q76–80)",
+      "context": "...Most of these clubs use a lot of high school and college students as volunteers because they are young enough to remember the problems of younger boys and girls.",
+      "text": "Câu 78. Most of the boys' and girls' clubs use many high school and college students as volunteers because _______.",
+      "options": [
+        "they have a lot of free time",
+        "they can understand the problems of younger boys and girls",
+        "they know how to the work",
+        "they are good at playing games and learning crafts"
+      ],
+      "answer": "they can understand the problems of younger boys and girls",
+      "explanation": "The passage says clubs use young volunteers 'because they are young enough to remember the problems of younger boys and girls.' This means they can understand (relate to) those problems, making option B the correct paraphrase."
+    },
+    {
+      "id": "q-79",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Chọn câu trả lời (Q76–80)",
+      "context": "...Volunteers believe that some of the happier people in the world are those who help to bring happiness to others.",
+      "text": "Câu 79. Volunteers believe that _______.",
+      "options": [
+        "in order to make others happy, they have got to be happy",
+        "the happiest people in the world are those who make themselves happy",
+        "the happiest people in the world are those who are young and healthy",
+        "bringing happiness to others makes them the happiest people in the world"
+      ],
+      "answer": "bringing happiness to others makes them the happiest people in the world",
+      "explanation": "The passage states: 'Volunteers believe that some of the happier people in the world are those who help to bring happiness to others.' Option D correctly paraphrases this — bringing happiness to others is what makes volunteers among the happiest people."
+    },
+    {
+      "id": "q-80",
+      "type": "multiple-choice",
+      "section": "Đọc hiểu – Chọn câu trả lời (Q76–80)",
+      "context": "The passage discusses volunteer work: helping the sick and elderly, working with fatherless boys, assisting handicapped children, disaster victims, and remote communities. It concludes that volunteers are among the happiest people.",
+      "text": "Câu 80. What is the best title for the passage?",
+      "options": [
+        "Taking care of others",
+        "Volunteers: the happiest people in the world",
+        "Voluntary work in the United States",
+        "Helping old and sick people in the United States"
+      ],
+      "answer": "Taking care of others",
+      "explanation": "'Taking care of others' best captures the broad theme of the entire passage, which covers various forms of volunteer work helping different groups of people. The other options are either too narrow (only volunteers' happiness, only the US, only elderly) or don't cover all sections of the passage."
+    },
+    {
+      "id": "q-81",
+      "type": "multiple-choice",
+      "section": "Cấu trúc câu (Q81–85)",
+      "text": "Câu 81. Chọn câu đúng nhất được tạo từ các từ: very / few / airports / United States / modern / as that / Atlanta",
+      "options": [
+        "Very few airports in the United States are as modern as that of Atlanta.",
+        "Very a few airports in the United States are more modern as that Atlanta.",
+        "Very few of airports in the United States are as modern as that in Atlanta.",
+        "Very a few of the airports in the United States are as modern as that of Atlanta."
+      ],
+      "answer": "Very few airports in the United States are as modern as that of Atlanta.",
+      "explanation": "'Very few' (not 'very a few') is correct. 'As modern as that of Atlanta' uses the comparison 'as...as' with 'that' as a pronoun replacing 'the airport'. Options B and D incorrectly use 'very a few'; option C uses 'very few of airports' which is ungrammatical."
+    },
+    {
+      "id": "q-82",
+      "type": "multiple-choice",
+      "section": "Cấu trúc câu (Q81–85)",
+      "text": "Câu 82. Chọn câu đúng nhất được tạo từ các từ: both / term paper / final exam / often require / college class",
+      "options": [
+        "Both a term paper as well as a final exam have often required for a college class.",
+        "Both a term paper and a final exam are often required for a college class.",
+        "Both term paper and final exam as well is often required for a college class.",
+        "Both a term paper and also a final exam has often required for a college class."
+      ],
+      "answer": "Both a term paper and a final exam are often required for a college class.",
+      "explanation": "'Both...and...' is the correct conjunction structure. 'Both a term paper AND a final exam' (two subjects) requires a plural verb 'are'. The passive 'are often required' is correct. Options A ('both...as well as'), C (missing articles, singular verb), and D ('both...and also', singular verb) are all incorrect."
+    },
+    {
+      "id": "q-83",
+      "type": "multiple-choice",
+      "section": "Cấu trúc câu (Q81–85)",
+      "text": "Câu 83. Chọn câu đúng nhất được tạo từ các từ: people / competitive / more likely / suffer / effects / stress / health",
+      "options": [
+        "People are competitive and more likely suffering by the effects of stress for their health.",
+        "People, competitive and more likely, suffer from the effects of stress on their health.",
+        "People are competitive and more likely to be suffered from the effects of stress for their health.",
+        "People who are competitive are more likely to suffer from the effects of stress on their health."
+      ],
+      "answer": "People who are competitive are more likely to suffer from the effects of stress on their health.",
+      "explanation": "'More likely to + infinitive' is the correct structure (not 'likely suffering' or 'likely to be suffered'). 'Suffer from' is the correct preposition. 'Effects on' health (not 'for'). Option D uses a relative clause 'who are competitive' correctly and has all prepositions right."
+    },
+    {
+      "id": "q-84",
+      "type": "multiple-choice",
+      "section": "Cấu trúc câu (Q81–85)",
+      "text": "Câu 84. Chọn câu đúng nhất được tạo từ các từ: color / star / depend / heat / energy / produce",
+      "options": [
+        "The color of a star depends on the heat and the energy it produces.",
+        "The color from a star is depended on the heat and the energy to produce.",
+        "The color of a star that depends on the heat and the energy produces.",
+        "The color star depends on the heat and the energy produces."
+      ],
+      "answer": "The color of a star depends on the heat and the energy it produces.",
+      "explanation": "'Depend on' is intransitive and cannot be passivized ('is depended on' is wrong). 'The color OF a star' uses the correct preposition. 'The energy it produces' correctly has a relative clause modifying 'energy'. Options B, C, and D all contain structural errors."
+    },
+    {
+      "id": "q-85",
+      "type": "multiple-choice",
+      "section": "Cấu trúc câu (Q81–85)",
+      "text": "Câu 85. Chọn câu đúng nhất được tạo từ các từ: those / us / smoke / have lungs / x-ray / regularly",
+      "options": [
+        "Those of us who smoke should have our lungs x-rayed regularly.",
+        "Those of us smoke and have the lungs x-ray regularly.",
+        "Those of us who smoke and have the lungs x-rayed regularly.",
+        "Those of us smoke and so have our lungs x-ray regularly."
+      ],
+      "answer": "Those of us who smoke should have our lungs x-rayed regularly.",
+      "explanation": "'Those of us who smoke' uses a relative clause correctly. 'Have our lungs x-rayed' is the causative structure (have + object + past participle). 'Regularly' is correctly placed at the end. Options B and D omit 'who' and are ungrammatical. Option C lacks the modal 'should' and is an incomplete sentence."
+    },
+    {
+      "id": "q-86",
+      "type": "multiple-choice",
+      "section": "Sửa lỗi (Q86–90)",
+      "text": "Câu 86. Chọn phần gạch chân cần sửa:\n(A) Asking about the date of the election, the prime minister (B) commented that (C) no decision (D) had yet been made.",
+      "options": [
+        "A: Asking about the date of the election",
+        "B: commented that",
+        "C: no decision",
+        "D: had yet been made"
+      ],
+      "answer": "A: Asking about the date of the election",
+      "explanation": "The participial phrase 'Asking about the date' implies the prime minister was asking, but logically the prime minister was BEING asked. It should be 'Asked about the date' (passive participle = 'When asked about...') to correctly indicate who was doing the asking."
+    },
+    {
+      "id": "q-87",
+      "type": "multiple-choice",
+      "section": "Sửa lỗi (Q86–90)",
+      "text": "Câu 87. Chọn phần gạch chân cần sửa:\nWhy (A) do you think (B) you are allowed (C) to criticize me (D) as that?",
+      "options": [
+        "A: do you think",
+        "B: you are allowed",
+        "C: to criticize me",
+        "D: as that"
+      ],
+      "answer": "D: as that",
+      "explanation": "'As that' is incorrect. The correct expression is 'like that' to describe the manner of doing something. 'As' is used for comparisons of equal status or as a conjunction, not for describing manner in this context. The sentence should end: '...to criticize me like that?'"
+    },
+    {
+      "id": "q-88",
+      "type": "multiple-choice",
+      "section": "Sửa lỗi (Q86–90)",
+      "text": "Câu 88. Chọn phần gạch chân cần sửa:\nBuying clothes (A) are often (B) a very time-consuming practice because those clothes that a person likes (C) are rarely the ones that fit (D) him or her.",
+      "options": [
+        "A: are often",
+        "B: a very time-consuming practice",
+        "C: are rarely",
+        "D: him or her"
+      ],
+      "answer": "A: are often",
+      "explanation": "'Buying clothes' is a gerund phrase acting as the subject of the sentence. A gerund subject takes a singular verb, so it should be 'is often' (not 'are often'). The rest of the sentence is grammatically correct."
+    },
+    {
+      "id": "q-89",
+      "type": "multiple-choice",
+      "section": "Sửa lỗi (Q86–90)",
+      "text": "Câu 89. Chọn phần gạch chân cần sửa:\nThe (A) fish and chips that my mother (B) is cooking in the kitchen (C) taste (D) delicious.",
+      "options": [
+        "A: fish and chips",
+        "B: is cooking",
+        "C: taste",
+        "D: delicious"
+      ],
+      "answer": "C: taste",
+      "explanation": "'Fish and chips' is treated as a single dish (like a set menu item), so it takes a singular verb. 'Taste' should be 'tastes'. Compare: 'Fish and chips is a popular British dish.' The verb 'is cooking' correctly refers to 'my mother' (singular), which is fine."
+    },
+    {
+      "id": "q-90",
+      "type": "multiple-choice",
+      "section": "Sửa lỗi (Q86–90)",
+      "text": "Câu 90. Chọn phần gạch chân cần sửa:\nMany theories on (A) conserving the purity of water (B) has been proposed but no one (C) has been as (D) widely accepted as this one.",
+      "options": [
+        "A: conserving the purity of water",
+        "B: has been proposed",
+        "C: has been",
+        "D: widely accepted"
+      ],
+      "answer": "B: has been proposed",
+      "explanation": "The subject is 'Many theories' (plural noun), so the verb must be plural: 'have been proposed' (not 'has been proposed'). The second 'has been' (option C) is correctly referring to 'no one' which is singular. 'Conserving' and 'widely accepted' are both grammatically correct."
+    }
+  ]
+}

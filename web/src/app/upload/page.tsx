@@ -12,6 +12,8 @@ export default function UploadPage() {
   const [message, setMessage] = useState('');
   const [quiz, setQuiz] = useState<QuizSet | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pageRange, setPageRange] = useState('');
+  const [autoDetect, setAutoDetect] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
@@ -28,6 +30,8 @@ export default function UploadPage() {
 
     const form = new FormData();
     form.append('file', file);
+    form.append('pageRange', pageRange.trim());
+    form.append('autoDetect', autoDetect ? 'true' : 'false');
 
     try {
       const res = await fetch('/api/extract-quiz', { method: 'POST', body: form });
@@ -60,12 +64,57 @@ export default function UploadPage() {
     if (file) handleFile(file);
   }
 
+  const isLoading = status === 'loading';
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="font-bold text-white text-xl">PDF → Quiz</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Upload a text-based PDF — AI will extract multiple-choice questions automatically.
+          Upload a PDF — AI will extract multiple-choice questions automatically.
+        </p>
+      </div>
+
+      {/* Options */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Extraction options</p>
+
+        {/* Auto-detect toggle */}
+        <label className="flex items-center gap-3 cursor-pointer">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoDetect}
+            disabled={isLoading}
+            onClick={() => setAutoDetect(!autoDetect)}
+            className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
+              autoDetect ? 'bg-blue-600' : 'bg-slate-700'
+            } disabled:opacity-50`}
+          >
+            <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+              autoDetect ? 'translate-x-4' : 'translate-x-0'
+            }`} />
+          </button>
+          <span className="text-sm text-slate-300">
+            Auto-detect MCQ pages
+            <span className="text-slate-500 ml-1.5">— skip Writing, Speaking, open cloze</span>
+          </span>
+        </label>
+
+        {/* Page range */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-300 shrink-0">Page range</span>
+          <input
+            type="text"
+            placeholder="e.g. 8-19 or 8-19, 22-27"
+            value={pageRange}
+            onChange={(e) => setPageRange(e.target.value)}
+            disabled={isLoading}
+            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-slate-500 disabled:opacity-50"
+          />
+        </div>
+        <p className="text-xs text-slate-600">
+          Specifying a page range overrides auto-detect and processes only those pages.
         </p>
       </div>
 
@@ -73,24 +122,24 @@ export default function UploadPage() {
       <div
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
-        onClick={() => status !== 'loading' && fileRef.current?.click()}
+        onClick={() => !isLoading && fileRef.current?.click()}
         className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors
-          ${status === 'loading'
+          ${isLoading
             ? 'border-blue-700 bg-blue-950/20 cursor-wait'
             : 'border-slate-700 hover:border-slate-500 cursor-pointer'
           }`}
       >
-        {status === 'loading' ? (
+        {isLoading ? (
           <>
             <div className="text-4xl mb-3 animate-pulse">⚙️</div>
             <p className="text-blue-400 text-sm font-medium">Extracting questions…</p>
-            <p className="text-slate-500 text-xs mt-1">This may take 10-20 seconds</p>
+            <p className="text-slate-500 text-xs mt-1">This may take 15-30 seconds</p>
           </>
         ) : (
           <>
             <p className="text-4xl mb-3">📄</p>
             <p className="text-slate-400 text-sm">Drop a PDF here, or click to browse</p>
-            <p className="text-slate-600 text-xs mt-1">Text-based PDFs only · Max 100MB</p>
+            <p className="text-slate-600 text-xs mt-1">Max 100MB</p>
           </>
         )}
         <input

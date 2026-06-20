@@ -2,6 +2,8 @@ import type { QuizSet } from '@/types/quiz';
 
 // Built-in quiz sets bundled with the app
 const BUILT_IN_IDS = [
+  // Nguyễn Huệ school exams
+  'nguyen-hue-1',
   // Test 1
   'test1-part1',
   'test1-part5',

@@ -17,8 +17,7 @@ export default function QuizPage() {
     async function load() {
       const builtin = await loadBuiltInQuizSets();
       const imported = loadImportedQuizSets();
-      const all = [...builtin, ...imported];
-      const found = all.find((q) => q.id === id);
+      const found = [...builtin, ...imported].find((q) => q.id === id);
       if (found) setQuiz(found);
       else setNotFound(true);
     }
@@ -38,16 +37,5 @@ export default function QuizPage() {
     return <div className="text-center py-20 text-slate-500">Loading…</div>;
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-white text-lg">{quiz.title}</h1>
-          <p className="text-slate-500 text-sm mt-0.5">{quiz.description}</p>
-        </div>
-        <Link href="/" className="text-slate-500 hover:text-slate-300 text-sm">✕ Exit</Link>
-      </div>
-      <QuizPlayer quiz={quiz} />
-    </div>
-  );
+  return <QuizPlayer quiz={quiz} />;
 }

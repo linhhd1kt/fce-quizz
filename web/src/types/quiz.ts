@@ -1,10 +1,19 @@
 export type QuestionType = 'multiple-choice' | 'fill-blank' | 'word-formation' | 'true-false';
 
+export interface SkippedSection {
+  type: string;
+  questions: string;
+  points: number;
+  description: string;
+  examples?: string[];
+}
+
 export interface MultipleChoiceQuestion {
   id: string;
   type: 'multiple-choice';
   text: string;
   context?: string;
+  section?: string;
   options: string[];
   answer: string;
   explanation?: string;
@@ -20,6 +29,7 @@ export interface QuizSet {
   totalQuestions: number;
   timePerQuestion?: number;
   questions: Question[];
+  skippedSections?: SkippedSection[];
 }
 
 export interface UserAnswer {
