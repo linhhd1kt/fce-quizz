@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { QuizSet, QuizAttempt, UserAnswer, MultipleChoiceQuestion } from '@/types/quiz';
 import { saveAttempt } from '@/lib/storage';
 import { calculateScore } from '@/lib/scoring';
+import { useI18n } from '@/i18n';
 
 // Wayground tile colors
 const TILES = [
@@ -43,6 +44,8 @@ function generateId(): string {
 
 export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
   const router = useRouter();
+  const { msgs, i } = useI18n();
+  const m = msgs.player;
   const timePerQ = quiz.timePerQuestion ?? DEFAULT_TIME;
   const completedAttemptRef = useRef<QuizAttempt | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -161,7 +164,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           <div className="absolute inset-0 rounded-full border-4 border-white/20" />
           <span className="relative text-9xl font-black text-white">{state.countdown}</span>
         </div>
-        <p className="relative text-white/30 text-sm mt-10">Chuẩn bị…</p>
+        <p className="relative text-white/30 text-sm mt-10">{m.getReady}</p>
       </div>
     );
   }
@@ -175,13 +178,13 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6" style={{ background: '#2d0a1e' }}>
         <GridPattern />
         <div className="relative text-7xl">🎉</div>
-        <p className="relative text-white text-2xl font-bold">Hoàn thành!</p>
+        <p className="relative text-white text-2xl font-bold">{m.finished}</p>
         <Link
           href={href}
           className="relative px-10 py-3.5 rounded-2xl text-white font-bold text-lg transition hover:brightness-110"
           style={{ background: '#e86020' }}
         >
-          Xem kết quả →
+          {m.viewResults}
         </Link>
       </div>
     );
@@ -199,7 +202,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between px-4 h-12 shrink-0">
         <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white/80 text-sm transition">
-          ← Thoát
+          {m.exit}
         </Link>
         <div className="flex items-center gap-2">
           {q.section && (
@@ -211,7 +214,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
             </span>
           )}
           <span className="text-white/40 text-sm font-medium">
-            {state.questionIndex + 1}/{quiz.questions.length}
+            {i(m.progress, { current: state.questionIndex + 1, total: quiz.questions.length })}
           </span>
         </div>
       </div>
@@ -237,7 +240,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           className="mb-3 px-5 py-1.5 rounded-full text-sm font-bold text-white"
           style={{ background: '#1a0815', border: '2px solid rgba(255,255,255,0.15)' }}
         >
-          {state.questionIndex + 1} / {quiz.questions.length}
+          {i(m.progress, { current: state.questionIndex + 1, total: quiz.questions.length })}
         </div>
 
         {/* Question card */}
@@ -248,10 +251,10 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           {revealed && (
             <p className={`text-sm font-semibold mb-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
               {isTimeout
-                ? '⏰ Hết giờ! Đáp án đúng: ' + q.answer
+                ? i(m.timeout, { answer: q.answer })
                 : isCorrect
-                ? '🎉 Chính xác!'
-                : '😔 Chưa đúng — Đáp án: ' + q.answer}
+                ? m.correct
+                : i(m.wrong, { answer: q.answer })}
             </p>
           )}
           {q.context && (
@@ -261,7 +264,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           )}
           <p className="text-white text-xl md:text-2xl font-bold leading-snug">{q.text}</p>
           {!revealed && (
-            <p className="text-white/30 text-xs mt-3">{state.timeLeft}s</p>
+            <p className="text-white/30 text-xs mt-3">{i(m.seconds, { s: state.timeLeft })}</p>
           )}
         </div>
 
@@ -284,8 +287,8 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           minHeight: '38vh',
         }}
       >
-        {q.options.map((opt, i) => {
-          const tile = TILES[i % TILES.length];
+        {q.options.map((opt, idx) => {
+          const tile = TILES[idx % TILES.length];
           const isThisCorrect = opt === q.answer;
           const isThisSelected = state.selected === opt;
 
@@ -326,7 +329,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
                 className="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
                 style={{ background: 'rgba(0,0,0,0.25)', color: 'rgba(255,255,255,0.9)' }}
               >
-                {TILE_LABELS[i]}
+                {TILE_LABELS[idx]}
               </span>
               {revealed && isThisCorrect && (
                 <span className="text-3xl mb-1 drop-shadow">✓</span>
@@ -350,7 +353,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
             className="px-12 py-3.5 rounded-2xl text-white font-bold text-base transition hover:brightness-110 active:scale-95 shadow-lg"
             style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}
           >
-            {state.questionIndex + 1 < quiz.questions.length ? 'Tiếp theo →' : 'Xem kết quả 🎉'}
+            {state.questionIndex + 1 < quiz.questions.length ? m.next : m.seeResults}
           </button>
         </div>
       )}

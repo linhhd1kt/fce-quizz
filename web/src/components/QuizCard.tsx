@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import type { QuizSet } from '@/types/quiz';
+import { useI18n } from '@/i18n';
 
 interface QuizCardProps {
   quiz: QuizSet;
@@ -7,6 +10,9 @@ interface QuizCardProps {
 }
 
 export default function QuizCard({ quiz, bestScore }: QuizCardProps) {
+  const { msgs, i } = useI18n();
+  const m = msgs.quizCard;
+
   return (
     <div className="group bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-2xl p-5 transition-all">
       <div className="flex items-start justify-between gap-4">
@@ -15,11 +21,11 @@ export default function QuizCard({ quiz, bestScore }: QuizCardProps) {
           <p className="text-sm text-slate-400 mt-1 line-clamp-2">{quiz.description}</p>
           <div className="flex items-center gap-3 mt-3">
             <span className="text-xs bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-md">
-              {quiz.totalQuestions} questions
+              {i(m.questions, { count: quiz.totalQuestions })}
             </span>
             {quiz.timePerQuestion && (
               <span className="text-xs bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-md">
-                {quiz.timePerQuestion}s / question
+                {i(m.timePerQ, { s: quiz.timePerQuestion })}
               </span>
             )}
             {bestScore !== undefined && (
@@ -28,7 +34,7 @@ export default function QuizCard({ quiz, bestScore }: QuizCardProps) {
                 bestScore >= 60 ? 'bg-yellow-950 border border-yellow-800 text-yellow-400' :
                 'bg-red-950 border border-red-800 text-red-400'
               }`}>
-                Best: {bestScore}%
+                {i(m.bestScore, { score: bestScore })}
               </span>
             )}
           </div>
@@ -37,7 +43,7 @@ export default function QuizCard({ quiz, bestScore }: QuizCardProps) {
           href={`/quiz/${quiz.id}`}
           className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors"
         >
-          Start
+          {m.start}
         </Link>
       </div>
       <p className="text-xs text-slate-600 mt-3">{quiz.source}</p>

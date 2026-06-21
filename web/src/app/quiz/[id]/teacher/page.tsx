@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { QuizSet, MultipleChoiceQuestion, SkippedSection } from '@/types/quiz';
 import { loadBuiltInQuizSets, loadImportedQuizSets } from '@/lib/quiz-loader';
+import { useI18n } from '@/i18n';
 
 const LABELS = ['A', 'B', 'C', 'D'];
 const TILE_COLORS = ['#8db600', '#8a4fd0', '#e86020', '#00c9a7'];
@@ -58,6 +59,8 @@ function QuestionRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { msgs } = useI18n();
+  const m = msgs.teacher;
   const answerIdx = q.options.indexOf(q.answer);
   const answerLabel = answerIdx >= 0 ? `${LABELS[answerIdx]}. ${q.answer}` : q.answer;
   const tileColor = TILE_COLORS[answerIdx % TILE_COLORS.length];
@@ -134,7 +137,7 @@ function QuestionRow({
               className="rounded-xl px-4 py-3 text-blue-200 text-sm"
               style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
             >
-              <span className="font-bold text-blue-400">Giải thích: </span>
+              <span className="font-bold text-blue-400">{m.explanationLabel} </span>
               {q.explanation}
             </div>
           )}
@@ -145,6 +148,8 @@ function QuestionRow({
 }
 
 function SkippedCard({ s }: { s: SkippedSection }) {
+  const { msgs } = useI18n();
+  const m = msgs.teacher;
   return (
     <div
       className="rounded-2xl p-5 space-y-3"
@@ -153,19 +158,19 @@ function SkippedCard({ s }: { s: SkippedSection }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-bold text-white text-base">{s.type}</h3>
-          <p className="text-white/40 text-xs mt-0.5">{s.questions} · {s.points} điểm</p>
+          <p className="text-white/40 text-xs mt-0.5">{s.questions} · {s.points} pts</p>
         </div>
         <span
           className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold"
           style={{ background: 'rgba(232,96,32,0.2)', border: '1px solid rgba(232,96,32,0.4)', color: '#f0904a' }}
         >
-          Chấm tay
+          {m.manualGrade}
         </span>
       </div>
       <p className="text-white/60 text-sm leading-relaxed">{s.description}</p>
       {s.examples && s.examples.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-white/30 text-[11px] uppercase tracking-widest font-semibold">Ví dụ</p>
+          <p className="text-white/30 text-[11px] uppercase tracking-widest font-semibold">{m.examplesLabel}</p>
           {s.examples.map((ex, i) => (
             <div
               key={i}
@@ -184,6 +189,8 @@ function SkippedCard({ s }: { s: SkippedSection }) {
 export default function TeacherPage() {
   const params = useParams();
   const id = params.id as string;
+  const { msgs, i } = useI18n();
+  const m = msgs.teacher;
   const [quiz, setQuiz] = useState<QuizSet | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [tab, setTab] = useState<Tab>('answers');
@@ -203,8 +210,8 @@ export default function TeacherPage() {
   if (notFound) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: '#2d0a1e' }}>
-        <p className="text-white/50">Không tìm thấy bài quiz.</p>
-        <Link href="/" className="mt-4 text-blue-400 hover:underline text-sm">← Trang chủ</Link>
+        <p className="text-white/50">{m.notFound}</p>
+        <Link href="/" className="mt-4 text-blue-400 hover:underline text-sm">{m.homeLink}</Link>
       </div>
     );
   }
@@ -212,13 +219,13 @@ export default function TeacherPage() {
   if (!quiz) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: '#2d0a1e' }}>
-        <p className="text-white/50">Đang tải…</p>
+        <p className="text-white/50">{m.loading}</p>
       </div>
     );
   }
 
   const questions = quiz.questions as MultipleChoiceQuestion[];
-  const sections = Array.from(new Set(questions.map((q) => q.section ?? 'Chung')));
+  const sections = Array.from(new Set(questions.map((q) => q.section ?? 'General')));
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-hidden" style={{ background: '#2d0a1e' }}>
@@ -231,7 +238,7 @@ export default function TeacherPage() {
       >
         <div className="flex items-center gap-4">
           <Link href="/" className="text-white/50 hover:text-white/80 text-sm transition">
-            ← Thoát
+            {m.exit}
           </Link>
           <span className="text-white/20">|</span>
           <h1 className="text-white font-bold text-sm truncate max-w-[200px] md:max-w-none">{quiz.title}</h1>
@@ -241,14 +248,14 @@ export default function TeacherPage() {
             className="px-3 py-1 rounded-full text-xs font-bold"
             style={{ background: 'rgba(232,96,32,0.2)', border: '1px solid rgba(232,96,32,0.5)', color: '#f0904a' }}
           >
-            GIÁO VIÊN
+            {m.roleBadge}
           </span>
           <Link
             href={`/quiz/${id}`}
             className="px-4 py-1.5 rounded-xl text-white text-sm font-bold transition hover:brightness-110"
             style={{ background: '#e86020' }}
           >
-            Làm bài →
+            {m.playBtn}
           </Link>
         </div>
       </div>
@@ -256,9 +263,9 @@ export default function TeacherPage() {
       {/* Stats bar */}
       <div className="relative z-10 flex items-center gap-4 px-5 py-3 shrink-0">
         {[
-          { label: 'Câu MCQ', value: quiz.questions.length, color: '#8db600' },
-          { label: 'Phần học', value: sections.length, color: '#8a4fd0' },
-          { label: 'Phần bỏ qua', value: quiz.skippedSections?.length ?? 0, color: '#e86020' },
+          { label: m.statMcq, value: quiz.questions.length, color: '#8db600' },
+          { label: m.statSections, value: sections.length, color: '#8a4fd0' },
+          { label: m.statSkipped, value: quiz.skippedSections?.length ?? 0, color: '#e86020' },
         ].map((s) => (
           <div
             key={s.label}
@@ -278,9 +285,9 @@ export default function TeacherPage() {
       >
         {(
           [
-            { key: 'answers', label: 'Đáp án' },
-            { key: 'questions', label: 'Câu hỏi' },
-            { key: 'skipped', label: `Bỏ qua${quiz.skippedSections?.length ? ` (${quiz.skippedSections.length})` : ''}` },
+            { key: 'answers', label: m.tabAnswers },
+            { key: 'questions', label: m.tabQuestions },
+            { key: 'skipped', label: `${m.tabSkippedLabel}${quiz.skippedSections?.length ? ` (${quiz.skippedSections.length})` : ''}` },
           ] as { key: Tab; label: string }[]
         ).map((t) => (
           <button
@@ -307,12 +314,12 @@ export default function TeacherPage() {
           <div className="p-5 space-y-6">
             <div>
               <p className="text-white/40 text-xs uppercase tracking-widest font-semibold mb-4">
-                Tất cả đáp án — {questions.length} câu
+                {i(m.allAnswersLabel, { count: questions.length })}
               </p>
               <AnswerKeyGrid questions={questions} />
             </div>
             {sections.map((sec) => {
-              const secQs = questions.filter((q) => (q.section ?? 'Chung') === sec);
+              const secQs = questions.filter((q) => (q.section ?? 'General') === sec);
               return (
                 <div key={sec}>
                   <div className="flex items-center gap-3 mb-3">
@@ -322,7 +329,7 @@ export default function TeacherPage() {
                     >
                       {sec}
                     </span>
-                    <span className="text-white/30 text-xs">{secQs.length} câu</span>
+                    <span className="text-white/30 text-xs">{i(m.sectionCount, { count: secQs.length })}</span>
                   </div>
                   <AnswerKeyGrid questions={secQs} />
                 </div>
@@ -335,7 +342,7 @@ export default function TeacherPage() {
         {tab === 'questions' && (
           <div className="p-5 space-y-6">
             {sections.map((sec) => {
-              const secQs = questions.filter((q) => (q.section ?? 'Chung') === sec);
+              const secQs = questions.filter((q) => (q.section ?? 'General') === sec);
               const globalOffset = questions.indexOf(secQs[0]);
               return (
                 <div key={sec} className="space-y-2">
@@ -346,13 +353,13 @@ export default function TeacherPage() {
                     >
                       {sec}
                     </span>
-                    <span className="text-white/30 text-xs">{secQs.length} câu</span>
+                    <span className="text-white/30 text-xs">{i(m.sectionCount, { count: secQs.length })}</span>
                   </div>
-                  {secQs.map((q, i) => (
+                  {secQs.map((q, idx) => (
                     <QuestionRow
                       key={q.id}
                       q={q}
-                      num={globalOffset + i + 1}
+                      num={globalOffset + idx + 1}
                       expanded={expandedQ === q.id}
                       onToggle={() => setExpandedQ(expandedQ === q.id ? null : q.id)}
                     />
@@ -367,14 +374,14 @@ export default function TeacherPage() {
         {tab === 'skipped' && (
           <div className="p-5 space-y-4">
             {!quiz.skippedSections || quiz.skippedSections.length === 0 ? (
-              <p className="text-white/30 text-sm text-center py-12">Không có phần nào bị bỏ qua.</p>
+              <p className="text-white/30 text-sm text-center py-12">{m.noSkipped}</p>
             ) : (
               <>
                 <p className="text-white/40 text-xs leading-relaxed">
-                  Các phần dưới đây không thể tự động tạo quiz trắc nghiệm — cần chấm tay hoặc xử lý riêng.
+                  {m.skippedIntro}
                 </p>
-                {quiz.skippedSections.map((s, i) => (
-                  <SkippedCard key={i} s={s} />
+                {quiz.skippedSections.map((s, idx) => (
+                  <SkippedCard key={idx} s={s} />
                 ))}
               </>
             )}
