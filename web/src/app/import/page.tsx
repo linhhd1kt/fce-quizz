@@ -4,10 +4,13 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { validateQuizSet, saveImportedQuizSet } from '@/lib/quiz-loader';
 import type { QuizSet } from '@/types/quiz';
+import { useI18n } from '@/i18n';
 
 type Status = 'idle' | 'success' | 'error';
 
 export default function ImportPage() {
+  const { msgs, i } = useI18n();
+  const m = msgs.import;
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
   const [imported, setImported] = useState<QuizSet | null>(null);
@@ -20,17 +23,17 @@ export default function ImportPage() {
       const result = validateQuizSet(data);
       if (!result.valid) {
         setStatus('error');
-        setMessage(result.error ?? 'Invalid quiz format');
+        setMessage(result.error ?? m.invalidFormat);
         return;
       }
       const quiz = data as QuizSet;
       saveImportedQuizSet(quiz);
       setImported(quiz);
       setStatus('success');
-      setMessage(`Imported "${quiz.title}" with ${quiz.questions.length} questions.`);
+      setMessage(i(m.successMsg, { title: quiz.title, count: quiz.questions.length }));
     } catch {
       setStatus('error');
-      setMessage('Failed to parse JSON. Make sure the file is valid JSON.');
+      setMessage(m.parseError);
     }
   }
 
@@ -43,13 +46,10 @@ export default function ImportPage() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div>
-        <h1 className="font-bold text-white text-xl">Import Quiz</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Upload a JSON file that follows the FCE Quiz schema.
-        </p>
+        <h1 className="font-bold text-white text-xl">{m.title}</h1>
+        <p className="text-slate-500 text-sm mt-1">{m.subtitle}</p>
       </div>
 
-      {/* Drop zone */}
       <div
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
@@ -57,7 +57,7 @@ export default function ImportPage() {
         className="border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-2xl p-12 text-center cursor-pointer transition-colors"
       >
         <p className="text-4xl mb-3">📂</p>
-        <p className="text-slate-400 text-sm">Drop a JSON file here, or click to browse</p>
+        <p className="text-slate-400 text-sm">{m.dropZone}</p>
         <input
           ref={fileRef}
           type="file"
@@ -70,7 +70,6 @@ export default function ImportPage() {
         />
       </div>
 
-      {/* Feedback */}
       {status === 'success' && imported && (
         <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-4 space-y-2">
           <p className="text-emerald-400 font-semibold text-sm">✓ {message}</p>
@@ -78,7 +77,7 @@ export default function ImportPage() {
             href={`/quiz/${imported.id}`}
             className="inline-block text-sm text-white bg-emerald-700 hover:bg-emerald-600 px-4 py-1.5 rounded-lg transition-colors"
           >
-            Start quiz →
+            {m.startQuiz}
           </Link>
         </div>
       )}
@@ -88,10 +87,9 @@ export default function ImportPage() {
         </div>
       )}
 
-      {/* Schema reference */}
       <details className="text-sm text-slate-500">
         <summary className="cursor-pointer hover:text-slate-300 transition-colors">
-          JSON schema reference
+          {m.schemaRef}
         </summary>
         <pre className="mt-3 bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-400 overflow-x-auto">{`{
   "id": "my-quiz-1",
@@ -115,7 +113,7 @@ export default function ImportPage() {
       </details>
 
       <Link href="/" className="block text-center text-slate-500 hover:text-slate-300 text-sm">
-        ← Back to home
+        {m.backHome}
       </Link>
     </div>
   );
