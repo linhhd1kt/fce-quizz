@@ -248,35 +248,29 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
           className="w-full max-w-3xl rounded-2xl px-8 py-5 text-center"
           style={{ background: '#1a0815' }}
         >
-          {revealed && (
-            <p className={`text-sm font-semibold mb-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-              {isTimeout
-                ? i(m.timeout, { answer: q.answer })
-                : isCorrect
-                ? m.correct
-                : i(m.wrong, { answer: q.answer })}
-            </p>
-          )}
+          <p className={`text-sm font-semibold mb-2 ${revealed ? (isCorrect ? 'text-green-400' : 'text-red-400') : 'invisible'}`}>
+            {isTimeout
+              ? i(m.timeout, { answer: q.answer })
+              : isCorrect
+              ? m.correct
+              : i(m.wrong, { answer: q.answer })}
+          </p>
           {q.context && (
             <p className="text-white/50 text-xs mb-3 text-left leading-relaxed line-clamp-3">
               {q.context}
             </p>
           )}
           <p className="text-white text-xl md:text-2xl font-bold leading-snug">{q.text}</p>
-          {!revealed && (
-            <p className="text-white/30 text-xs mt-3">{i(m.seconds, { s: state.timeLeft })}</p>
-          )}
+          <p className={`text-white/30 text-xs mt-3 ${revealed ? 'invisible' : ''}`}>{i(m.seconds, { s: state.timeLeft })}</p>
         </div>
 
-        {/* Explanation (feedback only) */}
-        {revealed && q.explanation && (
-          <div
-            className="mt-3 w-full max-w-3xl rounded-xl px-5 py-3 text-sm text-blue-200 text-center"
-            style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)' }}
-          >
-            {q.explanation}
-          </div>
-        )}
+        {/* Explanation - always rendered to prevent layout shift */}
+        <div
+          className={`mt-3 w-full max-w-3xl rounded-xl px-5 py-3 text-sm text-blue-200 text-center ${revealed && q.explanation ? 'visible' : 'invisible'}`}
+          style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', minHeight: '3rem' }}
+        >
+          {q.explanation}
+        </div>
       </div>
 
       {/* Option tiles */}
@@ -345,18 +339,16 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
         })}
       </div>
 
-      {/* Next button */}
-      {revealed && (
-        <div className="relative z-10 flex justify-center pb-4 pt-2 shrink-0">
-          <button
-            onClick={nextQuestion}
-            className="px-12 py-3.5 rounded-2xl text-white font-bold text-base transition hover:brightness-110 active:scale-95 shadow-lg"
-            style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}
-          >
-            {state.questionIndex + 1 < quiz.questions.length ? m.next : m.seeResults}
-          </button>
-        </div>
-      )}
+      {/* Next button - always rendered to prevent layout shift */}
+      <div className={`relative z-10 flex justify-center pb-4 pt-2 shrink-0 ${revealed ? 'visible' : 'invisible'}`}>
+        <button
+          onClick={nextQuestion}
+          className="px-12 py-3.5 rounded-2xl text-white font-bold text-base transition hover:brightness-110 active:scale-95 shadow-lg"
+          style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}
+        >
+          {state.questionIndex + 1 < quiz.questions.length ? m.next : m.seeResults}
+        </button>
+      </div>
     </div>
   );
 }
