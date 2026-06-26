@@ -50,3 +50,38 @@ export interface QuizAttempt {
   totalTimeSpent: number;
   answers: UserAnswer[];
 }
+
+// Supabase row types
+export interface QuizRow {
+  id: string;
+  teacher_id: string;
+  title: string;
+  description: string | null;
+  source: string | null;
+  time_per_question: number;
+  questions: Question[];
+  skipped_sections: SkippedSection[] | null;
+  created_at: string;
+}
+
+export interface SessionRow {
+  id: string;
+  quiz_id: string;
+  teacher_id: string;
+  code: string;
+  is_active: boolean;
+  created_at: string;
+  quizzes?: QuizRow;
+}
+
+export interface AttemptRow {
+  id: string;
+  session_id: string;
+  quiz_id: string;
+  student_name: string;
+  score: number;
+  total_questions: number;
+  time_spent_ms: number;
+  answers: UserAnswer[];
+  completed_at: string;
+}

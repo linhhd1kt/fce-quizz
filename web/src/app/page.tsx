@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { QuizSet } from '@/types/quiz';
 import { loadBuiltInQuizSets, loadImportedQuizSets, deleteImportedQuizSet } from '@/lib/quiz-loader';
 import { getAttemptsByQuiz } from '@/lib/storage';
@@ -11,8 +12,10 @@ import { useI18n } from '@/i18n';
 export default function HomePage() {
   const { msgs } = useI18n();
   const m = msgs.home;
+  const router = useRouter();
   const [quizSets, setQuizSets] = useState<QuizSet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [codeInput, setCodeInput] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -35,6 +38,12 @@ export default function HomePage() {
     setQuizSets((prev) => prev.filter((q) => q.id !== id));
   }
 
+  function handleJoinCode(e: React.FormEvent) {
+    e.preventDefault();
+    const code = codeInput.trim().toUpperCase();
+    if (code) router.push(`/s/${code}`);
+  }
+
   const builtIn = quizSets.filter((q) => !q.id.startsWith('upload-') && !q.id.startsWith('import-'));
   const imported = quizSets.filter((q) => q.id.startsWith('upload-') || q.id.startsWith('import-'));
 
@@ -44,6 +53,25 @@ export default function HomePage() {
         <h1 className="text-3xl font-bold text-white">{m.title}</h1>
         <p className="text-slate-400">{m.subtitle}</p>
       </div>
+
+      {/* Join with code */}
+      <form onSubmit={handleJoinCode} className="flex gap-2">
+        <input
+          type="text"
+          value={codeInput}
+          onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+          placeholder="Nhập mã phòng thi…"
+          maxLength={6}
+          className="flex-1 bg-slate-900 border border-slate-700 focus:border-orange-500 rounded-xl px-4 py-3 text-white font-mono text-lg tracking-widest uppercase placeholder-slate-600 outline-none transition-colors text-center"
+        />
+        <button
+          type="submit"
+          disabled={codeInput.trim().length < 4}
+          className="px-6 py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white font-bold rounded-xl transition-colors shrink-0"
+        >
+          Vào →
+        </button>
+      </form>
 
       {loading ? (
         <div className="text-center text-slate-500 py-12">{m.loading}</div>
