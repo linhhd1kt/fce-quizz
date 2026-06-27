@@ -11,14 +11,16 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
+          AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,DATABASE_URL
+          envs: DATABASE_URL,AUTH_SECRET,AUTH_GOOGLE_ID,AUTH_GOOGLE_SECRET,NEXTAUTH_URL
           script: |
             set -e
             cd /var/www/fce-quiz
@@ -27,10 +29,12 @@ jobs:
             cd web
             npm install
             pm2 stop fce-quiz || true
-            export NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
-            export NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
             export DATABASE_URL="$DATABASE_URL"
+            export AUTH_SECRET="$AUTH_SECRET"
+            export AUTH_GOOGLE_ID="$AUTH_GOOGLE_ID"
+            export AUTH_GOOGLE_SECRET="$AUTH_GOOGLE_SECRET"
+            export NEXTAUTH_URL="$NEXTAUTH_URL"
             DATABASE_URL="$DATABASE_URL" npx tsx src/db/migrate.ts
             npm run build
-            DATABASE_URL="$DATABASE_URL" pm2 start fce-quiz --update-env || DATABASE_URL="$DATABASE_URL" pm2 restart fce-quiz --update-env
+            pm2 start fce-quiz --update-env || pm2 restart fce-quiz --update-env
             echo "Deploy done at $(date)"

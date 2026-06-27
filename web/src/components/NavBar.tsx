@@ -1,24 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useI18n, SUPPORTED_LOCALES } from '@/i18n';
-import { supabase } from '@/lib/supabase';
 
 export default function NavBar() {
   const { msgs, locale, setLocale } = useI18n();
   const m = msgs.nav;
-  const [isTeacher, setIsTeacher] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsTeacher(!!session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setIsTeacher(!!session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+  const { data: session } = useSession();
+  const isTeacher = !!session;
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">

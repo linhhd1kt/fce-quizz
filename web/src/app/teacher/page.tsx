@@ -2,14 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { signOut } from 'next-auth/react';
 
 interface QuizRow { id: string; title: string; questions: unknown[]; time_per_question: number; source?: string; }
 interface SessionRow { id: string; code: string; isActive: boolean; createdAt: string; quizTitle: string; }
 
 export default function TeacherDashboard() {
-  const router = useRouter();
   const [quizzes, setQuizzes] = useState<QuizRow[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,8 +17,6 @@ export default function TeacherDashboard() {
   const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace('/teacher/login'); return; }
     const [quizRes, sessionRes] = await Promise.all([
       fetch('/api/quizzes').then((r) => r.json()),
       fetch('/api/sessions').then((r) => r.json()),
@@ -28,7 +24,7 @@ export default function TeacherDashboard() {
     setQuizzes(Array.isArray(quizRes) ? quizRes : []);
     setSessions(Array.isArray(sessionRes) ? sessionRes : []);
     setLoading(false);
-  }, [router]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
@@ -49,8 +45,7 @@ export default function TeacherDashboard() {
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.replace('/teacher/login');
+    await signOut({ redirectTo: '/teacher/login' });
   }
 
   function copyLink(code: string) {
