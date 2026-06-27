@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getSessionByCode, saveAttemptToSupabase, getStudentAttempts } from '@/lib/session';
 import { calculateScore } from '@/lib/scoring';
 import type { QuizRow, UserAnswer, AttemptRow } from '@/types/quiz';
 import type { MultipleChoiceQuestion } from '@/types/quiz';
@@ -62,11 +61,13 @@ export default function StudentSessionPage() {
 
   // Load session on mount
   useEffect(() => {
-    getSessionByCode(code).then((s) => {
-      if (!s) { setLoadError('Không tìm thấy phòng thi hoặc phòng đã đóng.'); return; }
-      setSessionId(s.id);
-      setQuiz(s.quizzes);
-    });
+    fetch(`/api/sessions/by-code/${code}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((s) => {
+        if (!s) { setLoadError('Không tìm thấy phòng thi hoặc phòng đã đóng.'); return; }
+        setSessionId(s.id);
+        setQuiz(s.quizzes);
+      });
   }, [code]);
 
   // Countdown timer
@@ -122,16 +123,20 @@ export default function StudentSessionPage() {
     if (next >= quiz.questions.length) {
       // Save to Supabase
       const score = calculateScore(play.answers);
-      const id = await saveAttemptToSupabase({
-        sessionId,
-        quizId: quiz.id,
-        studentName,
-        score,
-        totalQuestions: quiz.questions.length,
-        timeSpentMs: play.answers.reduce((s, a) => s + a.timeSpent, 0),
-        answers: play.answers,
+      const res = await fetch('/api/attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          quizId: quiz.id,
+          studentName,
+          score,
+          totalQuestions: quiz.questions.length,
+          timeSpentMs: play.answers.reduce((s, a) => s + a.timeSpent, 0),
+          answers: play.answers,
+        }),
       });
-      if (id) setSavedAttemptId(id);
+      if (res.ok) { const data = await res.json(); setSavedAttemptId(data.id); }
       setScreen('finished');
     } else {
       setPlay((prev) => ({
@@ -157,7 +162,8 @@ export default function StudentSessionPage() {
   }
 
   async function showResults() {
-    const data = await getStudentAttempts(sessionId, studentName);
+    const res = await fetch(`/api/attempts?sessionId=${sessionId}&studentName=${encodeURIComponent(studentName)}`);
+    const data = await res.json();
     setHistory(data as AttemptRow[]);
     setScreen('results');
   }

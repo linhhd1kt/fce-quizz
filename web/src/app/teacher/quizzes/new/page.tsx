@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { validateQuizSet } from '@/lib/quiz-loader';
 import type { QuizSet } from '@/types/quiz';
 
@@ -60,18 +59,22 @@ export default function NewQuizPage() {
   async function handleSaveToDb() {
     if (!quiz) return;
     setStatus('saving');
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setStatus('error'); setMessage('Chưa đăng nhập.'); return; }
-    const { error } = await supabase.from('quizzes').insert({
-      teacher_id: user.id,
-      title: quiz.title,
-      description: quiz.description ?? '',
-      source: quiz.source ?? '',
-      time_per_question: quiz.timePerQuestion ?? 45,
-      questions: quiz.questions,
-      skipped_sections: quiz.skippedSections ?? null,
+    const res = await fetch('/api/quizzes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: quiz.title,
+        description: quiz.description ?? '',
+        source: quiz.source ?? '',
+        timePerQuestion: quiz.timePerQuestion ?? 45,
+        questions: quiz.questions,
+        skippedSections: quiz.skippedSections ?? null,
+      }),
     });
-    if (error) { setStatus('error'); setMessage('Lưu thất bại: ' + error.message); return; }
+    if (!res.ok) {
+      const err = await res.json();
+      setStatus('error'); setMessage('Lưu thất bại: ' + (err.error ?? res.statusText)); return;
+    }
     router.replace('/teacher');
   }
 
