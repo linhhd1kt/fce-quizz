@@ -29,13 +29,25 @@ CREATE TABLE IF NOT EXISTS "auth_verification_tokens" (
   PRIMARY KEY ("identifier", "token")
 );
 
+-- Drop Supabase RLS policies that depend on teacher_id (block ALTER COLUMN TYPE)
+DROP POLICY IF EXISTS "teacher own quizzes" ON quizzes;
+DROP POLICY IF EXISTS "teacher own sessions" ON sessions;
+DROP POLICY IF EXISTS "teacher view attempts" ON attempts;
+DROP POLICY IF EXISTS "quizzes public read" ON quizzes;
+DROP POLICY IF EXISTS "sessions public read" ON sessions;
+DROP POLICY IF EXISTS "student insert attempt" ON attempts;
+DROP POLICY IF EXISTS "student view own session attempts" ON attempts;
+
+-- Disable RLS (no longer needed — auth is handled by Auth.js + JWT)
+ALTER TABLE quizzes  DISABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE attempts DISABLE ROW LEVEL SECURITY;
+
 -- Migrate quizzes.teacher_id and sessions.teacher_id from uuid → text
--- (Auth.js uses text IDs; drop old FK to teacher_profiles first)
-ALTER TABLE quizzes DROP CONSTRAINT IF EXISTS quizzes_teacher_id_fkey;
+ALTER TABLE quizzes  DROP CONSTRAINT IF EXISTS quizzes_teacher_id_fkey;
 ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_teacher_id_fkey;
 
--- Nullify old IDs (they referenced Supabase auth.users, won't match new auth_users)
-UPDATE quizzes SET teacher_id = NULL;
+UPDATE quizzes  SET teacher_id = NULL;
 UPDATE sessions SET teacher_id = NULL;
 
 ALTER TABLE quizzes  ALTER COLUMN teacher_id TYPE text USING teacher_id::text;
