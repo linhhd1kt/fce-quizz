@@ -4,12 +4,12 @@ import { NextResponse } from 'next/server';
 export default auth((req) => {
   const isAuthenticated = !!req.auth;
   const { pathname } = req.nextUrl;
-  const isLoginPage = pathname === '/teacher/login';
+  const isPublicPage = pathname === '/teacher/login' || pathname === '/teacher/register';
 
-  if (!isAuthenticated && !isLoginPage) {
+  if (!isAuthenticated && !isPublicPage) {
     return NextResponse.redirect(new URL('/teacher/login', req.url));
   }
-  if (isAuthenticated && isLoginPage) {
+  if (isAuthenticated && isPublicPage) {
     return NextResponse.redirect(new URL('/teacher', req.url));
   }
 });

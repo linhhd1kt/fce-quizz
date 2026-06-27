@@ -9,6 +9,7 @@ export const authUsers = pgTable('auth_users', {
   email: text('email').unique(),
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
   image: text('image'),
+  password: text('password'),
 });
 
 export const authAccounts = pgTable('auth_accounts', {

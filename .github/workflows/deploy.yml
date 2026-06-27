@@ -13,14 +13,11 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
-          AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: DATABASE_URL,AUTH_SECRET,AUTH_GOOGLE_ID,AUTH_GOOGLE_SECRET,NEXTAUTH_URL
+          envs: DATABASE_URL,AUTH_SECRET
           script: |
             set -e
             cd /var/www/fce-quiz
@@ -31,9 +28,6 @@ jobs:
             pm2 stop fce-quiz || true
             export DATABASE_URL="$DATABASE_URL"
             export AUTH_SECRET="$AUTH_SECRET"
-            export AUTH_GOOGLE_ID="$AUTH_GOOGLE_ID"
-            export AUTH_GOOGLE_SECRET="$AUTH_GOOGLE_SECRET"
-            export NEXTAUTH_URL="$NEXTAUTH_URL"
             DATABASE_URL="$DATABASE_URL" npx tsx src/db/migrate.ts
             npm run build
             pm2 start fce-quiz --update-env || pm2 restart fce-quiz --update-env
