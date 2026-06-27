@@ -49,9 +49,25 @@ export default function TeacherDashboard() {
   }
 
   function copyLink(code: string) {
-    navigator.clipboard.writeText(`${window.location.origin}/s/${code}`);
+    const url = `${window.location.origin}/s/${code}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).catch(() => fallbackCopy(url));
+    } else {
+      fallbackCopy(url);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function fallbackCopy(text: string) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
   }
 
   if (loading) return (
