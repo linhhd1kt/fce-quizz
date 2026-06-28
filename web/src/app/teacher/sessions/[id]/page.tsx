@@ -27,13 +27,13 @@ export default function SessionDetailPage() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <p className="text-slate-500 text-sm">Đang tải…</p>
+      <p className="text-slate-500 text-sm">Loading…</p>
     </div>
   );
 
   if (!session) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <p className="text-slate-500 text-sm">Không tìm thấy phòng thi.</p>
+      <p className="text-slate-500 text-sm">Room not found.</p>
     </div>
   );
 
@@ -58,9 +58,9 @@ export default function SessionDetailPage() {
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Học sinh đã làm', value: attempts.length, color: '#8db600' },
-            { label: 'Điểm trung bình', value: `${avg}%`, color: '#8a4fd0' },
-            { label: 'Mã phòng', value: session.code, color: '#e86020' },
+            { label: 'Students', value: attempts.length, color: '#8db600' },
+            { label: 'Average score', value: `${avg}%`, color: '#8a4fd0' },
+            { label: 'Room code', value: session.code, color: '#e86020' },
           ].map((s) => (
             <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
               <p className="font-black text-2xl" style={{ color: s.color }}>{s.value}</p>
@@ -72,18 +72,18 @@ export default function SessionDetailPage() {
         {attempts.length === 0 ? (
           <div className="text-center py-16 space-y-3">
             <p className="text-4xl">⏳</p>
-            <p className="text-slate-500">Chưa có học sinh nào làm bài.</p>
-            <button onClick={copyLink} className="text-blue-400 hover:underline text-sm">Copy link chia sẻ</button>
+            <p className="text-slate-500">No students yet.</p>
+            <button onClick={copyLink} className="text-blue-400 hover:underline text-sm">Copy share link</button>
           </div>
         ) : (
           <div className="space-y-3">
-            <h2 className="text-white font-bold">Kết quả học sinh</h2>
+            <h2 className="text-white font-bold">Results</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left border-b border-slate-800">
-                    {['#', 'Học sinh', 'Điểm', 'Đúng', 'Thời gian', 'Ngày'].map((h) => (
-                      <th key={h} className={`pb-3 text-slate-500 font-medium text-xs uppercase tracking-wide ${h !== '#' && h !== 'Học sinh' ? 'text-right' : ''}`}>{h}</th>
+                    {['#', 'Student', 'Score', 'Correct', 'Time', 'Date'].map((h) => (
+                      <th key={h} className={`pb-3 text-slate-500 font-medium text-xs uppercase tracking-wide ${h !== '#' && h !== 'Student' ? 'text-right' : ''}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -99,7 +99,7 @@ export default function SessionDetailPage() {
                         </td>
                         <td className="py-3 text-right text-slate-400">{correct}/{a.total_questions}</td>
                         <td className="py-3 text-right text-slate-400">{formatTime(a.time_spent_ms)}</td>
-                        <td className="py-3 text-right text-slate-600 text-xs">{new Date(a.completed_at).toLocaleDateString('vi-VN')}</td>
+                        <td className="py-3 text-right text-slate-600 text-xs">{new Date(a.completed_at).toLocaleDateString()}</td>
                       </tr>
                     );
                   })}
@@ -112,4 +112,3 @@ export default function SessionDetailPage() {
     </div>
   );
 }
-

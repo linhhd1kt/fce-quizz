@@ -25,11 +25,11 @@ export default function NavBar() {
           </Link>
           {isTeacher ? (
             <Link href="/teacher" className="px-3 py-1.5 text-sm text-orange-400 hover:text-orange-300 rounded-lg hover:bg-slate-800 transition-colors font-semibold">
-              Giáo viên
+              Teacher
             </Link>
           ) : (
             <Link href="/teacher/login" className="px-3 py-1.5 text-sm text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
-              Giáo viên
+              Teacher
             </Link>
           )}
 

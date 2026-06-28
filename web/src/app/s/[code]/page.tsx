@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { calculateScore } from '@/lib/scoring';
 import type { QuizRow, UserAnswer, AttemptRow, MultipleChoiceQuestion } from '@/types/quiz';
 
@@ -25,6 +26,12 @@ interface PlayState {
   questionStartedAt: number;
 }
 
+interface EditDraft {
+  text: string;
+  explanation: string;
+  answer: string;
+}
+
 function GridPattern() {
   return (
     <div className="absolute inset-0 pointer-events-none" style={{
@@ -36,6 +43,9 @@ function GridPattern() {
 
 export default function StudentSessionPage() {
   const { code } = useParams<{ code: string }>();
+  const { data: session } = useSession();
+  const isTeacher = !!session;
+
   const [screen, setScreen] = useState<Screen>('join');
   const [sessionId, setSessionId] = useState('');
   const [quiz, setQuiz] = useState<QuizRow | null>(null);
@@ -46,6 +56,11 @@ export default function StudentSessionPage() {
   const [history, setHistory] = useState<AttemptRow[]>([]);
   const [activeQuestions, setActiveQuestions] = useState<MultipleChoiceQuestion[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Teacher edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const timePerQ = quiz?.time_per_question ?? 45;
   const questions: MultipleChoiceQuestion[] = activeQuestions ?? ((quiz?.questions as MultipleChoiceQuestion[]) ?? []);
@@ -59,7 +74,7 @@ export default function StudentSessionPage() {
     fetch(`/api/sessions/by-code/${code}`)
       .then((r) => r.ok ? r.json() : null)
       .then((s) => {
-        if (!s) { setLoadError('Không tìm thấy phòng thi hoặc phòng đã đóng.'); return; }
+        if (!s) { setLoadError('Room not found or closed.'); return; }
         setSessionId(s.id);
         setQuiz(s.quizzes);
       });
@@ -75,6 +90,15 @@ export default function StudentSessionPage() {
     }, 1000);
     return () => clearInterval(t);
   }, [screen]);
+
+  // Initialize teacher edit draft when entering feedback phase
+  useEffect(() => {
+    if (play.phase === 'feedback' && isTeacher && questions.length > 0) {
+      const q = questions[play.questionIndex];
+      if (q) setEditDraft({ text: q.text, explanation: q.explanation ?? '', answer: q.answer });
+      setEditOpen(false);
+    }
+  }, [play.phase, play.questionIndex, isTeacher]);
 
   const submitAnswer = useCallback((selected: string | null) => {
     if (!quiz) return;
@@ -105,6 +129,30 @@ export default function StudentSessionPage() {
   useEffect(() => {
     if (screen === 'playing' && play.phase === 'question' && play.timeLeft === 0) submitAnswer(null);
   }, [screen, play.phase, play.timeLeft, submitAnswer]);
+
+  async function saveEdit() {
+    if (!quiz || !editDraft) return;
+    setEditSaving(true);
+    const qId = questions[play.questionIndex].id;
+    const finalQuestions = (quiz.questions as MultipleChoiceQuestion[]).map((qq) =>
+      qq.id === qId ? { ...qq, text: editDraft.text, explanation: editDraft.explanation, answer: editDraft.answer } : qq
+    );
+    const res = await fetch(`/api/quizzes/${quiz.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questions: finalQuestions }),
+    });
+    if (res.ok) {
+      setQuiz((prev) => prev ? { ...prev, questions: finalQuestions } : prev);
+      if (activeQuestions) {
+        setActiveQuestions((prev) => prev?.map((qq) =>
+          qq.id === qId ? { ...qq, text: editDraft.text, explanation: editDraft.explanation, answer: editDraft.answer } : qq
+        ) ?? prev);
+      }
+      setEditOpen(false);
+    }
+    setEditSaving(false);
+  }
 
   async function nextQuestion() {
     if (!quiz) return;
@@ -158,13 +206,13 @@ export default function StudentSessionPage() {
   if (loadError) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-950 px-4">
       <p className="text-red-400 text-center">{loadError}</p>
-      <Link href="/" className="text-blue-400 hover:underline text-sm">← Trang chủ</Link>
+      <Link href="/" className="text-blue-400 hover:underline text-sm">← Home</Link>
     </div>
   );
 
   if (!quiz) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <p className="text-slate-500 text-sm">Đang tải phòng thi…</p>
+      <p className="text-slate-500 text-sm">Loading room…</p>
     </div>
   );
 
@@ -178,15 +226,15 @@ export default function StudentSessionPage() {
             {code.toUpperCase()}
           </span>
           <h1 className="text-white text-2xl font-bold">{quiz.title}</h1>
-          <p className="text-white/40 text-sm">{quiz.questions.length} câu · {quiz.time_per_question}s/câu</p>
+          <p className="text-white/40 text-sm">{quiz.questions.length} questions · {quiz.time_per_question}s/q</p>
         </div>
         <form onSubmit={handleJoin} className="space-y-4">
-          <input type="text" required autoFocus placeholder="Nhập tên của bạn…" value={nameInput}
+          <input type="text" required autoFocus placeholder="Enter your name…" value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             className="w-full text-center text-white text-xl font-bold bg-white/5 border-2 border-white/20 focus:border-white/60 rounded-2xl px-6 py-4 outline-none transition-colors placeholder-white/20" />
           <button type="submit" className="w-full py-4 rounded-2xl text-white font-black text-xl transition hover:brightness-110 active:scale-95"
             style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}>
-            Vào phòng →
+            Join →
           </button>
         </form>
       </div>
@@ -198,13 +246,13 @@ export default function StudentSessionPage() {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: '#2d0a1e' }}>
       <GridPattern />
       <p className="relative text-white/50 text-base font-medium mb-4">{studentName}</p>
-      <p className="relative text-white/30 text-sm mb-10">{quiz.title}{activeQuestions ? ` · ${activeQuestions.length} câu sai` : ''}</p>
+      <p className="relative text-white/30 text-sm mb-10">{quiz.title}{activeQuestions ? ` · ${activeQuestions.length} wrong` : ''}</p>
       <div className="relative w-40 h-40 flex items-center justify-center">
         <div className="absolute inset-0 rounded-full border-4 border-white/10 animate-ping" />
         <div className="absolute inset-0 rounded-full border-4 border-white/20" />
         <span className="relative text-9xl font-black text-white">{countdown}</span>
       </div>
-      <p className="relative text-white/30 text-sm mt-10">Chuẩn bị…</p>
+      <p className="relative text-white/30 text-sm mt-10">Get ready…</p>
     </div>
   );
 
@@ -215,11 +263,11 @@ export default function StudentSessionPage() {
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6" style={{ background: '#2d0a1e' }}>
         <GridPattern />
         <div className="relative text-7xl">🎉</div>
-        <p className="relative text-white text-2xl font-bold">Hoàn thành!</p>
+        <p className="relative text-white text-2xl font-bold">Completed!</p>
         <p className="relative text-white/60">{studentName} · {score}%</p>
         <button onClick={showResults} className="relative px-10 py-3.5 rounded-2xl text-white font-bold text-lg transition hover:brightness-110"
           style={{ background: '#e86020' }}>
-          Xem kết quả →
+          View results →
         </button>
       </div>
     );
@@ -235,16 +283,16 @@ export default function StudentSessionPage() {
       <div className="min-h-screen bg-slate-950">
         <header className="border-b border-slate-800 sticky top-0 z-10 bg-slate-950/80 backdrop-blur">
           <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link href="/" className="text-slate-500 hover:text-slate-300 text-sm">← Trang chủ</Link>
+            <Link href="/" className="text-slate-500 hover:text-slate-300 text-sm">← Home</Link>
             <span className="text-white text-sm font-semibold">{studentName}</span>
           </div>
         </header>
         <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
           {/* Score */}
           <div className="text-center space-y-1">
-            <p className="text-slate-500 text-sm">{quiz.title}{activeQuestions ? ' · Câu sai' : ''}</p>
+            <p className="text-slate-500 text-sm">{quiz.title}{activeQuestions ? ' · Wrong answers' : ''}</p>
             <p className="text-6xl font-black text-white">{score}%</p>
-            <p className="text-slate-400 text-sm">{correctCount}/{play.answers.length} câu đúng</p>
+            <p className="text-slate-400 text-sm">{correctCount}/{play.answers.length} correct</p>
           </div>
 
           {/* Retry buttons */}
@@ -253,19 +301,19 @@ export default function StudentSessionPage() {
               <button onClick={handleRetryWrong}
                 className="w-full py-3 text-white font-bold rounded-xl transition-colors text-sm"
                 style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.3) 0 2px 12px' }}>
-                Ôn lại câu sai ({wrongCount} câu) →
+                Retry wrong ({wrongCount}) →
               </button>
             )}
             <button onClick={() => startPlay(null)}
               className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl transition-colors text-sm">
-              Làm lại toàn bộ ({quiz.questions.length} câu)
+              Retry all ({quiz.questions.length})
             </button>
           </div>
 
           {/* Per-question review */}
           <section className="space-y-2">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Chi tiết — {correctCount} đúng · {wrongCount} sai
+              Review — {correctCount} correct · {wrongCount} wrong
             </h2>
             {play.answers.map((a, idx) => {
               const q = questions.find(q => q.id === a.questionId);
@@ -275,12 +323,12 @@ export default function StudentSessionPage() {
                     <span className={`shrink-0 font-bold text-sm w-5 ${a.correct ? 'text-emerald-400' : 'text-red-400'}`}>
                       {a.correct ? '✓' : '✗'}
                     </span>
-                    <p className="text-white/80 text-sm leading-snug">{idx + 1}. {q?.text ?? `Câu ${idx + 1}`}</p>
+                    <p className="text-white/80 text-sm leading-snug">{idx + 1}. {q?.text ?? `Question ${idx + 1}`}</p>
                   </div>
                   {!a.correct && (
                     <div className="pl-7 space-y-0.5 text-xs">
-                      <p className="text-red-400">Bạn chọn: <span className="font-medium">{a.selected || '(không trả lời)'}</span></p>
-                      <p className="text-emerald-400">Đáp án: <span className="font-medium">{q?.answer}</span></p>
+                      <p className="text-red-400">Your answer: <span className="font-medium">{a.selected || '(no answer)'}</span></p>
+                      <p className="text-emerald-400">Correct: <span className="font-medium">{q?.answer}</span></p>
                       {q?.explanation && <p className="text-blue-300/70 italic mt-1 leading-relaxed">{q.explanation}</p>}
                     </div>
                   )}
@@ -292,14 +340,14 @@ export default function StudentSessionPage() {
           {/* History */}
           {history.length > 0 && (
             <section className="space-y-2">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Lịch sử làm bài</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">History</h2>
               {history.map((a, idx) => {
                 const correct = (a.answers as { correct: boolean }[]).filter(x => x.correct).length;
                 return (
                   <div key={a.id} className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center gap-4">
                     <span className="text-slate-600 text-xs w-4">{idx + 1}</span>
                     <p className="flex-1 text-slate-400 text-xs">
-                      {new Date(a.completed_at).toLocaleString('vi-VN')} · {correct}/{a.total_questions} đúng
+                      {new Date(a.completed_at).toLocaleString()} · {correct}/{a.total_questions} correct
                     </p>
                     <span className={`font-bold text-sm ${a.score >= 75 ? 'text-emerald-400' : a.score >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
                       {a.score}%
@@ -340,9 +388,18 @@ export default function StudentSessionPage() {
         <div className="mb-2 px-4 py-1 rounded-full text-xs font-bold text-white" style={{ background: '#1a0815', border: '2px solid rgba(255,255,255,0.15)' }}>
           {play.questionIndex + 1} / {questions.length}
         </div>
-        <div className="w-full max-w-3xl rounded-2xl px-4 sm:px-8 py-4 text-center" style={{ background: '#1a0815' }}>
+        <div className="relative w-full max-w-3xl rounded-2xl px-4 sm:px-8 py-4 text-center" style={{ background: '#1a0815' }}>
+          {/* Teacher edit button */}
+          {revealed && isTeacher && (
+            <button onClick={() => setEditOpen(true)}
+              className="absolute top-2 left-2 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-colors"
+              style={{ background: 'rgba(234,179,8,0.15)', color: 'rgba(234,179,8,0.7)' }}
+              title="Edit question">
+              ✎
+            </button>
+          )}
           <p className={`text-sm font-semibold mb-2 ${revealed ? (isCorrect ? 'text-green-400' : 'text-red-400') : 'invisible'}`}>
-            {isTimeout ? `⏰ Hết giờ! Đáp án: ${q.answer}` : isCorrect ? '🎉 Chính xác!' : `😔 Sai — Đáp án: ${q.answer}`}
+            {isTimeout ? `⏰ Time's up! Answer: ${q.answer}` : isCorrect ? '🎉 Correct!' : `😔 Wrong — Answer: ${q.answer}`}
           </p>
           {q.context && <p className="text-white/50 text-xs mb-2 text-left leading-relaxed line-clamp-2">{q.context}</p>}
           <p className="text-white text-base sm:text-xl font-bold leading-snug">{q.text}</p>
@@ -353,7 +410,7 @@ export default function StudentSessionPage() {
           {q.explanation}
         </div>
       </div>
-      {/* Tiles — always 2 columns on mobile, 2 or 4 on larger screens */}
+      {/* Tiles — always 2 columns on mobile */}
       <div className="relative z-10 grid grid-cols-2 gap-2 sm:gap-3 p-2 sm:p-3 shrink-0" style={{ minHeight: '36vh' }}>
         {q.options.map((opt, idx) => {
           const tile = TILES[idx % TILES.length];
@@ -381,9 +438,66 @@ export default function StudentSessionPage() {
         <button onClick={nextQuestion}
           className="px-10 py-3 rounded-2xl text-white font-bold text-base transition hover:brightness-110 active:scale-95 shadow-lg"
           style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}>
-          {play.questionIndex + 1 < questions.length ? 'Tiếp theo →' : 'Xem kết quả 🎉'}
+          {play.questionIndex + 1 < questions.length ? 'Next →' : 'Finish 🎉'}
         </button>
       </div>
+
+      {/* Teacher edit modal */}
+      {editOpen && editDraft && (
+        <div className="fixed inset-0 z-[60] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full sm:max-w-lg bg-slate-900 rounded-t-2xl sm:rounded-2xl p-5 space-y-3 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-bold text-sm">Edit Question</h3>
+              <button onClick={() => setEditOpen(false)} className="text-slate-500 hover:text-slate-300 text-xl leading-none">×</button>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Question text</p>
+              <textarea
+                rows={3}
+                value={editDraft.text}
+                onChange={(e) => setEditDraft((d) => d ? { ...d, text: e.target.value } : d)}
+                className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Correct answer</p>
+              <div className="flex gap-2 flex-wrap">
+                {q.options.map((opt) => (
+                  <button key={opt}
+                    onClick={() => setEditDraft((d) => d ? { ...d, answer: opt } : d)}
+                    className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${editDraft.answer === opt ? 'bg-emerald-700 border-emerald-600 text-white font-semibold' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'}`}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Explanation</p>
+              <textarea
+                rows={2}
+                placeholder="Add explanation (optional)…"
+                value={editDraft.explanation}
+                onChange={(e) => setEditDraft((d) => d ? { ...d, explanation: e.target.value } : d)}
+                className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 outline-none resize-none"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button onClick={saveEdit} disabled={editSaving}
+                className="flex-1 py-2.5 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                {editSaving ? 'Saving…' : 'Save'}
+              </button>
+              <button onClick={() => setEditOpen(false)}
+                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

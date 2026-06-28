@@ -60,7 +60,7 @@ export default function HomePage() {
           type="text"
           value={codeInput}
           onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-          placeholder="Nhập mã phòng thi…"
+          placeholder="Enter room code…"
           maxLength={6}
           className="flex-1 bg-slate-900 border border-slate-700 focus:border-orange-500 rounded-xl px-4 py-3 text-white font-mono text-lg tracking-widest uppercase placeholder-slate-600 outline-none transition-colors text-center"
         />
@@ -69,8 +69,8 @@ export default function HomePage() {
           disabled={codeInput.trim().length < 4}
           className="px-6 py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white font-bold rounded-xl transition-colors shrink-0"
         >
-          Vào →
-        </button>
+          Join →
+</button>
       </form>
 
       {loading ? (

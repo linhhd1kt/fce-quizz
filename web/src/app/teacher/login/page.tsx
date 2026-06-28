@@ -20,7 +20,7 @@ export default function TeacherLoginPage() {
     if (res?.ok) {
       router.replace('/teacher');
     } else {
-      setError('Email hoặc mật khẩu không đúng.');
+      setError('Invalid email or password.');
       setLoading(false);
     }
   }
@@ -29,8 +29,8 @@ export default function TeacherLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold text-white">Đăng nhập Giáo viên</h1>
-          <p className="text-slate-500 text-sm">Quản lý đề thi và theo dõi học sinh</p>
+          <h1 className="text-2xl font-bold text-white">Teacher Login</h1>
+          <p className="text-slate-500 text-sm">Manage quizzes and track students</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -44,7 +44,7 @@ export default function TeacherLoginPage() {
           />
           <input
             type="password"
-            placeholder="Mật khẩu"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -56,18 +56,18 @@ export default function TeacherLoginPage() {
             disabled={loading}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
           >
-            {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
         <p className="text-center text-slate-500 text-xs">
-          Chưa có tài khoản?{' '}
+          No account?{' '}
           <Link href="/teacher/register" className="text-blue-400 hover:underline">
-            Đăng ký
+            Register
           </Link>
         </p>
         <p className="text-center">
-          <Link href="/" className="text-xs text-slate-600 hover:text-slate-400">← Trang chủ</Link>
+          <Link href="/" className="text-xs text-slate-600 hover:text-slate-400">← Home</Link>
         </p>
       </div>
     </div>

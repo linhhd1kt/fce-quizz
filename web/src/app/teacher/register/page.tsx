@@ -25,7 +25,7 @@ export default function TeacherRegisterPage() {
       router.replace('/teacher/login');
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? 'Đăng ký thất bại.');
+      setError(data.error ?? 'Registration failed.');
       setLoading(false);
     }
   }
@@ -34,14 +34,14 @@ export default function TeacherRegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold text-white">Đăng ký Giáo viên</h1>
-          <p className="text-slate-500 text-sm">Tạo tài khoản để quản lý đề thi</p>
+          <h1 className="text-2xl font-bold text-white">Teacher Registration</h1>
+          <p className="text-slate-500 text-sm">Create an account to manage quizzes</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="text"
-            placeholder="Tên của bạn"
+            placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -57,7 +57,7 @@ export default function TeacherRegisterPage() {
           />
           <input
             type="password"
-            placeholder="Mật khẩu (ít nhất 8 ký tự)"
+            placeholder="Password (min. 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -70,18 +70,18 @@ export default function TeacherRegisterPage() {
             disabled={loading}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors text-sm"
           >
-            {loading ? 'Đang đăng ký…' : 'Đăng ký'}
+            {loading ? 'Registering…' : 'Register'}
           </button>
         </form>
 
         <p className="text-center text-slate-500 text-xs">
-          Đã có tài khoản?{' '}
+          Already have an account?{' '}
           <Link href="/teacher/login" className="text-blue-400 hover:underline">
-            Đăng nhập
+            Sign in
           </Link>
         </p>
         <p className="text-center">
-          <Link href="/" className="text-xs text-slate-600 hover:text-slate-400">← Trang chủ</Link>
+          <Link href="/" className="text-xs text-slate-600 hover:text-slate-400">← Home</Link>
         </p>
       </div>
     </div>

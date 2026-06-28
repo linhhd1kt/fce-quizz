@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import type { MultipleChoiceQuestion } from '@/types/quiz';
 
@@ -14,7 +14,6 @@ interface QuizRow {
 
 export default function EditQuizPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [quiz, setQuiz] = useState<QuizRow | null>(null);
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
   const [saving, setSaving] = useState(false);
@@ -25,7 +24,7 @@ export default function EditQuizPage() {
     fetch(`/api/quizzes/${id}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (!data) { setError('Không tìm thấy bộ đề.'); return; }
+        if (!data) { setError('Quiz not found.'); return; }
         setQuiz(data);
         setQuestions(data.questions as MultipleChoiceQuestion[]);
       });
@@ -45,7 +44,7 @@ export default function EditQuizPage() {
       body: JSON.stringify({ questions }),
     });
     setSaving(false);
-    if (!res.ok) { setError('Lưu thất bại.'); return; }
+    if (!res.ok) { setError('Save failed.'); return; }
     setSaved(true);
   }
 
@@ -58,7 +57,7 @@ export default function EditQuizPage() {
 
   if (!quiz) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <p className="text-slate-500 text-sm">Đang tải…</p>
+      <p className="text-slate-500 text-sm">Loading…</p>
     </div>
   );
 
@@ -76,14 +75,14 @@ export default function EditQuizPage() {
             disabled={saving}
             className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
           >
-            {saving ? 'Đang lưu…' : saved ? '✓ Đã lưu' : 'Lưu thay đổi'}
+            {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
           </button>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-3">
         <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold">
-          {questions.length} câu — Chỉnh sửa giải thích
+          {questions.length} questions — Edit Explanations
         </p>
         {questions.map((q, idx) => (
           <div key={q.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
@@ -102,7 +101,7 @@ export default function EditQuizPage() {
             <div className="pl-8">
               <textarea
                 rows={2}
-                placeholder="Nhập giải thích (để trống nếu không cần)…"
+                placeholder="Add explanation (optional)…"
                 value={q.explanation ?? ''}
                 onChange={(e) => updateExplanation(idx, e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 focus:border-blue-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 outline-none resize-none transition-colors"
@@ -116,7 +115,7 @@ export default function EditQuizPage() {
             disabled={saving}
             className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
           >
-            {saving ? 'Đang lưu…' : saved ? '✓ Đã lưu' : 'Lưu thay đổi'}
+            {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
           </button>
         </div>
       </main>
