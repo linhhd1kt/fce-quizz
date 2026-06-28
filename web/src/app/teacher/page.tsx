@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 
 interface QuizRow { id: string; title: string; questions: unknown[]; time_per_question: number; source?: string; }
-interface SessionRow { id: string; code: string; isActive: boolean; createdAt: string; quizTitle: string; }
+interface SessionRow { id: string; code: string; isActive: boolean; createdAt: string; quizTitle: string; batchId?: string | null; batchOrder?: number | null; }
 interface BatchPart { id: string; code: string; batchOrder: number; questionCount: number; }
 interface BatchResult { batchId: string; quizTitle: string; parts: BatchPart[]; }
 
@@ -199,24 +199,35 @@ export default function TeacherDashboard() {
           <section className="space-y-4">
             <h2 className="text-white font-bold text-lg">Active rooms</h2>
             <div className="space-y-2">
-              {sessions.map((s) => (
-                <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 flex items-center gap-4">
-                  <span className="font-mono font-black text-lg text-orange-400 w-20 shrink-0">{s.code}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{s.quizTitle}</p>
-                    <p className="text-slate-500 text-xs">{new Date(s.createdAt).toLocaleDateString()}</p>
+              {sessions.map((s) => {
+                const isBatch = !!s.batchId;
+                const totalInBatch = isBatch ? sessions.filter(x => x.batchId === s.batchId).length : null;
+                return (
+                  <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 flex items-center gap-4">
+                    <span className="font-mono font-black text-lg text-orange-400 w-20 shrink-0">{s.code}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white text-sm font-medium truncate">{s.quizTitle}</p>
+                        {isBatch && (
+                          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-400 border border-blue-800 font-semibold">
+                            Part {s.batchOrder}/{totalInBatch}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-500 text-xs">{new Date(s.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => copyLink(s.code)} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Copy link
+                      </button>
+                      <Link href={`/teacher/sessions/${s.id}`}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                        View results
+                      </Link>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => copyLink(s.code)} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
-                      Copy link
-                    </button>
-                    <Link href={`/teacher/sessions/${s.id}`}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                      View results
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

@@ -13,7 +13,7 @@ export async function GET() {
   const teacherId = await getAuthUserId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const data = await db
-    .select({ id: sessions.id, code: sessions.code, isActive: sessions.isActive, createdAt: sessions.createdAt, quizTitle: quizzes.title, quizId: sessions.quizId })
+    .select({ id: sessions.id, code: sessions.code, isActive: sessions.isActive, createdAt: sessions.createdAt, quizTitle: quizzes.title, quizId: sessions.quizId, batchId: sessions.batchId, batchOrder: sessions.batchOrder })
     .from(sessions)
     .leftJoin(quizzes, eq(sessions.quizId, quizzes.id))
     .where(eq(sessions.teacherId, teacherId))

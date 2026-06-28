@@ -240,7 +240,10 @@ export default function StudentSessionPage() {
             {code.toUpperCase()}
           </span>
           <h1 className="text-white text-2xl font-bold">{quiz.title}</h1>
-          <p className="text-white/40 text-sm">{quiz.questions.length} questions · {quiz.time_per_question}s/q</p>
+          <p className="text-white/40 text-sm">
+            {(sessionQuestions ?? quiz.questions).length} questions · {quiz.time_per_question}s/q
+            {batchOrder && batchParts ? ` · Part ${batchOrder}/${batchParts.length}` : ''}
+          </p>
         </div>
         {isTeacher && (
           <div className="flex justify-center">
