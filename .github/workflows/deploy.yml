@@ -25,12 +25,13 @@ jobs:
             git reset --hard origin/main
             cd web
             npm install
-            pm2 stop fce-quiz || true
-            pm2 reset fce-quiz || true
             export DATABASE_URL="$DATABASE_URL"
             export AUTH_SECRET="$AUTH_SECRET"
             DATABASE_URL="$DATABASE_URL" npx tsx src/db/migrate.ts
             npm run build
-            pm2 start fce-quiz --update-env || pm2 restart fce-quiz --update-env
+            pm2 reset fce-quiz || true
+            pm2 reload /var/www/fce-quiz/web/ecosystem.config.js --update-env || pm2 start /var/www/fce-quiz/web/ecosystem.config.js --update-env
             pm2 save
+            sleep 5
+            pm2 status
             echo "Deploy done at $(date)"
