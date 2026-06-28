@@ -6,6 +6,8 @@ import { signOut } from 'next-auth/react';
 
 interface QuizRow { id: string; title: string; questions: unknown[]; time_per_question: number; source?: string; }
 interface SessionRow { id: string; code: string; isActive: boolean; createdAt: string; quizTitle: string; }
+interface BatchPart { id: string; code: string; batchOrder: number; questionCount: number; }
+interface BatchResult { batchId: string; quizTitle: string; parts: BatchPart[]; }
 
 export default function TeacherDashboard() {
   const [quizzes, setQuizzes] = useState<QuizRow[]>([]);
@@ -14,6 +16,7 @@ export default function TeacherDashboard() {
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
   const [newSessionCode, setNewSessionCode] = useState<string | null>(null);
   const [newSessionId, setNewSessionId] = useState<string | null>(null);
+  const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
@@ -39,6 +42,24 @@ export default function TeacherDashboard() {
       const session = await res.json();
       setNewSessionCode(session.code);
       setNewSessionId(session.id);
+      setBatchResult(null);
+      await load();
+    }
+    setCreatingFor(null);
+  }
+
+  async function handleCreateBatch(quizId: string) {
+    setCreatingFor(quizId + ':batch');
+    const res = await fetch('/api/sessions/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quizId }),
+    });
+    if (res.ok) {
+      const result = await res.json() as BatchResult;
+      setBatchResult(result);
+      setNewSessionCode(null);
+      setNewSessionId(null);
       await load();
     }
     setCreatingFor(null);
@@ -111,6 +132,27 @@ export default function TeacherDashboard() {
           </div>
         )}
 
+        {batchResult && (
+          <div className="bg-blue-950 border border-blue-700 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-blue-400 font-bold text-sm">✓ Batch created — {batchResult.parts.length} parts · {batchResult.quizTitle}</p>
+              <button onClick={() => setBatchResult(null)} className="text-slate-500 hover:text-slate-300 text-xl leading-none">×</button>
+            </div>
+            <div className="space-y-2">
+              {batchResult.parts.map((part) => (
+                <div key={part.id} className="flex items-center gap-3 bg-blue-900/30 rounded-xl px-4 py-2.5">
+                  <span className="text-blue-300 text-xs font-semibold w-14 shrink-0">Part {part.batchOrder}/{batchResult.parts.length}</span>
+                  <span className="font-mono font-black text-white text-lg tracking-widest w-20">{part.code}</span>
+                  <span className="text-slate-400 text-xs flex-1">{part.questionCount} questions</span>
+                  <button onClick={() => copyLink(part.code)} className="text-xs text-blue-400 hover:text-blue-200 transition-colors">
+                    Copy
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-white font-bold text-lg">Quiz Sets</h2>
@@ -138,9 +180,13 @@ export default function TeacherDashboard() {
                       className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
                       Edit
                     </Link>
-                    <button onClick={() => handleCreateSession(quiz.id)} disabled={creatingFor === quiz.id}
+                    <button onClick={() => handleCreateSession(quiz.id)} disabled={!!creatingFor}
                       className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
-                      {creatingFor === quiz.id ? '…' : '+ Create room'}
+                      {creatingFor === quiz.id ? '…' : '+ Room'}
+                    </button>
+                    <button onClick={() => handleCreateBatch(quiz.id)} disabled={!!creatingFor}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                      {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
                     </button>
                   </div>
                 </div>

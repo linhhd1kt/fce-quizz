@@ -23,5 +23,12 @@
       "tag": "0002_auth_password",
       "breakpoints": false
     }
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1750300000000,
+      "tag": "0003_batch_sessions",
+      "breakpoints": false
+    }
   ]
 }

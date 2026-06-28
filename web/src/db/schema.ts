@@ -51,6 +51,9 @@ export const sessions = pgTable('sessions', {
   teacherId: text('teacher_id').references(() => authUsers.id, { onDelete: 'cascade' }),
   code: text('code').unique().notNull(),
   isActive: boolean('is_active').default(true),
+  questionsSubset: jsonb('questions_subset'),
+  batchId: uuid('batch_id'),
+  batchOrder: integer('batch_order'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
 });
 

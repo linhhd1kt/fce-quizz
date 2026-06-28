@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { calculateScore } from '@/lib/scoring';
@@ -44,6 +44,7 @@ function GridPattern() {
 
 export default function StudentSessionPage() {
   const { code } = useParams<{ code: string }>();
+  const router = useRouter();
   const { data: session } = useSession();
   const isTeacher = !!session;
 
@@ -56,6 +57,10 @@ export default function StudentSessionPage() {
   const [countdown, setCountdown] = useState(3);
   const [history, setHistory] = useState<AttemptRow[]>([]);
   const [activeQuestions, setActiveQuestions] = useState<MultipleChoiceQuestion[] | null>(null);
+  const [sessionQuestions, setSessionQuestions] = useState<MultipleChoiceQuestion[] | null>(null);
+  const [batchId, setBatchId] = useState<string | null>(null);
+  const [batchOrder, setBatchOrder] = useState<number | null>(null);
+  const [batchParts, setBatchParts] = useState<{ id: string; code: string; batchOrder: number }[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Teacher edit state
@@ -64,7 +69,7 @@ export default function StudentSessionPage() {
   const [editSaving, setEditSaving] = useState(false);
 
   const timePerQ = quiz?.time_per_question ?? 45;
-  const questions: MultipleChoiceQuestion[] = activeQuestions ?? ((quiz?.questions as MultipleChoiceQuestion[]) ?? []);
+  const questions: MultipleChoiceQuestion[] = activeQuestions ?? sessionQuestions ?? ((quiz?.questions as MultipleChoiceQuestion[]) ?? []);
 
   const [play, setPlay] = useState<PlayState>({
     phase: 'question', questionIndex: 0, selected: null,
@@ -78,6 +83,14 @@ export default function StudentSessionPage() {
         if (!s) { setLoadError('Room not found or closed.'); return; }
         setSessionId(s.id);
         setQuiz(s.quizzes);
+        if (s.questionsSubset) setSessionQuestions(s.questionsSubset as MultipleChoiceQuestion[]);
+        if (s.batchId) {
+          setBatchId(s.batchId);
+          setBatchOrder(s.batchOrder);
+          fetch(`/api/sessions/batch/${s.batchId}`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((parts) => { if (parts) setBatchParts(parts); });
+        }
       });
   }, [code]);
 
@@ -229,6 +242,13 @@ export default function StudentSessionPage() {
           <h1 className="text-white text-2xl font-bold">{quiz.title}</h1>
           <p className="text-white/40 text-sm">{quiz.questions.length} questions · {quiz.time_per_question}s/q</p>
         </div>
+        {isTeacher && (
+          <div className="flex justify-center">
+            <span className="px-3 py-1 rounded-full text-xs font-bold text-orange-400 bg-orange-400/10 border border-orange-400/30">
+              Teacher mode
+            </span>
+          </div>
+        )}
         <form onSubmit={handleJoin} className="space-y-4">
           <input type="text" required autoFocus placeholder="Enter your name…" value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
@@ -247,7 +267,7 @@ export default function StudentSessionPage() {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: '#2d0a1e' }}>
       <GridPattern />
       <p className="relative text-white/50 text-base font-medium mb-4">{studentName}</p>
-      <p className="relative text-white/30 text-sm mb-10">{quiz.title}{activeQuestions ? ` · ${activeQuestions.length} wrong` : ''}</p>
+      <p className="relative text-white/30 text-sm mb-10">{quiz.title}{activeQuestions ? ` · ${activeQuestions.length} wrong` : ''}{batchOrder && batchParts ? ` · Part ${batchOrder}/${batchParts.length}` : ''}</p>
       <div className="relative w-40 h-40 flex items-center justify-center">
         <div className="absolute inset-0 rounded-full border-4 border-white/10 animate-ping" />
         <div className="absolute inset-0 rounded-full border-4 border-white/20" />
@@ -260,16 +280,33 @@ export default function StudentSessionPage() {
   // ── FINISHED ─────────────────────────────────────────────────────────────
   if (screen === 'finished') {
     const score = calculateScore(play.answers);
+    const nextPart = batchParts && batchOrder != null
+      ? batchParts.find((p) => p.batchOrder === batchOrder + 1)
+      : null;
+    const totalParts = batchParts?.length ?? null;
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6" style={{ background: '#2d0a1e' }}>
         <GridPattern />
         <div className="relative text-7xl">🎉</div>
         <p className="relative text-white text-2xl font-bold">Completed!</p>
-        <p className="relative text-white/60">{studentName} · {score}%</p>
-        <button onClick={showResults} className="relative px-10 py-3.5 rounded-2xl text-white font-bold text-lg transition hover:brightness-110"
-          style={{ background: '#e86020' }}>
-          View results →
-        </button>
+        <p className="relative text-white/60">
+          {studentName} · {score}%
+          {totalParts && batchOrder ? ` · Part ${batchOrder}/${totalParts}` : ''}
+        </p>
+        <div className="relative flex flex-col gap-3 w-full max-w-xs px-4">
+          {nextPart && (
+            <button onClick={() => router.push(`/s/${nextPart.code}`)}
+              className="w-full py-3.5 rounded-2xl text-white font-black text-lg transition hover:brightness-110 active:scale-95"
+              style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}>
+              Continue — Part {batchOrder! + 1}/{totalParts} →
+            </button>
+          )}
+          <button onClick={showResults}
+            className={`w-full py-3.5 rounded-2xl text-white font-bold text-lg transition hover:brightness-110 active:scale-95 ${nextPart ? 'opacity-60' : ''}`}
+            style={{ background: nextPart ? '#1a0815' : '#e86020', boxShadow: nextPart ? 'none' : 'rgba(232,96,32,0.4) 0 4px 20px', border: nextPart ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+            View results →
+          </button>
+        </div>
       </div>
     );
   }
@@ -375,7 +412,10 @@ export default function StudentSessionPage() {
       <GridPattern />
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between px-4 h-12 shrink-0">
-        <span className="text-white/40 text-xs sm:text-sm truncate max-w-[40vw]">{studentName}</span>
+        <span className="text-white/40 text-xs sm:text-sm truncate max-w-[40vw]">
+          {studentName}
+          {isTeacher && <span className="ml-1.5 text-orange-400/80 text-xs font-bold">✎</span>}
+        </span>
         <span className="text-white/40 text-sm font-medium">{play.questionIndex + 1}/{questions.length}</span>
       </div>
       {/* Timer bar */}
