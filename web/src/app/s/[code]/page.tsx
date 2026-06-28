@@ -30,6 +30,7 @@ interface EditDraft {
   text: string;
   explanation: string;
   answer: string;
+  options: string[];
 }
 
 function GridPattern() {
@@ -95,7 +96,7 @@ export default function StudentSessionPage() {
   useEffect(() => {
     if (play.phase === 'feedback' && isTeacher && questions.length > 0) {
       const q = questions[play.questionIndex];
-      if (q) setEditDraft({ text: q.text, explanation: q.explanation ?? '', answer: q.answer });
+      if (q) setEditDraft({ text: q.text, explanation: q.explanation ?? '', answer: q.answer, options: [...q.options] });
       setEditOpen(false);
     }
   }, [play.phase, play.questionIndex, isTeacher]);
@@ -135,7 +136,7 @@ export default function StudentSessionPage() {
     setEditSaving(true);
     const qId = questions[play.questionIndex].id;
     const finalQuestions = (quiz.questions as MultipleChoiceQuestion[]).map((qq) =>
-      qq.id === qId ? { ...qq, text: editDraft.text, explanation: editDraft.explanation, answer: editDraft.answer } : qq
+      qq.id === qId ? { ...qq, text: editDraft.text, options: editDraft.options, explanation: editDraft.explanation, answer: editDraft.answer } : qq
     );
     const res = await fetch(`/api/quizzes/${quiz.id}`, {
       method: 'PATCH',
@@ -146,7 +147,7 @@ export default function StudentSessionPage() {
       setQuiz((prev) => prev ? { ...prev, questions: finalQuestions } : prev);
       if (activeQuestions) {
         setActiveQuestions((prev) => prev?.map((qq) =>
-          qq.id === qId ? { ...qq, text: editDraft.text, explanation: editDraft.explanation, answer: editDraft.answer } : qq
+          qq.id === qId ? { ...qq, text: editDraft.text, options: editDraft.options, explanation: editDraft.explanation, answer: editDraft.answer } : qq
         ) ?? prev);
       }
       setEditOpen(false);
@@ -462,14 +463,31 @@ export default function StudentSessionPage() {
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs text-slate-500 uppercase tracking-widest">Correct answer</p>
-              <div className="flex gap-2 flex-wrap">
-                {q.options.map((opt) => (
-                  <button key={opt}
-                    onClick={() => setEditDraft((d) => d ? { ...d, answer: opt } : d)}
-                    className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${editDraft.answer === opt ? 'bg-emerald-700 border-emerald-600 text-white font-semibold' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'}`}>
-                    {opt}
-                  </button>
+              <p className="text-xs text-slate-500 uppercase tracking-widest">Answer options</p>
+              <div className="space-y-2">
+                {editDraft.options.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <button
+                      onClick={() => setEditDraft((d) => d ? { ...d, answer: d.options[i] } : d)}
+                      className={`shrink-0 w-5 h-5 rounded-full border-2 transition-colors ${editDraft.answer === opt ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600 hover:border-emerald-500'}`}
+                    />
+                    <input
+                      value={opt}
+                      onChange={(e) => {
+                        const newVal = e.target.value;
+                        setEditDraft((d) => {
+                          if (!d) return d;
+                          const newOpts = d.options.map((o, j) => j === i ? newVal : o);
+                          const newAnswer = d.answer === d.options[i] ? newVal : d.answer;
+                          return { ...d, options: newOpts, answer: newAnswer };
+                        });
+                      }}
+                      className="flex-1 bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-lg px-3 py-1.5 text-sm text-white outline-none"
+                    />
+                    <span className={`text-xs font-mono w-4 ${editDraft.answer === opt ? 'text-emerald-400' : 'text-slate-600'}`}>
+                      {['A', 'B', 'C', 'D'][i]}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
