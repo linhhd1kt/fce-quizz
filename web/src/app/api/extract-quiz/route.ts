@@ -213,7 +213,7 @@ async function callAI(
 ): Promise<{ title?: string; questions?: unknown[] }> {
   const response = await client.chat.completions.create({
     model: 'gpt-4o',
-    max_tokens: 4096,
+    max_tokens: 16000,
     temperature: 0.1,
     messages: [
       { role: 'system', content: systemPrompt },
