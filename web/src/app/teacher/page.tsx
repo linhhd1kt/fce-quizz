@@ -133,10 +133,16 @@ export default function TeacherDashboard() {
                       {(quiz.questions as unknown[]).length} câu · {quiz.time_per_question}s/câu{quiz.source ? ` · ${quiz.source}` : ''}
                     </p>
                   </div>
-                  <button onClick={() => handleCreateSession(quiz.id)} disabled={creatingFor === quiz.id}
-                    className="shrink-0 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
-                    {creatingFor === quiz.id ? '…' : '+ Tạo phòng'}
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link href={`/teacher/quizzes/${quiz.id}`}
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
+                      Sửa đề
+                    </Link>
+                    <button onClick={() => handleCreateSession(quiz.id)} disabled={creatingFor === quiz.id}
+                      className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                      {creatingFor === quiz.id ? '…' : '+ Tạo phòng'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

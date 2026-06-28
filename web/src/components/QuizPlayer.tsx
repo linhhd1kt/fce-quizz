@@ -245,7 +245,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
 
         {/* Question card */}
         <div
-          className="w-full max-w-3xl rounded-2xl px-8 py-5 text-center"
+          className="w-full max-w-3xl rounded-2xl px-4 sm:px-8 py-4 sm:py-5 text-center"
           style={{ background: '#1a0815' }}
         >
           <p className={`text-sm font-semibold mb-2 ${revealed ? (isCorrect ? 'text-green-400' : 'text-red-400') : 'invisible'}`}>
@@ -260,7 +260,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
               {q.context}
             </p>
           )}
-          <p className="text-white text-xl md:text-2xl font-bold leading-snug">{q.text}</p>
+          <p className="text-white text-base sm:text-xl md:text-2xl font-bold leading-snug">{q.text}</p>
           <p className={`text-white/30 text-xs mt-3 ${revealed ? 'invisible' : ''}`}>{i(m.seconds, { s: state.timeLeft })}</p>
         </div>
 
@@ -275,11 +275,8 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
 
       {/* Option tiles */}
       <div
-        className="relative z-10 grid gap-3 p-3 shrink-0"
-        style={{
-          gridTemplateColumns: q.options.length <= 2 ? 'repeat(2, 1fr)' : `repeat(${Math.min(q.options.length, 4)}, 1fr)`,
-          minHeight: '38vh',
-        }}
+        className={`relative z-10 grid gap-2 sm:gap-3 p-2 sm:p-3 shrink-0 ${q.options.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}
+        style={{ minHeight: '36vh' }}
       >
         {q.options.map((opt, idx) => {
           const tile = TILES[idx % TILES.length];
@@ -331,7 +328,7 @@ export default function QuizPlayer({ quiz }: { quiz: QuizSet }) {
               {revealed && isThisSelected && !isThisCorrect && (
                 <span className="text-3xl mb-1 drop-shadow">✗</span>
               )}
-              <span className="text-white font-bold text-lg md:text-xl text-center px-4 leading-snug drop-shadow-md">
+              <span className="text-white font-bold text-sm sm:text-base text-center px-3 leading-snug drop-shadow-md">
                 {opt}
               </span>
             </button>

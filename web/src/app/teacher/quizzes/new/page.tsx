@@ -15,6 +15,8 @@ export default function NewQuizPage() {
   const [quiz, setQuiz] = useState<QuizSet | null>(null);
   const [pageRange, setPageRange] = useState('');
   const [autoDetect, setAutoDetect] = useState(true);
+  const [splitEnabled, setSplitEnabled] = useState(false);
+  const [splitSize, setSplitSize] = useState(15);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
 
@@ -59,23 +61,44 @@ export default function NewQuizPage() {
   async function handleSaveToDb() {
     if (!quiz) return;
     setStatus('saving');
-    const res = await fetch('/api/quizzes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: quiz.title,
-        description: quiz.description ?? '',
-        source: quiz.source ?? '',
-        timePerQuestion: quiz.timePerQuestion ?? 45,
-        questions: quiz.questions,
-        skippedSections: quiz.skippedSections ?? null,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      setStatus('error'); setMessage('Lưu thất bại: ' + (err.error ?? res.statusText)); return;
+
+    const basePayload = {
+      description: quiz.description ?? '',
+      source: quiz.source ?? '',
+      timePerQuestion: quiz.timePerQuestion ?? 45,
+      skippedSections: quiz.skippedSections ?? null,
+    };
+
+    async function postQuiz(title: string, questions: QuizSet['questions']) {
+      const res = await fetch('/api/quizzes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...basePayload, title, questions }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? res.statusText);
+      }
     }
-    router.replace('/teacher');
+
+    try {
+      await postQuiz(quiz.title, quiz.questions);
+
+      if (splitEnabled && quiz.questions.length > splitSize) {
+        const chunks: (typeof quiz.questions)[] = [];
+        for (let i = 0; i < quiz.questions.length; i += splitSize) {
+          chunks.push(quiz.questions.slice(i, i + splitSize));
+        }
+        for (let i = 0; i < chunks.length; i++) {
+          await postQuiz(`${quiz.title} - Phần ${i + 1}/${chunks.length}`, chunks[i]);
+        }
+      }
+
+      router.replace('/teacher');
+    } catch (err) {
+      setStatus('error');
+      setMessage('Lưu thất bại: ' + (err instanceof Error ? err.message : String(err)));
+    }
   }
 
   const isLoading = status === 'loading';
@@ -108,6 +131,18 @@ export default function NewQuizPage() {
               onChange={(e) => setPageRange(e.target.value)} disabled={isLoading}
               className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-slate-500 disabled:opacity-50" />
           </div>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <button type="button" role="switch" aria-checked={splitEnabled} disabled={isLoading}
+              onClick={() => setSplitEnabled(!splitEnabled)}
+              className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${splitEnabled ? 'bg-blue-600' : 'bg-slate-700'} disabled:opacity-50`}>
+              <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${splitEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
+            <span className="text-sm text-slate-300">Chia nhỏ bài (~</span>
+            <input type="number" min={5} max={50} value={splitSize} disabled={!splitEnabled || isLoading}
+              onChange={(e) => setSplitSize(Math.max(5, Math.min(50, Number(e.target.value))))}
+              className="w-14 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-slate-500 disabled:opacity-40" />
+            <span className="text-sm text-slate-300"> câu/phần)</span>
+          </label>
         </div>
 
         {/* Drop zone */}
@@ -151,7 +186,7 @@ export default function NewQuizPage() {
                 disabled={status === 'saving'}
                 className="shrink-0 px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
               >
-                {status === 'saving' ? 'Đang lưu…' : 'Lưu vào thư viện →'}
+                {status === 'saving' ? 'Đang lưu…' : splitEnabled && quiz.questions.length > splitSize ? `Lưu toàn bộ + ${Math.ceil(quiz.questions.length / splitSize)} phần →` : 'Lưu vào thư viện →'}
               </button>
             </div>
             <div className="space-y-2">
