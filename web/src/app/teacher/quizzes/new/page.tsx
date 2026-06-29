@@ -153,9 +153,13 @@ export default function NewQuizPage() {
   }
 
   async function copyCode(code: string) {
-    await navigator.clipboard.writeText(code);
-    setCopying(code);
-    setTimeout(() => setCopying(null), 1500);
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopying(code);
+      setTimeout(() => setCopying(null), 1500);
+    } catch {
+      // clipboard unavailable
+    }
   }
 
   const isLoading = status === 'loading';
