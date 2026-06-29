@@ -25,6 +25,12 @@ export async function POST(req: NextRequest) {
   const teacherId = await getAuthUserId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { quizId } = await req.json();
+
+  const [quiz] = await db.select({ teacherId: quizzes.teacherId }).from(quizzes).where(eq(quizzes.id, quizId));
+  if (!quiz || quiz.teacherId !== teacherId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   let code: string;
   let tries = 0;
   do {

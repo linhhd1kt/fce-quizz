@@ -7,6 +7,7 @@ import os from 'os';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require('pdf-parse') as (buf: Buffer, opts?: { max?: number }) => Promise<{ text: string; numpages: number }>;
 import OpenAI from 'openai';
+import { getAuthUserId } from '@/lib/server-auth';
 
 export const maxDuration = 60;
 
@@ -42,7 +43,7 @@ Return ONLY valid JSON (no markdown, no extra text):
 
 type PageRange = { from: number; to: number };
 
-function parsePageRange(input: string): PageRange[] {
+export function parsePageRange(input: string): PageRange[] {
   return input
     .split(',')
     .map((s) => s.trim())
@@ -98,12 +99,12 @@ async function detectMCQPageRanges(buffer: Buffer): Promise<PageRange[]> {
   }
 }
 
-function isScanned(text: string, numPages: number): boolean {
+export function isScanned(text: string, numPages: number): boolean {
   return text.length / Math.max(numPages, 1) < 100;
 }
 
 // Strip "A. " / "A) " / "A " prefix if AI adds them despite instructions
-function normalizeQuestion(q: Record<string, unknown>): Record<string, unknown> {
+export function normalizeQuestion(q: Record<string, unknown>): Record<string, unknown> {
   const opts = q.options as unknown[];
   if (!Array.isArray(opts) || opts.length < 2) return q;
 
@@ -123,7 +124,7 @@ function normalizeQuestion(q: Record<string, unknown>): Record<string, unknown> 
   return { ...q, options: stripped, answer };
 }
 
-function extractJSON(text: string): { title?: string; questions?: unknown[] } {
+export function extractJSON(text: string): { title?: string; questions?: unknown[] } {
   // Try direct parse first
   try {
     return JSON.parse(text);
@@ -225,6 +226,9 @@ async function callAI(
 }
 
 export async function POST(req: NextRequest) {
+  const userId = await getAuthUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const apiKey = process.env.GITHUB_TOKEN;
   if (!apiKey) {
     return NextResponse.json({ error: 'Server not configured (missing GITHUB_TOKEN).' }, { status: 500 });
