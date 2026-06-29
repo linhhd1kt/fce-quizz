@@ -19,19 +19,42 @@ async function uniqueCode(): Promise<string> {
   throw new Error('Could not generate unique code');
 }
 
+function chunkByTargetGames(questions: MultipleChoiceQuestion[], targetGames: number): MultipleChoiceQuestion[][] {
+  const total = questions.length;
+  const games = Math.max(1, targetGames);
+  const base = Math.floor(total / games);
+  const remainder = total % games;
+  const chunks: MultipleChoiceQuestion[][] = [];
+  let offset = 0;
+  for (let i = 0; i < games; i++) {
+    const size = i < remainder ? base + 1 : base;
+    if (size === 0) break;
+    chunks.push(questions.slice(offset, offset + size));
+    offset += size;
+  }
+  return chunks;
+}
+
 export async function POST(req: NextRequest) {
   const teacherId = await getAuthUserId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { quizId, batchSize = 15 } = await req.json();
+  const { quizId, batchSize, targetGames } = await req.json();
   const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, quizId));
   if (!quiz || quiz.teacherId !== teacherId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const allQuestions = quiz.questions as MultipleChoiceQuestion[];
-  const size = Math.max(5, Math.min(50, batchSize));
-  const chunks: MultipleChoiceQuestion[][] = [];
-  for (let i = 0; i < allQuestions.length; i += size) {
-    chunks.push(allQuestions.slice(i, i + size));
+  if (allQuestions.length === 0) return NextResponse.json({ error: 'Quiz has no questions' }, { status: 400 });
+
+  let chunks: MultipleChoiceQuestion[][];
+  if (targetGames != null) {
+    chunks = chunkByTargetGames(allQuestions, targetGames);
+  } else {
+    const size = Math.max(5, Math.min(50, batchSize ?? 15));
+    chunks = [];
+    for (let i = 0; i < allQuestions.length; i += size) {
+      chunks.push(allQuestions.slice(i, i + size));
+    }
   }
 
   const batchId = crypto.randomUUID();
