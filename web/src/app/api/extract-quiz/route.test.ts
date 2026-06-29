@@ -75,7 +75,7 @@ describe('isScanned', () => {
     expect(isScanned('a'.repeat(50), 0)).toBe(true);
   });
 
-  it('returns false for 0 chars with 0 pages (0/1 = 0 < 100, scanned)', () => {
+  it('returns true (scanned) for 0 chars with 0 pages (0/1 = 0 < 100)', () => {
     // 0 chars / 1 page = 0 → scanned
     expect(isScanned('', 0)).toBe(true);
   });

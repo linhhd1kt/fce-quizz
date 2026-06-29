@@ -38,10 +38,10 @@ sequenceDiagram
 
     Note over Student: Student enters name,<br/>answers each question (timed)
 
-    Student->>App: POST /api/sessions/{id}/attempts<br/>body: { studentName, answers: [...] }
-    App->>DB: Compute score from answers<br/>INSERT into attempts
+    Student->>App: POST /api/attempts<br/>body: { sessionId, studentName, answers: [...] }
+    App->>DB: Validate session active; compute score server-side<br/>INSERT into attempts
     DB-->>App: attempt row (id, score, totalQuestions)
-    App-->>Student: 201 Created<br/>{ score, totalQuestions, correctAnswers }
+    App-->>Student: 201 Created<br/>{ score, totalQuestions }
 
     Note over Student: Results page shown.<br/>If batch: link to next session offered.
 ```
@@ -54,7 +54,7 @@ sequenceDiagram
 | `/api/quizzes` | POST | Teacher | Save quiz to database |
 | `/api/sessions` | POST | Teacher | Create a single room; returns 6-char code |
 | `/api/sessions/batch` | POST | Teacher | Create N batch sessions from one quiz |
-| `/api/sessions/batch/[batchId]` | GET | Teacher | Get all sessions in a batch |
+| `/api/sessions/batch/[batchId]` | GET | Public | Get all session codes in a batch (students need this for navigation) |
 | `/api/sessions/by-code/[code]` | GET | Public | Student fetches session by room code |
-| `/api/sessions/[id]/attempts` | GET | Teacher | List all attempts for a session |
-| `/api/sessions/[id]/attempts` | POST | Public | Student submits attempt |
+| `/api/attempts` | GET | Teacher | List all attempts for a session (`?sessionId=`) |
+| `/api/attempts` | POST | Public | Student submits attempt (`body: { sessionId, studentName, answers }`) |

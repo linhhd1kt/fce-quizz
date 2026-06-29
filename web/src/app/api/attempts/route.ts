@@ -8,7 +8,12 @@ interface SubmittedAnswer { questionId: string; answer: string; }
 interface Question { id: string; answer: string; }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  let body: { sessionId?: string; studentName?: string; timeSpentMs?: number; answers?: SubmittedAnswer[] };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
   const { sessionId, studentName, timeSpentMs, answers } = body as {
     sessionId: string;
     studentName: string;

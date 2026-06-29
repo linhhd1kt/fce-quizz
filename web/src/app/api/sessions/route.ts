@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
   const teacherId = await getAuthUserId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { quizId } = await req.json();
+  if (!quizId) return NextResponse.json({ error: 'quizId required' }, { status: 400 });
 
   const [quiz] = await db.select({ teacherId: quizzes.teacherId }).from(quizzes).where(eq(quizzes.id, quizId));
   if (!quiz || quiz.teacherId !== teacherId) {
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   do {
     code = generateCode();
     tries++;
-    if (tries > 10) return NextResponse.json({ error: 'Không thể tạo mã phòng' }, { status: 500 });
+    if (tries > 10) return NextResponse.json({ error: 'Failed to generate a unique room code' }, { status: 500 });
     const existing = await db.select({ id: sessions.id }).from(sessions).where(eq(sessions.code, code));
     if (!existing.length) break;
   } while (true);
