@@ -1,27 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// Mock heavy deps before importing route
-vi.mock('@/db/client', () => ({ db: { select: vi.fn(), insert: vi.fn() } }));
-vi.mock('@/db/schema', () => ({ sessions: {}, quizzes: {} }));
-vi.mock('drizzle-orm', () => ({ eq: vi.fn() }));
-vi.mock('@/lib/server-auth', () => ({ getAuthUserId: vi.fn() }));
-
-// Unit-test only the chunking logic extracted from the route
-function chunkByTargetGames(questions: unknown[], targetGames: number): unknown[][] {
-  const total = questions.length;
-  const games = Math.max(1, targetGames);
-  const base = Math.floor(total / games);
-  const remainder = total % games;
-  const chunks: unknown[][] = [];
-  let offset = 0;
-  for (let i = 0; i < games; i++) {
-    const size = i < remainder ? base + 1 : base;
-    if (size === 0) break;
-    chunks.push(questions.slice(offset, offset + size));
-    offset += size;
-  }
-  return chunks;
-}
+import { describe, it, expect } from 'vitest';
+import { chunkByTargetGames } from '@/lib/chunk-by-target-games';
 
 describe('chunkByTargetGames', () => {
   it('splits 50 questions into 4 games evenly [13,13,12,12]', () => {

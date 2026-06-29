@@ -4,6 +4,7 @@ import { sessions, quizzes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getAuthUserId } from '@/lib/server-auth';
 import type { MultipleChoiceQuestion } from '@/types/quiz';
+import { chunkByTargetGames } from '@/lib/chunk-by-target-games';
 
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function generateCode() {
@@ -19,22 +20,6 @@ async function uniqueCode(): Promise<string> {
   throw new Error('Could not generate unique code');
 }
 
-function chunkByTargetGames(questions: MultipleChoiceQuestion[], targetGames: number): MultipleChoiceQuestion[][] {
-  const total = questions.length;
-  const games = Math.max(1, targetGames);
-  const base = Math.floor(total / games);
-  const remainder = total % games;
-  const chunks: MultipleChoiceQuestion[][] = [];
-  let offset = 0;
-  for (let i = 0; i < games; i++) {
-    const size = i < remainder ? base + 1 : base;
-    if (size === 0) break;
-    chunks.push(questions.slice(offset, offset + size));
-    offset += size;
-  }
-  return chunks;
-}
-
 export async function POST(req: NextRequest) {
   const teacherId = await getAuthUserId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -45,6 +30,7 @@ export async function POST(req: NextRequest) {
 
   const allQuestions = quiz.questions as MultipleChoiceQuestion[];
   if (allQuestions.length === 0) return NextResponse.json({ error: 'Quiz has no questions' }, { status: 400 });
+  if (targetGames != null && targetGames > 20) return NextResponse.json({ error: 'targetGames exceeds maximum of 20' }, { status: 400 });
 
   let chunks: MultipleChoiceQuestion[][];
   if (targetGames != null) {
