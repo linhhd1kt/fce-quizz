@@ -7,8 +7,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  css: {
+    postcss: {},
+  },
   test: {
     environment: 'node',
     globals: true,
+    setupFiles: ['./src/test-setup.ts'],
+    server: {
+      deps: {
+        external: ['canvas', '@napi-rs/canvas', 'pdfjs-dist'],
+      },
+    },
   },
 });

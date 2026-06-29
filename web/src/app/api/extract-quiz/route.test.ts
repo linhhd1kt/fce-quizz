@@ -4,6 +4,9 @@ vi.mock('@/auth', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/server-auth', () => ({ getAuthUserId: vi.fn() }));
 vi.mock('@/db/client', () => ({ db: {} }));
 vi.mock('@/db/schema', () => ({}));
+vi.mock('openai', () => ({ default: vi.fn() }));
+vi.mock('pdf-parse', () => ({ default: vi.fn() }));
+vi.mock('canvas', () => ({}));
 
 import {
   parsePageRange,
