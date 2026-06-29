@@ -8,6 +8,12 @@ import type { QuizSet } from '@/types/quiz';
 
 type Status = 'idle' | 'loading' | 'saving' | 'success' | 'error';
 
+type BatchResult = {
+  batchId: string;
+  quizTitle: string;
+  parts: { id: string; code: string; batchOrder: number; questionCount: number }[];
+};
+
 export default function NewQuizPage() {
   const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
@@ -17,6 +23,9 @@ export default function NewQuizPage() {
   const [autoDetect, setAutoDetect] = useState(true);
   const [splitEnabled, setSplitEnabled] = useState(false);
   const [splitSize, setSplitSize] = useState(15);
+  const [targetGames, setTargetGames] = useState(4);
+  const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
+  const [copying, setCopying] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLInputElement>(null);
 
@@ -101,6 +110,54 @@ export default function NewQuizPage() {
     }
   }
 
+  async function handleSaveAndBatch() {
+    if (!quiz) return;
+    setStatus('saving');
+    setBatchResult(null);
+
+    const basePayload = {
+      description: quiz.description ?? '',
+      source: quiz.source ?? '',
+      timePerQuestion: quiz.timePerQuestion ?? 45,
+      skippedSections: quiz.skippedSections ?? null,
+    };
+
+    try {
+      const saveRes = await fetch('/api/quizzes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...basePayload, title: quiz.title, questions: quiz.questions }),
+      });
+      if (!saveRes.ok) {
+        const err = await saveRes.json();
+        throw new Error(err.error ?? saveRes.statusText);
+      }
+      const { id: quizId } = await saveRes.json();
+
+      const batchRes = await fetch('/api/sessions/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId, targetGames }),
+      });
+      if (!batchRes.ok) {
+        const err = await batchRes.json();
+        throw new Error(err.error ?? batchRes.statusText);
+      }
+      const data = await batchRes.json();
+      setBatchResult(data);
+      setStatus('success');
+    } catch (err) {
+      setStatus('error');
+      setMessage('Save failed: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  }
+
+  async function copyCode(code: string) {
+    await navigator.clipboard.writeText(code);
+    setCopying(code);
+    setTimeout(() => setCopying(null), 1500);
+  }
+
   const isLoading = status === 'loading';
 
   return (
@@ -179,16 +236,37 @@ export default function NewQuizPage() {
 
         {(status === 'success' || status === 'saving') && quiz && (
           <div className="space-y-4">
-            <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-4 flex items-center justify-between gap-4">
+            <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-4 space-y-3">
               <p className="text-emerald-400 font-semibold text-sm">✓ {message}</p>
-              <button
-                onClick={handleSaveToDb}
-                disabled={status === 'saving'}
-                className="shrink-0 px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                {status === 'saving' ? 'Saving…' : splitEnabled && quiz.questions.length > splitSize ? `Save all + ${Math.ceil(quiz.questions.length / splitSize)} parts →` : 'Save to library →'}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleSaveToDb}
+                  disabled={status === 'saving'}
+                  className="shrink-0 px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                >
+                  {status === 'saving' ? 'Saving…' : splitEnabled && quiz.questions.length > splitSize ? `Save all + ${Math.ceil(quiz.questions.length / splitSize)} parts →` : 'Save to library →'}
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={targetGames}
+                    disabled={status === 'saving'}
+                    onChange={(e) => setTargetGames(Math.max(1, Math.min(20, Number(e.target.value))))}
+                    className="w-12 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-slate-500 disabled:opacity-40"
+                  />
+                  <button
+                    onClick={handleSaveAndBatch}
+                    disabled={status === 'saving'}
+                    className="shrink-0 px-4 py-1.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    {status === 'saving' ? 'Saving…' : `Lưu & Tạo ${targetGames} batch →`}
+                  </button>
+                </div>
+              </div>
             </div>
+            {/* preview questions */}
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
                 Preview ({quiz.questions.length} questions)
@@ -209,6 +287,32 @@ export default function NewQuizPage() {
                 <p className="text-center text-slate-600 text-xs">+{quiz.questions.length - 5} more</p>
               )}
             </div>
+          </div>
+        )}
+
+        {batchResult && (
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 space-y-4">
+            <p className="text-emerald-400 font-semibold text-sm">
+              ✓ Đã tạo {batchResult.parts.length} game từ {quiz?.questions.length ?? 0} câu — &quot;{batchResult.quizTitle}&quot;
+            </p>
+            <div className="space-y-2">
+              {batchResult.parts.map((part) => (
+                <div key={part.id} className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-2.5 gap-3">
+                  <span className="text-slate-400 text-sm">Game {part.batchOrder}</span>
+                  <span className="font-mono text-white text-sm tracking-widest">{part.code}</span>
+                  <span className="text-slate-500 text-xs">{part.questionCount} câu</span>
+                  <button
+                    onClick={() => copyCode(part.code)}
+                    className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md transition-colors"
+                  >
+                    {copying === part.code ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <Link href="/teacher" className="inline-block text-sm text-slate-400 hover:text-white transition-colors">
+              ← Về dashboard
+            </Link>
           </div>
         )}
       </main>
