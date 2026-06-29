@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
 
   const allQuestions = quiz.questions as MultipleChoiceQuestion[];
   if (allQuestions.length === 0) return NextResponse.json({ error: 'Quiz has no questions' }, { status: 400 });
-  if (targetGames != null && targetGames > 20) return NextResponse.json({ error: 'targetGames exceeds maximum of 20' }, { status: 400 });
+  if (targetGames != null && (!Number.isInteger(targetGames) || targetGames < 1 || targetGames > 20))
+    return NextResponse.json({ error: 'targetGames must be an integer between 1 and 20' }, { status: 400 });
 
   let chunks: MultipleChoiceQuestion[][];
   if (targetGames != null) {
