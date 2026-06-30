@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     .from(sessions)
     .where(eq(sessions.id, sessionId));
 
-  if (!session || !session.isActive) {
+  if (!session || !session.isActive || !session.quizId) {
     return NextResponse.json({ error: 'Session not found or inactive.' }, { status: 404 });
   }
 
