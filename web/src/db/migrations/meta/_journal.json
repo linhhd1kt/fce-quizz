@@ -22,7 +22,7 @@
       "when": 1750200000000,
       "tag": "0002_auth_password",
       "breakpoints": false
-    }
+    },
     {
       "idx": 3,
       "version": "7",
