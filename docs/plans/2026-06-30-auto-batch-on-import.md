@@ -1,3 +1,41 @@
+# Auto-Batch on PDF Import Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Replace the flat question preview with a real-time grouped-by-game view that auto-calculates `targetGames`, so the teacher sees the split immediately after extraction and can adjust before saving.
+
+**Architecture:** Single file change — `web/src/app/teacher/quizzes/new/page.tsx`. The `chunkByTargetGames` utility already exists at `@/lib/chunk-by-target-games.ts` and is imported client-side for real-time preview. No API changes needed.
+
+**Tech Stack:** Next.js App Router, React (useState), TypeScript, Tailwind CSS, `@/lib/chunk-by-target-games`
+
+## Global Constraints
+
+- Only 1 file modified: `web/src/app/teacher/quizzes/new/page.tsx`
+- No API changes — `POST /api/sessions/batch` and `POST /api/quizzes` unchanged
+- `targetGames` range: 1–20, auto-init = `Math.ceil(questions.length / 15)`, min result 1
+- All code in English; Vietnamese only in UI strings ("Lưu & Tạo", "câu", "← Về dashboard", "Chia thành", "games")
+- No new dependencies
+
+---
+
+### Task 1: Replace preview with real-time grouped game view
+
+**Files:**
+- Modify: `web/src/app/teacher/quizzes/new/page.tsx`
+
+**Interfaces:**
+- Consumes: `chunkByTargetGames<T>(questions: T[], targetGames: number): T[][]` from `@/lib/chunk-by-target-games`
+- Produces: updated page component (no new exports)
+
+- [ ] **Step 1: Read the current file**
+
+Read `web/src/app/teacher/quizzes/new/page.tsx` in full before making any changes.
+
+- [ ] **Step 2: Replace the entire file with the new implementation**
+
+Write `web/src/app/teacher/quizzes/new/page.tsx`:
+
+```tsx
 'use client';
 
 import { useState, useRef } from 'react';
@@ -246,7 +284,7 @@ export default function NewQuizPage() {
                         {chunk.map((q, idx) => (
                           <div key={q.id} className="pt-3 space-y-2">
                             <p className="text-white text-sm font-medium">
-                              {gameChunks.slice(0, i).reduce((sum, c) => sum + c.length, 0) + idx + 1}. {q.text}
+                              {i * Math.ceil(quiz.questions.length / targetGames) + idx + 1}. {q.text}
                             </p>
                             <div className="grid grid-cols-2 gap-1.5">
                               {q.options.map((opt, j) => (
@@ -295,3 +333,42 @@ export default function NewQuizPage() {
     </div>
   );
 }
+```
+
+- [ ] **Step 3: Verify TypeScript**
+
+```bash
+cd /Users/halinh/git/fce-quiz/web && node_modules/.bin/tsc --noEmit
+```
+
+Expected: only pre-existing error in `src/app/api/attempts/route.ts` (TS2769). No new errors.
+
+- [ ] **Step 4: Run existing tests**
+
+```bash
+cd /Users/halinh/git/fce-quiz/web && node_modules/.bin/vitest run
+```
+
+Expected: 37 tests pass (no UI component tests affected by this change).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add web/src/app/teacher/quizzes/new/page.tsx
+git commit -m "feat: auto-batch preview grouped by game on PDF import"
+```
+
+---
+
+## Self-Review
+
+- [x] `initQuiz` sets `targetGames = Math.max(1, Math.ceil(questions.length / 15))` ✓
+- [x] `expandedGames` default = empty Set (all collapsed) ✓
+- [x] `toggleGame` uses immutable Set update ✓
+- [x] `gameChunks` derived from `chunkByTargetGames` — re-renders when `targetGames` changes ✓
+- [x] `handleSaveToDb` removed, `useRouter` import removed ✓
+- [x] `splitEnabled`, `splitSize` removed ✓
+- [x] "Save to library →" button removed ✓
+- [x] Question numbering in expanded view uses global index (not per-game index) ✓
+- [x] `batchResult` section unchanged ✓
+- [x] No API changes ✓
