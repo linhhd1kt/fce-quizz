@@ -1,0 +1,370 @@
+{
+  "id": "fixture-30q",
+  "title": "Test Quiz — 30 Questions",
+  "description": "E2E test fixture with 30 multiple-choice questions",
+  "source": "e2e-test",
+  "totalQuestions": 30,
+  "timePerQuestion": 45,
+  "questions": [
+    {
+      "id": "q01",
+      "type": "multiple-choice",
+      "text": "Q01: Câu hỏi số 1 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 1",
+        "Đáp án B cho câu 1",
+        "Đáp án C cho câu 1",
+        "Đáp án D cho câu 1"
+      ],
+      "answer": "Đáp án A cho câu 1"
+    },
+    {
+      "id": "q02",
+      "type": "multiple-choice",
+      "text": "Q02: Câu hỏi số 2 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 2",
+        "Đáp án B cho câu 2",
+        "Đáp án C cho câu 2",
+        "Đáp án D cho câu 2"
+      ],
+      "answer": "Đáp án A cho câu 2"
+    },
+    {
+      "id": "q03",
+      "type": "multiple-choice",
+      "text": "Q03: Câu hỏi số 3 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 3",
+        "Đáp án B cho câu 3",
+        "Đáp án C cho câu 3",
+        "Đáp án D cho câu 3"
+      ],
+      "answer": "Đáp án A cho câu 3"
+    },
+    {
+      "id": "q04",
+      "type": "multiple-choice",
+      "text": "Q04: Câu hỏi số 4 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 4",
+        "Đáp án B cho câu 4",
+        "Đáp án C cho câu 4",
+        "Đáp án D cho câu 4"
+      ],
+      "answer": "Đáp án A cho câu 4"
+    },
+    {
+      "id": "q05",
+      "type": "multiple-choice",
+      "text": "Q05: Câu hỏi số 5 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 5",
+        "Đáp án B cho câu 5",
+        "Đáp án C cho câu 5",
+        "Đáp án D cho câu 5"
+      ],
+      "answer": "Đáp án A cho câu 5"
+    },
+    {
+      "id": "q06",
+      "type": "multiple-choice",
+      "text": "Q06: Câu hỏi số 6 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 6",
+        "Đáp án B cho câu 6",
+        "Đáp án C cho câu 6",
+        "Đáp án D cho câu 6"
+      ],
+      "answer": "Đáp án A cho câu 6"
+    },
+    {
+      "id": "q07",
+      "type": "multiple-choice",
+      "text": "Q07: Câu hỏi số 7 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 7",
+        "Đáp án B cho câu 7",
+        "Đáp án C cho câu 7",
+        "Đáp án D cho câu 7"
+      ],
+      "answer": "Đáp án A cho câu 7"
+    },
+    {
+      "id": "q08",
+      "type": "multiple-choice",
+      "text": "Q08: Câu hỏi số 8 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 8",
+        "Đáp án B cho câu 8",
+        "Đáp án C cho câu 8",
+        "Đáp án D cho câu 8"
+      ],
+      "answer": "Đáp án A cho câu 8"
+    },
+    {
+      "id": "q09",
+      "type": "multiple-choice",
+      "text": "Q09: Câu hỏi số 9 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 9",
+        "Đáp án B cho câu 9",
+        "Đáp án C cho câu 9",
+        "Đáp án D cho câu 9"
+      ],
+      "answer": "Đáp án A cho câu 9"
+    },
+    {
+      "id": "q10",
+      "type": "multiple-choice",
+      "text": "Q10: Câu hỏi số 10 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 10",
+        "Đáp án B cho câu 10",
+        "Đáp án C cho câu 10",
+        "Đáp án D cho câu 10"
+      ],
+      "answer": "Đáp án A cho câu 10"
+    },
+    {
+      "id": "q11",
+      "type": "multiple-choice",
+      "text": "Q11: Câu hỏi số 11 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 11",
+        "Đáp án B cho câu 11",
+        "Đáp án C cho câu 11",
+        "Đáp án D cho câu 11"
+      ],
+      "answer": "Đáp án A cho câu 11"
+    },
+    {
+      "id": "q12",
+      "type": "multiple-choice",
+      "text": "Q12: Câu hỏi số 12 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 12",
+        "Đáp án B cho câu 12",
+        "Đáp án C cho câu 12",
+        "Đáp án D cho câu 12"
+      ],
+      "answer": "Đáp án A cho câu 12"
+    },
+    {
+      "id": "q13",
+      "type": "multiple-choice",
+      "text": "Q13: Câu hỏi số 13 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 13",
+        "Đáp án B cho câu 13",
+        "Đáp án C cho câu 13",
+        "Đáp án D cho câu 13"
+      ],
+      "answer": "Đáp án A cho câu 13"
+    },
+    {
+      "id": "q14",
+      "type": "multiple-choice",
+      "text": "Q14: Câu hỏi số 14 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 14",
+        "Đáp án B cho câu 14",
+        "Đáp án C cho câu 14",
+        "Đáp án D cho câu 14"
+      ],
+      "answer": "Đáp án A cho câu 14"
+    },
+    {
+      "id": "q15",
+      "type": "multiple-choice",
+      "text": "Q15: Câu hỏi số 15 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 15",
+        "Đáp án B cho câu 15",
+        "Đáp án C cho câu 15",
+        "Đáp án D cho câu 15"
+      ],
+      "answer": "Đáp án A cho câu 15"
+    },
+    {
+      "id": "q16",
+      "type": "multiple-choice",
+      "text": "Q16: Câu hỏi số 16 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 16",
+        "Đáp án B cho câu 16",
+        "Đáp án C cho câu 16",
+        "Đáp án D cho câu 16"
+      ],
+      "answer": "Đáp án A cho câu 16"
+    },
+    {
+      "id": "q17",
+      "type": "multiple-choice",
+      "text": "Q17: Câu hỏi số 17 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 17",
+        "Đáp án B cho câu 17",
+        "Đáp án C cho câu 17",
+        "Đáp án D cho câu 17"
+      ],
+      "answer": "Đáp án A cho câu 17"
+    },
+    {
+      "id": "q18",
+      "type": "multiple-choice",
+      "text": "Q18: Câu hỏi số 18 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 18",
+        "Đáp án B cho câu 18",
+        "Đáp án C cho câu 18",
+        "Đáp án D cho câu 18"
+      ],
+      "answer": "Đáp án A cho câu 18"
+    },
+    {
+      "id": "q19",
+      "type": "multiple-choice",
+      "text": "Q19: Câu hỏi số 19 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 19",
+        "Đáp án B cho câu 19",
+        "Đáp án C cho câu 19",
+        "Đáp án D cho câu 19"
+      ],
+      "answer": "Đáp án A cho câu 19"
+    },
+    {
+      "id": "q20",
+      "type": "multiple-choice",
+      "text": "Q20: Câu hỏi số 20 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 20",
+        "Đáp án B cho câu 20",
+        "Đáp án C cho câu 20",
+        "Đáp án D cho câu 20"
+      ],
+      "answer": "Đáp án A cho câu 20"
+    },
+    {
+      "id": "q21",
+      "type": "multiple-choice",
+      "text": "Q21: Câu hỏi số 21 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 21",
+        "Đáp án B cho câu 21",
+        "Đáp án C cho câu 21",
+        "Đáp án D cho câu 21"
+      ],
+      "answer": "Đáp án A cho câu 21"
+    },
+    {
+      "id": "q22",
+      "type": "multiple-choice",
+      "text": "Q22: Câu hỏi số 22 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 22",
+        "Đáp án B cho câu 22",
+        "Đáp án C cho câu 22",
+        "Đáp án D cho câu 22"
+      ],
+      "answer": "Đáp án A cho câu 22"
+    },
+    {
+      "id": "q23",
+      "type": "multiple-choice",
+      "text": "Q23: Câu hỏi số 23 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 23",
+        "Đáp án B cho câu 23",
+        "Đáp án C cho câu 23",
+        "Đáp án D cho câu 23"
+      ],
+      "answer": "Đáp án A cho câu 23"
+    },
+    {
+      "id": "q24",
+      "type": "multiple-choice",
+      "text": "Q24: Câu hỏi số 24 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 24",
+        "Đáp án B cho câu 24",
+        "Đáp án C cho câu 24",
+        "Đáp án D cho câu 24"
+      ],
+      "answer": "Đáp án A cho câu 24"
+    },
+    {
+      "id": "q25",
+      "type": "multiple-choice",
+      "text": "Q25: Câu hỏi số 25 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 25",
+        "Đáp án B cho câu 25",
+        "Đáp án C cho câu 25",
+        "Đáp án D cho câu 25"
+      ],
+      "answer": "Đáp án A cho câu 25"
+    },
+    {
+      "id": "q26",
+      "type": "multiple-choice",
+      "text": "Q26: Câu hỏi số 26 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 26",
+        "Đáp án B cho câu 26",
+        "Đáp án C cho câu 26",
+        "Đáp án D cho câu 26"
+      ],
+      "answer": "Đáp án A cho câu 26"
+    },
+    {
+      "id": "q27",
+      "type": "multiple-choice",
+      "text": "Q27: Câu hỏi số 27 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 27",
+        "Đáp án B cho câu 27",
+        "Đáp án C cho câu 27",
+        "Đáp án D cho câu 27"
+      ],
+      "answer": "Đáp án A cho câu 27"
+    },
+    {
+      "id": "q28",
+      "type": "multiple-choice",
+      "text": "Q28: Câu hỏi số 28 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 28",
+        "Đáp án B cho câu 28",
+        "Đáp án C cho câu 28",
+        "Đáp án D cho câu 28"
+      ],
+      "answer": "Đáp án A cho câu 28"
+    },
+    {
+      "id": "q29",
+      "type": "multiple-choice",
+      "text": "Q29: Câu hỏi số 29 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 29",
+        "Đáp án B cho câu 29",
+        "Đáp án C cho câu 29",
+        "Đáp án D cho câu 29"
+      ],
+      "answer": "Đáp án A cho câu 29"
+    },
+    {
+      "id": "q30",
+      "type": "multiple-choice",
+      "text": "Q30: Câu hỏi số 30 — chọn đáp án đúng?",
+      "options": [
+        "Đáp án A cho câu 30",
+        "Đáp án B cho câu 30",
+        "Đáp án C cho câu 30",
+        "Đáp án D cho câu 30"
+      ],
+      "answer": "Đáp án A cho câu 30"
+    }
+  ]
+}
