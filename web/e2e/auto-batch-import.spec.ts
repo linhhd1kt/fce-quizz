@@ -4,10 +4,8 @@ import path from 'path';
 const FIXTURE_30Q = path.join(__dirname, 'fixtures/quiz-30q.json');
 
 async function uploadJsonFixture(page: Page, fixturePath: string) {
-  const fileChooserPromise = page.waitForEvent('filechooser');
-  await page.getByText('Select JSON file').click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles(fixturePath);
+  // Directly set files on the hidden JSON input — more reliable than filechooser
+  await page.locator('input[type="file"][accept=".json,application/json"]').setInputFiles(fixturePath);
 }
 
 test.describe('Auto-Batch on PDF Import', () => {
