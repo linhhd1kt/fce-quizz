@@ -75,7 +75,11 @@ export default function NewQuizPage() {
   function toggleGame(order: number) {
     setExpandedGames(prev => {
       const next = new Set(prev);
-      next.has(order) ? next.delete(order) : next.add(order);
+      if (next.has(order)) {
+        next.delete(order);
+      } else {
+        next.add(order);
+      }
       return next;
     });
   }
@@ -213,13 +217,13 @@ export default function NewQuizPage() {
                   onChange={(e) => setTargetGames(Math.max(1, Math.min(20, Number(e.target.value))))}
                   className="w-12 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-slate-500 disabled:opacity-40"
                 />
-                <span className="text-slate-400 text-sm">games (~{Math.ceil(quiz.questions.length / targetGames)} câu/game)</span>
+                <span className="text-slate-400 text-sm">games (~{gameChunks.length > 0 ? Math.round(quiz.questions.length / gameChunks.length) : 0} câu/game)</span>
                 <button
                   onClick={handleSaveAndBatch}
                   disabled={status === 'saving'}
                   className="ml-auto shrink-0 px-4 py-1.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
                 >
-                  {status === 'saving' ? 'Saving…' : `Lưu & Tạo ${targetGames} batch →`}
+                  {status === 'saving' ? 'Saving…' : `Lưu & Tạo ${gameChunks.length} batch →`}
                 </button>
               </div>
             </div>

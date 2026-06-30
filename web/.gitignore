@@ -39,4 +39,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-web/rollup-rollup-darwin-arm64-*.tgz
+rollup-rollup-darwin-arm64-*.tgz
