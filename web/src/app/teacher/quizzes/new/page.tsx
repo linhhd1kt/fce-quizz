@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { validateQuizSet } from '@/lib/quiz-loader';
 import { chunkByTargetGames } from '@/lib/chunk-by-target-games';
 import type { QuizSet } from '@/types/quiz';
 
@@ -25,7 +24,6 @@ export default function NewQuizPage() {
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [copying, setCopying] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const jsonRef = useRef<HTMLInputElement>(null);
 
   function initQuiz(data: QuizSet) {
     setQuiz(data);
@@ -51,25 +49,13 @@ export default function NewQuizPage() {
     } catch { setStatus('error'); setMessage('Connection error. Please try again.'); }
   }
 
-  async function handleJson(file: File) {
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      const result = validateQuizSet(data);
-      if (!result.valid) { setStatus('error'); setMessage(result.error ?? 'Invalid JSON file.'); return; }
-      initQuiz(data as QuizSet);
-      setStatus('success');
-      setMessage(`Found ${data.totalQuestions} questions in "${data.title}"`);
-    } catch { setStatus('error'); setMessage('Cannot read JSON file.'); }
-  }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (!file) return;
     if (file.name.endsWith('.pdf')) handlePdf(file);
-    else if (file.name.endsWith('.json')) handleJson(file);
-    else { setStatus('error'); setMessage('Only PDF or JSON files accepted.'); }
+    else { setStatus('error'); setMessage('Only PDF files accepted.'); }
   }
 
   function toggleGame(order: number) {
@@ -179,21 +165,12 @@ export default function NewQuizPage() {
               <p className="text-slate-500 text-xs mt-1">Takes about 15-30 seconds</p></>
           ) : (
             <><p className="text-4xl mb-3">📄</p>
-              <p className="text-slate-400 text-sm">Drag PDF or JSON here, or click to select</p>
-              <p className="text-slate-600 text-xs mt-1">PDF (auto-extract) · JSON (standard schema)</p></>
+              <p className="text-slate-400 text-sm">Drag PDF here, or click to select</p>
+              <p className="text-slate-600 text-xs mt-1">PDF only (auto-extract)</p></>
           )}
           <input ref={fileRef} type="file" accept=".pdf,application/pdf" className="hidden"
             onChange={(e) => { const file = e.target.files?.[0]; if (file) handlePdf(file); e.target.value = ''; }} />
-          <input ref={jsonRef} type="file" accept=".json,application/json" className="hidden"
-            onChange={(e) => { const file = e.target.files?.[0]; if (file) handleJson(file); e.target.value = ''; }} />
         </div>
-
-        <p className="text-center text-xs text-slate-600">
-          Import JSON?{' '}
-          <button onClick={() => jsonRef.current?.click()} className="text-slate-400 hover:text-white underline">
-            Select JSON file
-          </button>
-        </p>
 
         {status === 'error' && (
           <div className="bg-red-950 border border-red-800 rounded-xl p-4">
