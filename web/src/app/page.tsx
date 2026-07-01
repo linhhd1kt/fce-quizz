@@ -105,20 +105,6 @@ export default function HomePage() {
             </section>
           )}
 
-          <div className="border border-dashed border-slate-700 rounded-2xl p-5 text-center space-y-1">
-            <p className="text-slate-500 text-sm">
-              {m.hasPdf}{' '}
-              <Link href="/upload" className="text-blue-400 hover:underline">
-                {m.uploadLink}
-              </Link>
-            </p>
-            <p className="text-slate-600 text-xs">
-              {m.or}{' '}
-              <Link href="/import" className="hover:underline">
-                {m.importLink}
-              </Link>
-            </p>
-          </div>
         </>
       )}
     </div>
