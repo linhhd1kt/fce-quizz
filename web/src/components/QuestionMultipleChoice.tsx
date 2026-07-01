@@ -74,7 +74,7 @@ export default function QuestionMultipleChoice({ question, selected, revealed, o
 
       {revealed && question.explanation && (
         <div className="rounded-2xl bg-blue-950/60 border border-blue-800 p-4 text-sm text-blue-200 leading-relaxed">
-          <span className="font-bold text-blue-400">Giải thích: </span>
+          <span className="font-bold text-blue-400">Explanation: </span>
           {question.explanation}
         </div>
       )}

@@ -207,7 +207,7 @@ export default function NewQuizPage() {
             <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-4 space-y-3">
               <p className="text-emerald-400 font-semibold text-sm">✓ {message}</p>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-sm">Chia thành</span>
+                <span className="text-slate-400 text-sm">Split into</span>
                 <input
                   type="number"
                   min={1}
@@ -217,13 +217,13 @@ export default function NewQuizPage() {
                   onChange={(e) => setTargetGames(Math.max(1, Math.min(20, Number(e.target.value))))}
                   className="w-12 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white text-center focus:outline-none focus:border-slate-500 disabled:opacity-40"
                 />
-                <span className="text-slate-400 text-sm">games (~{gameChunks.length > 0 ? Math.round(quiz.questions.length / gameChunks.length) : 0} câu/game)</span>
+                <span className="text-slate-400 text-sm">games (~{gameChunks.length > 0 ? Math.round(quiz.questions.length / gameChunks.length) : 0} q/game)</span>
                 <button
                   onClick={handleSaveAndBatch}
                   disabled={status === 'saving'}
                   className="ml-auto shrink-0 px-4 py-1.5 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
                 >
-                  {status === 'saving' ? 'Saving…' : `Lưu & Tạo ${gameChunks.length} batch →`}
+                  {status === 'saving' ? 'Saving…' : `Save & create ${gameChunks.length} batches →`}
                 </button>
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function NewQuizPage() {
                       <span className="text-slate-300 text-sm font-medium">
                         {isExpanded ? '▼' : '▶'} Game {order}
                       </span>
-                      <span className="text-slate-500 text-xs">{chunk.length} câu</span>
+                      <span className="text-slate-500 text-xs">{chunk.length} questions</span>
                     </button>
                     {isExpanded && (
                       <div className="px-4 pb-3 space-y-3 border-t border-slate-800">
@@ -273,14 +273,14 @@ export default function NewQuizPage() {
         {batchResult && (
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 space-y-4">
             <p className="text-emerald-400 font-semibold text-sm">
-              ✓ Đã tạo {batchResult.parts.length} game từ {quiz?.questions.length ?? 0} câu — &quot;{batchResult.quizTitle}&quot;
+              ✓ Created {batchResult.parts.length} games from {quiz?.questions.length ?? 0} questions — &quot;{batchResult.quizTitle}&quot;
             </p>
             <div className="space-y-2">
               {batchResult.parts.map((part) => (
                 <div key={part.id} className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-2.5 gap-3">
                   <span className="text-slate-400 text-sm">Game {part.batchOrder}</span>
                   <span className="font-mono text-white text-sm tracking-widest">{part.code}</span>
-                  <span className="text-slate-500 text-xs">{part.questionCount} câu</span>
+                  <span className="text-slate-500 text-xs">{part.questionCount} questions</span>
                   <button
                     onClick={() => copyCode(part.code)}
                     className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md transition-colors"
@@ -291,7 +291,7 @@ export default function NewQuizPage() {
               ))}
             </div>
             <Link href="/teacher" className="inline-block text-sm text-slate-400 hover:text-white transition-colors">
-              ← Về dashboard
+              ← Back to dashboard
             </Link>
           </div>
         )}

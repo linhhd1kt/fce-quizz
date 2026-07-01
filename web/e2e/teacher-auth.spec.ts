@@ -70,7 +70,7 @@ unauthenticatedTest.describe('Teacher Register', () => {
 
     await page.locator('button[type="submit"]').click();
 
-    await expect(page.getByText('Dữ liệu không hợp lệ.')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Invalid data.')).toBeVisible({ timeout: 10_000 });
     await expect(page).toHaveURL('/teacher/register');
   });
 
@@ -82,7 +82,7 @@ unauthenticatedTest.describe('Teacher Register', () => {
     await page.getByPlaceholder('Password (min. 8 characters)').fill('password123');
     await page.locator('button[type="submit"]').click();
 
-    await expect(page.getByText('Email đã được sử dụng.')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Email already in use.')).toBeVisible({ timeout: 10_000 });
     await expect(page).toHaveURL('/teacher/register');
   });
 });
