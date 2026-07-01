@@ -16,10 +16,15 @@ export default function TeacherLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const res = await signIn('credentials', { email, password, redirect: false });
-    if (res?.ok) {
-      router.replace('/teacher');
-    } else {
+    try {
+      const res = await signIn('credentials', { email, password, redirect: false });
+      if (res?.ok && !res.error) {
+        router.replace('/teacher');
+      } else {
+        setError('Invalid email or password.');
+        setLoading(false);
+      }
+    } catch {
       setError('Invalid email or password.');
       setLoading(false);
     }
