@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { chunkByTargetGames } from '@/lib/chunk-by-target-games';
-import type { QuizSet } from '@/types/quiz';
+import type { QuizSet, MultipleChoiceQuestion } from '@/types/quiz';
 
 type Status = 'idle' | 'loading' | 'saving' | 'success' | 'error';
 
@@ -23,12 +23,14 @@ export default function NewQuizPage() {
   const [expandedGames, setExpandedGames] = useState<Set<number>>(new Set());
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [copying, setCopying] = useState<string | null>(null);
+  const [editingIds, setEditingIds] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   function initQuiz(data: QuizSet) {
     setQuiz(data);
     setTargetGames(Math.max(1, Math.ceil(data.questions.length / 15)));
     setExpandedGames(new Set());
+    setEditingIds(new Set());
     setBatchResult(null);
   }
 
@@ -67,6 +69,21 @@ export default function NewQuizPage() {
         next.add(order);
       }
       return next;
+    });
+  }
+
+  function toggleEdit(id: string) {
+    setEditingIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function updateQuestion(id: string, patch: Partial<MultipleChoiceQuestion>) {
+    setQuiz(prev => {
+      if (!prev) return prev;
+      return { ...prev, questions: prev.questions.map(q => q.id === id ? { ...q, ...patch } : q) };
     });
   }
 
@@ -224,20 +241,102 @@ export default function NewQuizPage() {
                     </button>
                     {isExpanded && (
                       <div className="px-4 pb-3 space-y-3 border-t border-slate-800">
-                        {chunk.map((q, idx) => (
-                          <div key={q.id} className="pt-3 space-y-2">
-                            <p className="text-white text-sm font-medium">
-                              {gameChunks.slice(0, i).reduce((sum, c) => sum + c.length, 0) + idx + 1}. {q.text}
-                            </p>
-                            <div className="grid grid-cols-2 gap-1.5">
-                              {q.options.map((opt, j) => (
-                                <div key={j} className={`text-xs px-2.5 py-1.5 rounded-lg border ${opt === q.answer ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
-                                  {['A','B','C','D'][j]}. {opt}
+                        {chunk.map((q, idx) => {
+                          const globalIdx = gameChunks.slice(0, i).reduce((s, c) => s + c.length, 0) + idx;
+                          const isEditing = editingIds.has(q.id);
+                          return (
+                            <div key={q.id} className="pt-3 border-t border-slate-800 first:border-t-0">
+                              {isEditing ? (
+                                <div className="space-y-3">
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-slate-500 uppercase tracking-widest">Question text</p>
+                                    <textarea
+                                      rows={2}
+                                      value={q.text}
+                                      data-testid={`question-text-${q.id}`}
+                                      onChange={(e) => updateQuestion(q.id, { text: e.target.value })}
+                                      className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-slate-500 uppercase tracking-widest">Options</p>
+                                    <div className="space-y-1.5">
+                                      {q.options.map((opt, j) => (
+                                        <div key={j} className="flex items-center gap-2">
+                                          <input
+                                            type="radio"
+                                            name={`answer-${q.id}`}
+                                            checked={q.answer === opt}
+                                            onChange={() => updateQuestion(q.id, { answer: opt })}
+                                            className="accent-emerald-500 shrink-0"
+                                          />
+                                          <span className="text-xs text-slate-500 w-4 shrink-0">{['A','B','C','D'][j]}.</span>
+                                          <input
+                                            type="text"
+                                            value={opt}
+                                            data-testid={`option-input-${q.id}-${j}`}
+                                            onChange={(e) => {
+                                              const newOpts = q.options.map((o, k) => k === j ? e.target.value : o);
+                                              const newAnswer = q.answer === opt ? e.target.value : q.answer;
+                                              updateQuestion(q.id, { options: newOpts, answer: newAnswer });
+                                            }}
+                                            className="flex-1 bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-lg px-2.5 py-1 text-xs text-white outline-none"
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-slate-500 uppercase tracking-widest">Explanation</p>
+                                    <textarea
+                                      rows={2}
+                                      placeholder="Add explanation (optional)…"
+                                      value={q.explanation ?? ''}
+                                      data-testid={`explanation-${q.id}`}
+                                      onChange={(e) => updateQuestion(q.id, { explanation: e.target.value })}
+                                      className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 outline-none resize-none"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <button
+                                      onClick={() => toggleEdit(q.id)}
+                                      className="px-3 py-1 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                                    >
+                                      ✓ Done
+                                    </button>
+                                  </div>
                                 </div>
-                              ))}
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <p className="text-white text-sm font-medium flex-1">
+                                      {globalIdx + 1}. {q.text}
+                                    </p>
+                                    <button
+                                      onClick={() => toggleEdit(q.id)}
+                                      data-testid={`edit-btn-${q.id}`}
+                                      className="shrink-0 text-slate-500 hover:text-slate-300 text-xs px-2 py-0.5 rounded border border-slate-700 hover:border-slate-500 transition-colors"
+                                    >
+                                      ✎
+                                    </button>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-1.5">
+                                    {q.options.map((opt, j) => (
+                                      <div key={j} className={`text-xs px-2.5 py-1.5 rounded-lg border ${opt === q.answer ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                        {['A','B','C','D'][j]}. {opt}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {q.explanation && (
+                                    <p className="text-xs text-blue-300/70 px-2.5 py-1.5 rounded-lg bg-blue-950/30 border border-blue-900/50">
+                                      💡 {q.explanation}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
