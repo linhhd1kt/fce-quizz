@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geist.className} bg-slate-950 text-slate-100 min-h-screen`}>
         <Providers>
           <NavBar />
-          <main className="max-w-3xl mx-auto px-4 py-8">{children}</main>
+          <main>{children}</main>
         </Providers>
       </body>
     </html>

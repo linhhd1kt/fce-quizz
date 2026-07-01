@@ -48,7 +48,7 @@ export default function HomePage() {
   const imported = quizSets.filter((q) => q.id.startsWith('upload-') || q.id.startsWith('import-'));
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="text-center py-6 space-y-2">
         <h1 className="text-3xl font-bold text-white">{m.title}</h1>
         <p className="text-slate-400">{m.subtitle}</p>

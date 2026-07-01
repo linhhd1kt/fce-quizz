@@ -12,7 +12,7 @@ export default function NavBar() {
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
-      <nav className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+      <nav className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link href="/" className="font-bold text-white tracking-tight">
           FCE<span className="text-blue-400">Quiz</span>
         </Link>
