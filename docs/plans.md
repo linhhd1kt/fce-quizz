@@ -13,7 +13,7 @@
 | 3 | PDF Upload & Quiz Creation | §5 | ✅ Done |
 | 4 | Student Quiz Player | §6 | ✅ Done |
 | 5 | Student Auth & Profile | §7 | ✅ Done |
-| 6 | Real-time Teacher Monitoring | §7 Sub-2 | 🔲 Not started |
+| 6 | Real-time Teacher Monitoring | §7 Sub-2 | ✅ Done |
 | 7 | Adaptive Solo Retry | §7 Sub-3 | 🔲 Not started |
 | 8 | Achievements Leaderboard | §7 Sub-4 | 🔲 Not started |
 
@@ -204,40 +204,40 @@
 
 ---
 
-## Feature 6: Real-time Teacher Monitoring 🔲 Not started
+## Feature 6: Real-time Teacher Monitoring ✅ Done
 
 > Spec: `docs/specs/2026-07-02-realtime-monitoring-design.md` | Full plan: `docs/plans/2026-07-02-realtime-monitoring.md`
 
 ### Task 1: DB migration — `session_progress` table
-- [ ] Add `sessionProgress` table to `web/src/db/schema.ts`
-- [ ] Write `web/db/migrations/0005_session_progress.sql` and run against DB
-- [ ] Commit: `chore: add session_progress table for real-time monitoring`
+- [x] Add `sessionProgress` table to `web/src/db/schema.ts`
+- [x] Write `web/db/migrations/0005_session_progress.sql` and run against DB
+- [x] Commit: `chore: add session_progress table for real-time monitoring`
 
 ### Task 2: `POST /api/sessions/[id]/progress`
-- [ ] Upsert endpoint: validate body, check session active, increment score on correct
-- [ ] Set `is_finished = true` when `questionIndex + 1 >= totalQuestions`
-- [ ] Unit tests: missing fields → 400, inactive session → 404, happy path → ok
-- [ ] Commit: `feat: add POST /api/sessions/[id]/progress endpoint`
+- [x] Upsert endpoint: validate body, check session active, increment score on correct
+- [x] Set `is_finished = true` when `questionIndex + 1 >= totalQuestions`
+- [x] Unit tests: missing fields → 400, inactive session → 404, happy path → ok
+- [x] Commit: `feat: add POST /api/sessions/[id]/progress endpoint`
 
 ### Task 3: `GET /api/sessions/[id]/live` SSE endpoint
-- [ ] SSE stream, teacher auth required, 1.5s poll, sends snapshot on connect
-- [ ] Close stream on client disconnect
-- [ ] Commit: `feat: add GET /api/sessions/[id]/live SSE endpoint`
+- [x] SSE stream, teacher auth required, 1.5s poll, sends snapshot on connect
+- [x] Close stream on client disconnect
+- [x] Commit: `feat: add GET /api/sessions/[id]/live SSE endpoint`
 
 ### Task 4: Quiz player — fire-and-forget progress call
-- [ ] Add `fetch(...)` (no await) in `submitAnswer` after each answer
-- [ ] Commit: `feat: add fire-and-forget progress call in quiz player`
+- [x] Add `fetch(...)` (no await) in `submitAnswer` after each answer
+- [x] Commit: `feat: add fire-and-forget progress call in quiz player`
 
 ### Task 5: `/teacher/sessions/[id]/live` leaderboard page
-- [ ] Full-screen dark layout: quiz title, playing/finished counter, ranked rows
-- [ ] Rank badges 🥇🥈🥉, progress bar per student, CSS transitions
-- [ ] Flash animation on rank change
-- [ ] E2E tests: page loads, unauthenticated redirect, link exists on detail page
-- [ ] Commit: `feat: add live leaderboard page for teacher monitoring`
+- [x] Full-screen dark layout: quiz title, playing/finished counter, ranked rows
+- [x] Rank badges 🥇🥈🥉, progress bar per student, CSS transitions
+- [x] Flash animation on rank change
+- [x] E2E tests: page loads, unauthenticated redirect, link exists on detail page
+- [x] Commit: `feat: add live leaderboard page for teacher monitoring`
 
 ### Task 6: Session detail — "▶ Live View" link + docs update
-- [ ] Add `Link` to `/teacher/sessions/${id}/live` in header of session detail page
-- [ ] Tick checkboxes in this file, commit: `feat: add live view link to session detail page`
+- [x] Add `Link` to `/teacher/sessions/${id}/live` in header of session detail page
+- [x] Tick checkboxes in this file, commit: `feat: add live view link to session detail page`
 
 ---
 

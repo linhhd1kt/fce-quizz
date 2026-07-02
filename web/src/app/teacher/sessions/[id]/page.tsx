@@ -49,9 +49,14 @@ export default function SessionDetailPage() {
             <span className="text-slate-700">/</span>
             <span className="text-white text-sm font-semibold truncate max-w-xs">{session.quiz?.title}</span>
           </div>
-          <button onClick={copyLink} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
-            Copy link /s/{session.code}
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={copyLink} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Copy link /s/{session.code}
+            </button>
+            <Link href={`/teacher/sessions/${id}/live`} className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium">
+              ▶ Live View
+            </Link>
+          </div>
         </div>
       </header>
 
