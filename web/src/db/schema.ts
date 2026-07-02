@@ -88,6 +88,8 @@ export const studentQuestionStats = pgTable('student_question_stats', {
   correctCount: integer('correct_count').notNull().default(0),
   wrongCount: integer('wrong_count').notNull().default(0),
   easeFactor: doublePrecision('ease_factor').notNull().default(2.5),
+  repetitions: integer('repetitions').notNull().default(0),
+  nextReviewAt: timestamp('next_review_at', { withTimezone: true }),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).default(sql`now()`),
 });
 
