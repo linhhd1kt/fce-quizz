@@ -14,7 +14,7 @@
 | 4 | Student Quiz Player | §6 | ✅ Done |
 | 5 | Student Auth & Profile | §7 | ✅ Done |
 | 6 | Real-time Teacher Monitoring | §7 Sub-2 | ✅ Done |
-| 7 | Adaptive Solo Retry | §7 Sub-3 | 🔲 Not started |
+| 7 | Adaptive Solo Retry | §7 Sub-3 | ✅ Done |
 | 8 | Achievements Leaderboard | §7 Sub-4 | 🔲 Not started |
 
 ---
@@ -241,12 +241,17 @@
 
 ---
 
-## Feature 7: Adaptive Solo Retry 🔲 Not started
+## Feature 7: Adaptive Solo Retry ✅ Done
 
-> Depends on Feature 5. Uses `student_question_stats.ease_factor` already in DB.
+> Spec: `docs/specs/2026-07-02-adaptive-solo-retry-design.md` | Plan: `docs/plans/2026-07-02-adaptive-solo-retry.md`
 
-- [x] Spec written in `docs/specs.md` §9
-- [x] Tasks planned in this file
+- [x] DB migration: add `repetitions`, `next_review_at` to `student_question_stats` + unique constraint
+- [x] SM-2 algorithm in `web/src/lib/sm2.ts` with unit tests
+- [x] `GET /api/student/practice/[quizId]` — due questions
+- [x] `POST /api/student/practice/[quizId]` — batch SM-2 update
+- [x] `GET /api/student/practice-summary` — per-quiz due counts
+- [x] `/student/practice/[quizId]` practice page
+- [x] Profile page "Luyện tập" section
 
 ---
 

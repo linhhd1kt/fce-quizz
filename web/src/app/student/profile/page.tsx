@@ -13,6 +13,13 @@ const BADGE_EMOJI: Record<string, string> = {
   dedicated: '💪',
 };
 
+interface PracticeSummaryItem {
+  quizId: string;
+  quizTitle: string;
+  dueCount: number;
+  totalCount: number;
+}
+
 interface ProfileData {
   student: { id: string; username: string; displayName: string };
   stats: {
@@ -40,12 +47,20 @@ function timeAgo(dateStr: string): string {
 export default function StudentProfilePage() {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [practice, setPractice] = useState<PracticeSummaryItem[]>([]);
 
   useEffect(() => {
     fetch('/api/student/profile')
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/student/practice-summary')
+      .then((r) => r.json())
+      .then((d) => Array.isArray(d) && setPractice(d))
+      .catch(() => {});
   }, []);
 
   if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Loading…</div>;
@@ -95,6 +110,36 @@ export default function StudentProfilePage() {
                   <span className="text-xl">{BADGE_EMOJI[b.id] ?? '🏅'}</span>
                   <span className="text-sm font-medium">{BADGE_LABELS[b.id] ?? b.id}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Practice section */}
+        {practice.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Luyện tập</h2>
+            <div className="space-y-2">
+              {practice.map((item) => (
+                <a
+                  key={item.quizId}
+                  href={`/student/practice/${item.quizId}`}
+                  className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-600 transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{item.quizTitle}</p>
+                    <p className="text-xs text-slate-500">{item.totalCount} câu</p>
+                  </div>
+                  <div className="text-right">
+                    {item.dueCount > 0 ? (
+                      <span className="text-xs font-bold text-orange-400 bg-orange-950/40 border border-orange-800 rounded-full px-2 py-0.5">
+                        {item.dueCount} due
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-600">✓ ôn xong</span>
+                    )}
+                  </div>
+                </a>
               ))}
             </div>
           </div>
