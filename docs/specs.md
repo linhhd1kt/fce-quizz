@@ -684,3 +684,119 @@ flowchart TD
 | Teacher resets PIN → student logs in with new PIN | §7 |
 | Streak increments day-over-day (page.clock) | §7 |
 | Badge awarded: first_play, first_win | §7 |
+| Teacher opens live leaderboard during session | §8 |
+| Student answers question → rank updates in live view | §8 |
+| Student plays practice session → due count updates | §9 |
+| Student views leaderboard, sees top 10 ranked | §10 |
+
+---
+
+## §8 — Real-time Teacher Monitoring
+
+**Date:** 2026-07-02 | **Status:** Done | **Depends on:** §5
+
+### Overview
+
+Teacher opens a live leaderboard view at `/teacher/sessions/[id]/live` while a quiz session is in progress. Updates in real-time as students answer, showing rank, name, score, and animated position changes.
+
+### Database — `session_progress` table
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID PK | auto |
+| `session_id` | UUID FK → sessions | ON DELETE CASCADE |
+| `student_name` | TEXT | identifies student |
+| `current_question` | INTEGER | 0-indexed, increments each answer |
+| `score` | INTEGER | running correct count |
+| `total_questions` | INTEGER | from session |
+| `is_finished` | BOOLEAN | true when student submits final answer |
+| `updated_at` | TIMESTAMPTZ | for diff detection |
+
+Unique constraint: `(session_id, student_name)`
+
+### API
+
+**`POST /api/sessions/[id]/progress`** — called by quiz player after each answer (no auth required)
+- Body: `{ studentName, questionIndex, isCorrect, totalQuestions }`
+- Upsert row; set `is_finished = true` when `questionIndex + 1 === totalQuestions`
+
+**`GET /api/sessions/[id]/live`** — SSE stream (teacher auth required)
+- Every 1.5s: query `session_progress` ordered by score DESC
+- Sends initial snapshot on connect; closes on client disconnect
+- Payload: `{ entries: [{ rank, studentName, score, currentQuestion, totalQuestions, isFinished }], playing, finished }`
+
+### Frontend
+
+- `/teacher/sessions/[id]/live` — dark full-screen leaderboard with rank badges 🥇🥈🥉, progress bar per student, CSS transition animations on rank change, flash on position change
+- `/teacher/sessions/[id]` — "▶ Live View" link added to header
+
+### Quiz Player Change
+
+Fire-and-forget `fetch` to progress endpoint after each answer (no await, doesn't block UI).
+
+---
+
+## §9 — Adaptive Solo Retry
+
+**Date:** 2026-07-02 | **Status:** Done | **Depends on:** §5
+
+### Overview
+
+Students practice any quiz solo using spaced repetition (SM-2). The system tracks per-question difficulty and surfaces only "due" questions. Entry point: `/student/practice/[quizId]`, linked from profile.
+
+### Database — changes to `student_question_stats`
+
+Two columns added (migration 0006):
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `repetitions` | INTEGER DEFAULT 0 | Consecutive correct answers; resets to 0 on wrong |
+| `next_review_at` | TIMESTAMPTZ | NULL = never reviewed (always due); set by SM-2 |
+
+### SM-2 Algorithm — `web/src/lib/sm2.ts`
+
+Binary quality scale (correct=4, wrong=1):
+- Correct: `interval`: rep=0→1d, rep=1→6d, rep≥2→`round(6 * ef^(rep-1))` days; `newRep = rep + 1`; EF unchanged at q=4
+- Wrong: `interval = 1d`; `newRep = 0`; `newEF = max(1.3, ef - 0.54)`
+
+Example intervals (ef=2.5): 1d → 6d → 15d → 37d → 93d
+
+### API
+
+**`GET /api/student/practice/[quizId]`** (student auth)
+- Returns due questions (`next_review_at IS NULL OR <= now()`) joined with question data
+- If 0 due: returns empty questions + `nextReviewAt` (earliest scheduled)
+
+**`POST /api/student/practice/[quizId]`** (student auth)
+- Body: `{ answers: [{ questionId, isCorrect }] }`
+- Batch upsert SM-2 values to `student_question_stats`
+
+**`GET /api/student/practice-summary`** (student auth)
+- Returns `[{ quizId, quizTitle, dueCount }]` for all quizzes student has attempted
+
+### Frontend
+
+- `/student/practice/[quizId]` — 5 states: loading / nothing-due / ready / playing / finished; untimed; dark theme
+- `/student/profile` — "Luyện tập" section with per-quiz due count badges and practice links
+
+---
+
+## §10 — Achievements Leaderboard
+
+**Date:** 2026-07-02 | **Status:** Done | **Depends on:** §5
+
+### Overview
+
+Public leaderboard at `/student/leaderboard` shows top 10 students ranked by total correct answers. No new DB tables — data from existing `student_stats` joined with `students`.
+
+### API
+
+**`GET /api/student/leaderboard`** (student auth)
+- JOIN `student_stats` with `students` on `student_id`
+- ORDER BY `total_correct DESC` LIMIT 10
+- Response: `[{ rank, displayName, totalCorrect, totalGames }]`
+
+### Frontend
+
+- `/student/leaderboard` — dark theme, rank badges 🥇🥈🥉 for top 3, loading/empty states
+- `/student/profile` — "Xem bảng xếp hạng →" link added
