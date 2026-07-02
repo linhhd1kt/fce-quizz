@@ -125,7 +125,20 @@ export default function StudentSessionPage() {
       timeSpent: Date.now() - play.questionStartedAt,
     };
     setPlay((prev) => ({ ...prev, phase: 'feedback', selected, answers: [...prev.answers, answer] }));
-  }, [quiz, questions, play.questionIndex, play.questionStartedAt]);
+
+    if (sessionId) {
+      fetch(`/api/sessions/${sessionId}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName,
+          questionIndex: play.questionIndex,
+          isCorrect: selected === q.answer,
+          totalQuestions: questions.length,
+        }),
+      });
+    }
+  }, [quiz, questions, play.questionIndex, play.questionStartedAt, sessionId, studentName]);
 
   useEffect(() => {
     if (screen !== 'playing' || play.phase !== 'question') return;
