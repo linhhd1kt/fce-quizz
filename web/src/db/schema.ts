@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, integer, bigint, jsonb, timestamp, primaryKey, date, doublePrecision } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, integer, bigint, jsonb, timestamp, primaryKey, date, doublePrecision, unique } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import type { AdapterAccountType } from 'next-auth/adapters';
 
@@ -103,3 +103,19 @@ export const attempts = pgTable('attempts', {
   answers: jsonb('answers').notNull(),
   completedAt: timestamp('completed_at', { withTimezone: true }).default(sql`now()`),
 });
+
+// ── Real-time monitoring ─────────────────────────────────────────────────────
+export const sessionProgress = pgTable(
+  'session_progress',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'cascade' }).notNull(),
+    studentName: text('student_name').notNull(),
+    currentQuestion: integer('current_question').notNull().default(0),
+    score: integer('score').notNull().default(0),
+    totalQuestions: integer('total_questions').notNull().default(0),
+    isFinished: boolean('is_finished').notNull().default(false),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).default(sql`now()`),
+  },
+  (t) => [unique().on(t.sessionId, t.studentName)]
+);
