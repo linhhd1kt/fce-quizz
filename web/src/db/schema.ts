@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, boolean, integer, bigint, jsonb, timestamp, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, boolean, integer, bigint, jsonb, timestamp, primaryKey, date, doublePrecision } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import type { AdapterAccountType } from 'next-auth/adapters';
 
@@ -57,10 +57,45 @@ export const sessions = pgTable('sessions', {
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
 });
 
+// ── Student tables ───────────────────────────────────────────────────────────
+export const students = pgTable('students', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  username: text('username').unique().notNull(),
+  pinHash: text('pin_hash').notNull(),
+  displayName: text('display_name').notNull(),
+  createdBy: text('created_by').references(() => authUsers.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
+  lastActiveAt: timestamp('last_active_at', { withTimezone: true }),
+});
+
+export const studentStats = pgTable('student_stats', {
+  studentId: uuid('student_id').primaryKey().references(() => students.id, { onDelete: 'cascade' }),
+  currentStreak: integer('current_streak').notNull().default(0),
+  longestStreak: integer('longest_streak').notNull().default(0),
+  totalGames: integer('total_games').notNull().default(0),
+  totalCorrect: integer('total_correct').notNull().default(0),
+  totalAnswered: integer('total_answered').notNull().default(0),
+  lastPlayedDate: date('last_played_date'),
+  consecutivePerfect: integer('consecutive_perfect').notNull().default(0),
+  badges: jsonb('badges').notNull().default(sql`'[]'::jsonb`),
+});
+
+export const studentQuestionStats = pgTable('student_question_stats', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  studentId: uuid('student_id').notNull().references(() => students.id, { onDelete: 'cascade' }),
+  quizId: uuid('quiz_id').notNull().references(() => quizzes.id, { onDelete: 'cascade' }),
+  questionId: text('question_id').notNull(),
+  correctCount: integer('correct_count').notNull().default(0),
+  wrongCount: integer('wrong_count').notNull().default(0),
+  easeFactor: doublePrecision('ease_factor').notNull().default(2.5),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).default(sql`now()`),
+});
+
 export const attempts = pgTable('attempts', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'cascade' }),
   quizId: uuid('quiz_id').references(() => quizzes.id),
+  studentId: uuid('student_id').references(() => students.id, { onDelete: 'set null' }),
   studentName: text('student_name').notNull(),
   score: integer('score').notNull(),
   totalQuestions: integer('total_questions').notNull(),
