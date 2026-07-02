@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
-import { attempts, sessions, quizzes } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { attempts, sessions, quizzes, studentStats, studentQuestionStats } from '@/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
+import { auth } from '@/auth';
 import { getAuthUserId } from '@/lib/server-auth';
+import { updateStreak } from '@/lib/streak';
+import { evaluateBadges } from '@/lib/badges';
+import type { StudentStats } from '@/types/quiz';
 
-interface SubmittedAnswer { questionId: string; answer: string; }
+interface SubmittedAnswer { questionId: string; answer: string; timeSpent?: number; }
 interface Question { id: string; answer: string; }
 
 export async function POST(req: NextRequest) {
@@ -25,7 +29,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
   }
 
-  // Validate session exists and is active
   const [session] = await db
     .select({ id: sessions.id, quizId: sessions.quizId, isActive: sessions.isActive, questionsSubset: sessions.questionsSubset })
     .from(sessions)
@@ -35,7 +38,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Session not found or inactive.' }, { status: 404 });
   }
 
-  // Fetch quiz to compute score server-side
   const [quiz] = await db
     .select({ questions: quizzes.questions })
     .from(quizzes)
@@ -45,25 +47,93 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Quiz not found.' }, { status: 404 });
   }
 
-  // Use session subset if present, otherwise full quiz questions
   const questions = (session.questionsSubset ?? quiz.questions) as Question[];
   const totalQuestions = questions.length;
 
-  // Compute score server-side — never trust client-supplied score
   const score = answers.reduce((acc, submitted) => {
     const q = questions.find((qq) => qq.id === submitted.questionId);
     return acc + (q && q.answer === submitted.answer ? 1 : 0);
   }, 0);
 
+  // Resolve student identity from session
+  const nextSession = await auth();
+  const studentId = nextSession?.user?.role === 'student' ? nextSession.user.id : null;
+
   const [attempt] = await db.insert(attempts).values({
     sessionId,
     quizId: session.quizId,
+    studentId,
     studentName,
     score,
     totalQuestions,
     timeSpentMs: timeSpentMs ?? 0,
     answers,
   }).returning();
+
+  // Update student stats if logged-in student
+  if (studentId) {
+    const [stats] = await db.select().from(studentStats).where(eq(studentStats.studentId, studentId));
+    if (stats) {
+      const today = new Date();
+      const streakUpdate = updateStreak(stats as unknown as StudentStats, today);
+
+      const isPerfect = score === totalQuestions;
+      const newConsecutivePerfect = isPerfect ? stats.consecutivePerfect + 1 : 0;
+
+      const statsForBadge: StudentStats = {
+        ...(stats as unknown as StudentStats),
+        ...streakUpdate,
+        consecutivePerfect: newConsecutivePerfect,
+        totalGames: stats.totalGames + 1,
+      };
+      const newBadges = evaluateBadges(statsForBadge, {
+        score,
+        totalQuestions,
+        answers: answers.map((a) => ({ timeSpent: a.timeSpent ?? 0 })),
+      });
+      const allBadges = [...(stats.badges as Array<{ id: string; earnedAt: string }>), ...newBadges];
+
+      await db.update(studentStats).set({
+        totalGames: stats.totalGames + 1,
+        totalCorrect: stats.totalCorrect + score,
+        totalAnswered: stats.totalAnswered + totalQuestions,
+        consecutivePerfect: newConsecutivePerfect,
+        badges: allBadges,
+        ...streakUpdate,
+      }).where(eq(studentStats.studentId, studentId));
+
+      // Update per-question stats
+      for (const submitted of answers) {
+        const q = questions.find((qq) => qq.id === submitted.questionId);
+        const isCorrect = q && q.answer === submitted.answer;
+
+        const [existing] = await db
+          .select({ id: studentQuestionStats.id })
+          .from(studentQuestionStats)
+          .where(and(
+            eq(studentQuestionStats.studentId, studentId),
+            eq(studentQuestionStats.quizId, session.quizId!),
+            eq(studentQuestionStats.questionId, submitted.questionId),
+          ));
+
+        if (existing) {
+          await db.update(studentQuestionStats).set({
+            correctCount: isCorrect ? sql`correct_count + 1` : sql`correct_count`,
+            wrongCount: isCorrect ? sql`wrong_count` : sql`wrong_count + 1`,
+            lastSeenAt: new Date(),
+          }).where(eq(studentQuestionStats.id, existing.id));
+        } else {
+          await db.insert(studentQuestionStats).values({
+            studentId,
+            quizId: session.quizId!,
+            questionId: submitted.questionId,
+            correctCount: isCorrect ? 1 : 0,
+            wrongCount: isCorrect ? 0 : 1,
+          });
+        }
+      }
+    }
+  }
 
   return NextResponse.json(attempt, { status: 201 });
 }
@@ -75,7 +145,6 @@ export async function GET(req: NextRequest) {
 
   if (!sessionId) return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
 
-  // Teacher view: requires auth and session ownership
   if (!studentName) {
     const teacherId = await getAuthUserId();
     if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
