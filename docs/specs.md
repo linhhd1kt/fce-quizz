@@ -222,8 +222,8 @@ ALTER TABLE attempts ADD COLUMN student_id UUID REFERENCES students(id);
 1. Login at `/teacher/login` with email + password → redirect to `/teacher`.
 2. Wrong credentials → "Invalid email or password." (no redirect).
 3. Register at `/teacher/register` with name, email, password (min 8 chars) → redirect to `/teacher/login`.
-4. Password < 8 chars → "Dữ liệu không hợp lệ."
-5. Duplicate email → "Email đã được sử dụng."
+4. Password < 8 chars → "Invalid data."
+5. Duplicate email → "Email already in use."
 6. Sign out → session cleared → redirect to `/teacher/login`.
 
 ### Flow
@@ -241,8 +241,8 @@ flowchart TD
 
     H([Teacher at /teacher/register]) --> I["Enter name + email + password"]
     I --> J{Valid?}
-    J -- "password under 8" --> K["Error: Du lieu khong hop le."]
-    J -- "email taken" --> L["Error: Email da duoc su dung."]
+    J -- "password under 8" --> K["Error: Invalid data."]
+    J -- "email taken" --> L["Error: Email already in use."]
     K --> I
     L --> I
     J -- ok --> M["bcrypt hash + INSERT auth_users"]
@@ -348,10 +348,10 @@ This covers three overlapping features: upload page consolidation, save-and-batc
 8. `[✎]` button on each card enters edit mode for that question.
 9. Edit mode: textarea for question text, text inputs for options, radio to select correct answer, textarea for explanation.
 10. `[✓ Done]` exits edit mode; changes persist in React state.
-11. All edits are in-memory; they are saved to DB only when "Lưu & Tạo batch" is clicked.
+11. All edits are in-memory; they are saved to DB only when "Save & Create Batch" is clicked.
 
 **Save & batch:**
-12. "Lưu & Tạo N batch →" saves quiz to DB then creates N sessions.
+12. "Save & Create N Batch" saves quiz to DB then creates N sessions.
 13. Results shown inline: each part's code + question count.
 
 ### Flow
@@ -374,7 +374,7 @@ flowchart TD
     K -- "Done button" --> L["Update quiz in React state only"]
     L --> I
 
-    H -- "Luu va Tao batch" --> M["POST /api/quizzes with edited questions"]
+    H -- "Save and Create Batch" --> M["POST /api/quizzes with edited questions"]
     M --> N["POST /api/sessions/batch with targetGames"]
     N --> O["Show result: room code per part"]
 ```
@@ -567,7 +567,7 @@ flowchart TD
     D --> E{score = 100%?}
     E -- yes --> F["consecutive_perfect++"]
     E -- no --> G["consecutive_perfect = 0"]
-    F --> H["Check streak: last_played_date vs today UTC+7"]
+    F --> H["Check streak: last_played_date vs today UTC+0"]
     G --> H
     H --> I{Gap?}
     I -- yesterday --> J["current_streak++"]
