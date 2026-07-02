@@ -4,7 +4,7 @@ import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '@/db/client';
-import { authUsers, authAccounts, authVerificationTokens } from '@/db/schema';
+import { authUsers, authAccounts, authVerificationTokens, students } from '@/db/schema';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -16,6 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
   providers: [
     Credentials({
+      id: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
@@ -29,17 +30,47 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user?.password) return null;
         const valid = await bcrypt.compare(credentials.password as string, user.password);
         if (!valid) return null;
-        return { id: user.id, name: user.name ?? '', email: user.email ?? '' };
+        return { id: user.id, name: user.name ?? '', email: user.email ?? '', role: 'teacher' as const };
+      },
+    }),
+    Credentials({
+      id: 'student-credentials',
+      credentials: {
+        username: { label: 'Username', type: 'text' },
+        pin: { label: 'PIN', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.username || !credentials?.pin) return null;
+        const [student] = await db
+          .select()
+          .from(students)
+          .where(eq(students.username, credentials.username as string));
+        if (!student) return null;
+        const valid = await bcrypt.compare(credentials.pin as string, student.pinHash);
+        if (!valid) return null;
+        return {
+          id: student.id,
+          name: student.displayName,
+          email: null,
+          role: 'student' as const,
+          username: student.username,
+        };
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.role = user.role ?? 'teacher';
+        token.username = user.username;
+      }
       return token;
     },
     session({ session, token }) {
       if (token.id) session.user.id = token.id as string;
+      session.user.role = token.role ?? 'teacher';
+      if (token.username) session.user.username = token.username;
       return session;
     },
   },

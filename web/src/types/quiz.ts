@@ -79,9 +79,39 @@ export interface AttemptRow {
   session_id: string;
   quiz_id: string;
   student_name: string;
+  student_id?: string | null;
   score: number;
   total_questions: number;
   time_spent_ms: number;
   answers: UserAnswer[];
   completed_at: string;
 }
+
+export type BadgeId = 'first_play' | 'first_win' | 'on_fire' | 'speed_demon' | 'sharpshooter' | 'dedicated';
+
+export interface Badge {
+  id: BadgeId;
+  earnedAt: string;
+}
+
+export interface Student {
+  id: string;
+  username: string;
+  displayName: string;
+  createdBy: string | null;
+  createdAt: string;
+  lastActiveAt: string | null;
+}
+
+export interface StudentStats {
+  studentId: string;
+  currentStreak: number;
+  longestStreak: number;
+  totalGames: number;
+  totalCorrect: number;
+  totalAnswered: number;
+  lastPlayedDate: string | null;
+  consecutivePerfect: number;
+  badges: Badge[];
+}
+
