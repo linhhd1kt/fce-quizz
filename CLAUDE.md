@@ -2,8 +2,9 @@
 
 ## Docs (single source of truth)
 
-- **Spec:** `docs/specs.md` — all feature specs with Mermaid flow diagrams
-- **Plan:** `docs/plans.md` — all implementation tasks with `- [ ]` / `- [x]` checkboxes
+- **Spec:** `docs/specs.md` — all feature specs with Mermaid flow diagrams (one file, append new sections)
+- **Plan:** `docs/plans.md` — all implementation tasks with `- [ ]` / `- [x]` checkboxes (one file, append new blocks)
+- **NEVER** create separate files per feature (no `docs/specs/*.md`, no `docs/plans/*.md`, no subdirectories)
 - After each task commit: tick the checkbox in `docs/plans.md` and commit it alongside the code
 - After each spec change: update Mermaid diagrams to stay in sync with code
 
