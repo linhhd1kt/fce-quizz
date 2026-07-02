@@ -23,25 +23,24 @@
 ```mermaid
 graph TB
     subgraph Client
-        Home["/  Home"]
+        Home["/ Home"]
         Nav["NavBar"]
-        StudentPlay["/s/[code]  Play"]
-        TeacherDash["/teacher  Dashboard"]
-        TeacherUpload["/teacher/quizzes/new  Upload"]
+        StudentPlay["/s/code Play"]
+        TeacherDash["/teacher Dashboard"]
+        TeacherUpload["/teacher/quizzes/new Upload"]
         StudentLogin["/student/login"]
         StudentProfile["/student/profile"]
         TeacherStudents["/teacher/students"]
     end
 
     subgraph API["API Routes"]
-        AuthAPI["/api/auth  NextAuth"]
+        AuthAPI["/api/auth NextAuth"]
         QuizzesAPI["/api/quizzes"]
         SessionsAPI["/api/sessions"]
         BatchAPI["/api/sessions/batch"]
         AttemptsAPI["/api/attempts"]
         ExtractAPI["/api/extract-quiz"]
         StudentsAPI["/api/students"]
-        StudentRegAPI["/api/student/register"]
     end
 
     subgraph DB["Supabase Postgres"]
@@ -55,7 +54,7 @@ graph TB
     end
 
     subgraph External
-        PDF["PDF (Gemini AI)"]
+        PDF["Gemini AI"]
     end
 
     Home --> StudentPlay
@@ -231,26 +230,26 @@ ALTER TABLE attempts ADD COLUMN student_id UUID REFERENCES students(id);
 
 ```mermaid
 flowchart TD
-    A([Teacher visits /teacher/login]) --> B{Has session?}
-    B -- yes --> C[/teacher Dashboard/]
-    B -- no --> D[Enter email + password]
+    A([Teacher at /teacher/login]) --> B{Has session?}
+    B -- yes --> C["Dashboard: /teacher"]
+    B -- no --> D["Enter email + password"]
     D --> E{Credentials valid?}
     E -- no --> F["Error: Invalid email or password."]
     F --> D
-    E -- yes --> G[Create NextAuth session\nrole = 'teacher']
+    E -- yes --> G["Create session, role=teacher"]
     G --> C
 
-    H([Teacher visits /teacher/register]) --> I[Enter name + email + password]
+    H([Teacher at /teacher/register]) --> I["Enter name + email + password"]
     I --> J{Valid?}
-    J -- "password < 8" --> K["Error: Dữ liệu không hợp lệ."]
-    J -- "email taken" --> L["Error: Email đã được sử dụng."]
+    J -- "password under 8" --> K["Error: Du lieu khong hop le."]
+    J -- "email taken" --> L["Error: Email da duoc su dung."]
     K --> I
     L --> I
-    J -- ok --> M[bcrypt hash password\nINSERT auth_users]
-    M --> N[Redirect /teacher/login]
+    J -- ok --> M["bcrypt hash + INSERT auth_users"]
+    M --> N["Redirect /teacher/login"]
 
-    C --> O[Click Sign out]
-    O --> P[signOut\nclear session]
+    C --> O["Click Sign out"]
+    O --> P["signOut, clear session"]
     P --> N
 ```
 
@@ -291,20 +290,20 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([Middleware: /teacher/*]) --> B{Teacher session?}
-    B -- no --> C[Redirect /teacher/login]
-    B -- yes --> D[Load quizzes + sessions]
-    D --> E[Dashboard rendered]
+    A([Request to /teacher]) --> B{Teacher session?}
+    B -- no --> C["Redirect /teacher/login"]
+    B -- yes --> D["Load quizzes + sessions"]
+    D --> E["Dashboard rendered"]
 
     E --> F{User action?}
-    F -- "+ Upload new" --> G[/teacher/quizzes/new]
-    F -- "[Edit]" --> H["/teacher/quizzes/[id]"]
-    F -- "+ Room" --> I["POST /api/sessions\n{ quizId }"]
-    F -- "+ Batch" --> J["POST /api/sessions/batch\n{ quizId, targetGames }"]
-    F -- "View results" --> K["/teacher/sessions/[id]"]
+    F -- "+ Upload new" --> G["Navigate to /teacher/quizzes/new"]
+    F -- "Edit" --> H["Navigate to /teacher/quizzes/id"]
+    F -- "+ Room" --> I["POST /api/sessions"]
+    F -- "+ Batch" --> J["POST /api/sessions/batch"]
+    F -- "View results" --> K["Navigate to /teacher/sessions/id"]
 
-    I --> L[Show banner: room code + Copy link]
-    J --> M[Show batch banner: all codes + Copy per part]
+    I --> L["Banner: room code + Copy link"]
+    J --> M["Batch banner: codes + Copy per part"]
     L --> E
     M --> E
 ```
@@ -359,30 +358,30 @@ This covers three overlapping features: upload page consolidation, save-and-batc
 
 ```mermaid
 flowchart TD
-    A([Teacher visits /teacher/quizzes/new]) --> B[Drop PDF]
+    A([Teacher at /teacher/quizzes/new]) --> B["Drop file"]
     B --> C{Is PDF?}
     C -- no --> D["Error: Only PDF files accepted."]
     D --> B
-    C -- yes --> E["POST /api/extract-quiz\n(Gemini AI)"]
-    E --> F[Set quiz state + auto targetGames]
-    F --> G["Show grouped preview\n(collapsed by default)"]
+    C -- yes --> E["POST /api/extract-quiz via Gemini AI"]
+    E --> F["Set quiz state, auto-compute targetGames"]
+    F --> G["Show grouped preview, all collapsed"]
 
     G --> H{User action?}
-    H -- "expand game" --> I[Show question cards in read mode]
-    H -- "change targetGames" --> J[Re-chunk client-side + re-render]
+    H -- "expand game" --> I["Show question cards in read mode"]
+    H -- "change targetGames" --> J["Re-chunk client-side, re-render"]
     J --> G
-    H -- "[✎] on a question" --> K[Edit mode: textarea + radio inputs]
-    K -- "[✓ Done]" --> L[Update quiz state in memory]
+    H -- "Edit button on question" --> K["Edit mode: textarea + radio inputs"]
+    K -- "Done button" --> L["Update quiz in React state only"]
     L --> I
 
-    H -- "Lưu & Tạo N batch →" --> M["POST /api/quizzes\n{ title, questions (edited) }"]
-    M --> N["POST /api/sessions/batch\n{ quizId, targetGames }"]
-    N --> O[Show result: codes per part]
+    H -- "Luu va Tao batch" --> M["POST /api/quizzes with edited questions"]
+    M --> N["POST /api/sessions/batch with targetGames"]
+    N --> O["Show result: room code per part"]
 ```
 
 ### Split formula
 
-**targetGames mode (new, used here):**
+**targetGames mode (used here):**
 ```
 base      = floor(total / targetGames)
 remainder = total % targetGames
@@ -440,7 +439,7 @@ function toggleEdit(id: string) {
 | `web/src/app/api/extract-quiz/route.ts` | PDF extraction via Gemini |
 | `web/src/app/api/quizzes/route.ts` | Save quiz to DB |
 | `web/src/app/api/sessions/batch/route.ts` | Create batch sessions |
-| `web/src/lib/chunk-by-target-games.ts` | Split logic (used both client-side preview and server-side) |
+| `web/src/lib/chunk-by-target-games.ts` | Split logic (client-side preview + server-side) |
 
 **Deleted files:**
 - `web/src/app/upload/page.tsx`
@@ -464,27 +463,26 @@ function toggleEdit(id: string) {
 
 ```mermaid
 flowchart TD
-    A(["Navigate to /s/[code]"]) --> B["GET /api/sessions/by-code/[code]"]
-    B --> C{Found & active?}
+    A([Navigate to /s/code]) --> B["GET /api/sessions/by-code"]
+    B --> C{Found and active?}
     C -- no --> D["Error: Room not found or closed."]
-    C -- yes --> E[Join screen: enter name]
-    E --> F[Click Join →]
+    C -- yes --> E["Join screen: enter name"]
+    E --> F["Click Join"]
     F --> G{Name non-empty?}
     G -- no --> E
-    G -- yes --> H[Countdown: 3 → 2 → 1]
-    H --> I[Question screen]
+    G -- yes --> H["Countdown: 3, 2, 1"]
+    H --> I["Question screen"]
 
     I --> J{Timer or answer}
-    J -- "Answer selected" --> K[Feedback: correct/wrong]
-    J -- "Timer = 0" --> L[Feedback: Time's up!]
+    J -- "Answer selected" --> K["Feedback: correct or wrong"]
+    J -- "Timer = 0" --> L["Feedback: Time's up!"]
     K --> M{Last question?}
     L --> M
-    M -- no --> N[Next question]
+    M -- no --> N["Next question"]
     N --> I
-    M -- yes --> O["POST /api/attempts\n{ sessionId, score, answers, ... }"]
-    O --> P[Finish screen: score%]
-    P --> Q{"View results →"}
-    Q --> R["/results/[attemptId]"]
+    M -- yes --> O["POST /api/attempts"]
+    O --> P["Finish screen: score%"]
+    P --> R["Navigate: /results/attemptId"]
 ```
 
 ### Score formula
@@ -538,49 +536,49 @@ When a logged-in student plays, `POST /api/attempts` includes `student_id` from 
 
 ```mermaid
 flowchart TD
-    A([Student visits /student/login]) --> B[Enter username + PIN]
-    B --> C["NextAuth 'student-credentials'\nSELECT * FROM students WHERE username = ?"]
+    A([Student at /student/login]) --> B["Enter username + PIN"]
+    B --> C["NextAuth student-credentials provider"]
     C --> D{PIN matches?}
     D -- no --> E["Error: Invalid username or PIN."]
     E --> B
-    D -- yes --> F["JWT { role: 'student', studentId, username }"]
-    F --> G["/student/profile"]
+    D -- yes --> F["Create JWT: role=student, studentId, username"]
+    F --> G["Redirect /student/profile"]
 
-    H([Student visits /student/register]) --> I[Enter display_name + username + PIN]
-    I --> J{"username unique?\nPIN = 6 digits?"}
-    J -- no --> K["Error: Username taken / PIN invalid"]
+    H([Student at /student/register]) --> I["Enter display_name, username, PIN"]
+    I --> J{username unique AND PIN 6 digits?}
+    J -- no --> K["Error: Username taken or PIN invalid"]
     K --> I
-    J -- yes --> L["INSERT students\nINSERT student_stats\nauto sign-in"]
+    J -- yes --> L["INSERT students + student_stats, auto sign-in"]
     L --> G
 
-    M([Teacher at /teacher/students]) --> N["Click + Add Student\nEnter display_name"]
-    N --> O["POST /api/students\nAuto-generate username + 6-digit PIN"]
-    O --> P["INSERT students\nINSERT student_stats"]
-    P --> Q["Show PIN once in row\nthen replace with ——"]
+    M([Teacher at /teacher/students]) --> N["Click Add Student, enter display_name"]
+    N --> O["POST /api/students, auto-generate username + PIN"]
+    O --> P["INSERT students + student_stats"]
+    P --> Q["Show PIN once, then hide"]
 ```
 
 ### Flow — Attempt → stats update
 
 ```mermaid
 flowchart TD
-    A["POST /api/attempts\n{ student_id, score, answers }"] --> B{student_id set?}
-    B -- no --> C[Save attempt only\nanon play]
-    B -- yes --> D["UPDATE student_stats\ntotal_games++, total_correct+=, total_answered+="]
+    A(["POST /api/attempts"]) --> B{student_id set?}
+    B -- no --> C["Save attempt only, anon play"]
+    B -- yes --> D["UPDATE student_stats: total_games++, total_correct+="]
     D --> E{score = 100%?}
     E -- yes --> F["consecutive_perfect++"]
     E -- no --> G["consecutive_perfect = 0"]
-    F --> H["Check streak\nlast_played_date vs today (UTC+7)"]
+    F --> H["Check streak: last_played_date vs today UTC+7"]
     G --> H
     H --> I{Gap?}
     I -- yesterday --> J["current_streak++"]
-    I -- today --> K[no change]
-    I -- "≥ 2 days" --> L["current_streak = 1"]
+    I -- today --> K["no change"]
+    I -- "2 or more days" --> L["current_streak = 1"]
     J --> M["Update longest_streak if needed"]
     K --> M
     L --> M
-    M --> N[Evaluate badges]
-    N --> O["Append new badges to\nstudent_stats.badges\n(no duplicates)"]
-    O --> P["UPDATE student_question_stats\ncorrect_count / wrong_count per question"]
+    M --> N["Evaluate badges"]
+    N --> O["Append new badges to student_stats.badges"]
+    O --> P["UPDATE student_question_stats per question"]
 ```
 
 ### Badges
@@ -616,15 +614,15 @@ session.user.username?: string
 
 ```
 base = display_name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
-username = base   (if unique)
-         = base + '_2' / '_3' / ...  (on collision)
+username = base         (if unique)
+         = base_2 / base_3 ...  (on collision)
 ```
 
 ### Files
 
 | File | Purpose |
 |------|---------|
-| `web/src/auth.ts` | Add `"student-credentials"` provider; extend JWT/session types |
+| `web/src/auth.ts` | Add student-credentials provider; extend JWT/session types |
 | `web/src/middleware.ts` | Protect `/student/*` routes |
 | `web/src/types/quiz.ts` | Add `Student`, `StudentStats`, `Badge` types |
 | `web/src/app/student/login/page.tsx` | Username + PIN login form |
@@ -635,11 +633,11 @@ username = base   (if unique)
 | `web/src/app/api/students/[id]/route.ts` | DELETE student |
 | `web/src/app/api/students/[id]/reset-pin/route.ts` | POST reset PIN |
 | `web/src/app/api/student/register/route.ts` | Self-registration |
-| `web/src/app/api/attempts/route.ts` | Link `student_id`; update stats + badges |
+| `web/src/app/api/attempts/route.ts` | Link student_id; update stats + badges |
 | `web/src/lib/badges.ts` | Badge evaluation logic |
 | `web/src/lib/streak.ts` | Streak update logic |
-| `web/src/components/NavBar.tsx` | Student profile link when `role === 'student'` |
-| `web/db/schema.ts` | Add students/stats tables; add `student_id` to attempts |
+| `web/src/components/NavBar.tsx` | Student profile link when role=student |
+| `web/db/schema.ts` | Add students/stats tables; add student_id to attempts |
 | `web/db/migrations/NNNN_student_auth.sql` | SQL migration |
 
 ---
@@ -650,16 +648,15 @@ username = base   (if unique)
 flowchart TD
     REQ([Incoming request]) --> A{Path?}
 
-    A -- "/teacher/*" --> B{role = 'teacher'?}
-    B -- yes --> C[Allow]
-    B -- no --> D[Redirect /teacher/login]
+    A -- "/teacher/*" --> B{role = teacher?}
+    B -- yes --> C["Allow"]
+    B -- no --> D["Redirect /teacher/login"]
 
-    A -- "/student/*" --> E{role = 'student'?}
+    A -- "/student/*" --> E{role = student?}
     E -- yes --> C
-    E -- no --> F[Redirect /student/login]
+    E -- no --> F["Redirect /student/login"]
 
-    A -- "/s/[code]" --> G[Allow all\nanon + student + teacher]
-    A -- "other" --> G
+    A -- "/s/code or other" --> C
 ```
 
 | Route pattern | Required role | Fallback |
@@ -685,5 +682,5 @@ flowchart TD
 | Student self-register → login → play → profile stats | §7 |
 | Teacher creates student → student logs in with PIN | §7 |
 | Teacher resets PIN → student logs in with new PIN | §7 |
-| Streak increments day-over-day (`page.clock`) | §7 |
+| Streak increments day-over-day (page.clock) | §7 |
 | Badge awarded: first_play, first_win | §7 |
