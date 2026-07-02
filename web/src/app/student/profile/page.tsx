@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import type { Badge } from '@/types/quiz';
 import { BADGE_LABELS } from '@/lib/badges';
 
@@ -98,6 +99,13 @@ export default function StudentProfilePage() {
               <p className="text-xs text-slate-400 mt-1">{label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Leaderboard link */}
+        <div className="text-right">
+          <Link href="/student/leaderboard" className="text-sm text-blue-400 hover:underline">
+            Xem bảng xếp hạng →
+          </Link>
         </div>
 
         {/* Badges */}

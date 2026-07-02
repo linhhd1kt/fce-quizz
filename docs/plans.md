@@ -15,7 +15,7 @@
 | 5 | Student Auth & Profile | §7 | ✅ Done |
 | 6 | Real-time Teacher Monitoring | §7 Sub-2 | ✅ Done |
 | 7 | Adaptive Solo Retry | §7 Sub-3 | ✅ Done |
-| 8 | Achievements Leaderboard | §7 Sub-4 | 🔲 Not started |
+| 8 | Achievements Leaderboard | §7 Sub-4 | ✅ Done |
 
 ---
 
@@ -255,9 +255,10 @@
 
 ---
 
-## Feature 8: Achievements Leaderboard 🔲 Not started
+## Feature 8: Achievements Leaderboard ✅ Done
 
-> Depends on Feature 5.
+> Spec: `docs/specs/2026-07-02-achievements-leaderboard-design.md` | Plan: `docs/plans/2026-07-02-achievements-leaderboard.md`
 
-- [x] Spec written in `docs/specs.md` §10
-- [x] Tasks planned in this file
+- [x] `GET /api/student/leaderboard` — top 10 by total correct
+- [x] `/student/leaderboard` leaderboard page
+- [x] Profile page link to leaderboard
