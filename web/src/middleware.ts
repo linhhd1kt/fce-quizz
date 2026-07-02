@@ -2,16 +2,30 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
 export default auth((req) => {
-  const isAuthenticated = !!req.auth;
   const { pathname } = req.nextUrl;
-  const isPublicPage = pathname === '/teacher/login' || pathname === '/teacher/register';
+  const role = (req.auth as { user?: { role?: string } } | null)?.user?.role;
 
-  if (!isAuthenticated && !isPublicPage) {
-    return NextResponse.redirect(new URL('/teacher/login', req.url));
+  // ── Teacher routes ─────────────────────────────────────────────────────────
+  if (pathname.startsWith('/teacher')) {
+    const isPublic = pathname === '/teacher/login' || pathname === '/teacher/register';
+    if (role !== 'teacher' && !isPublic) {
+      return NextResponse.redirect(new URL('/teacher/login', req.url));
+    }
+    if (role === 'teacher' && isPublic) {
+      return NextResponse.redirect(new URL('/teacher', req.url));
+    }
   }
-  if (isAuthenticated && isPublicPage) {
-    return NextResponse.redirect(new URL('/teacher', req.url));
+
+  // ── Student routes ─────────────────────────────────────────────────────────
+  if (pathname.startsWith('/student')) {
+    const isPublic = pathname === '/student/login' || pathname === '/student/register';
+    if (role !== 'student' && !isPublic) {
+      return NextResponse.redirect(new URL('/student/login', req.url));
+    }
+    if (role === 'student' && isPublic) {
+      return NextResponse.redirect(new URL('/student/profile', req.url));
+    }
   }
 });
 
-export const config = { matcher: ['/teacher/:path*'] };
+export const config = { matcher: ['/teacher/:path*', '/student/:path*'] };
