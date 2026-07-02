@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -q 'git push' && echo '{\"systemMessage\": \"⚠️  Pre-push reminder: Have you run the full E2E suite? (cd web && npm run test:e2e)\"}' || true"
+          }
+        ]
+      }
+    ]
+  }
+}

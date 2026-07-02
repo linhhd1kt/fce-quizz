@@ -40,17 +40,43 @@ cd web && npm run test:e2e
 
 ## Feature Delivery Flow
 
-Same as global `~/git/CLAUDE.md`, with these project-specific steps:
+### New requirement (non-trivial: new flow, new API, new state, DB change)
 
 ```
-Confirm
-  → Spec: add section to docs/specs.md with Mermaid diagram
+Confirm req
+  → Brainstorm (invoke brainstorming skill — mandatory, no skipping)
+  → Spec: add new section to docs/specs.md with Mermaid diagram
   → Plan: add task block to docs/plans.md with - [ ] checkboxes
   → Code: TDD for logic (streak, badges, chunking); implement directly for UI/routes
-  → E2E: cover every requirement in the spec section
-  → Full regression: npm run test:e2e (all specs)
+  → Tick checkboxes in docs/plans.md after each task commit
+  → E2E: cover every requirement in the new spec section
+  → Full regression: npm run test:e2e (all specs, catch regressions)
   → Push → GitHub Actions CI → SSH verify PM2 + logs
 ```
+
+### New requirement (trivial: text/style/config change only)
+
+```
+Confirm req
+  → Code: implement directly
+  → E2E: update if behavior visible to user changes
+  → Push → verify
+```
+
+### Update existing spec
+
+```
+Update section in docs/specs.md
+  → Update Mermaid diagram if flow changed
+  → docs/plans.md: add new tasks if code change needed; skip if clarification only
+  → Code: implement any new tasks (TDD if logic complex)
+  → E2E: update tests if behavior changed
+  → Full regression: npm run test:e2e
+  → Commit docs + code together: "docs: update spec for X" + "feat/fix: ..."
+  → Push → verify
+```
+
+**Rule: spec and code must always be in sync. Never update one without the other.**
 
 ## Implementation Order (current)
 

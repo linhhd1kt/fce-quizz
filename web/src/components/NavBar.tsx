@@ -8,7 +8,7 @@ export default function NavBar() {
   const { msgs, locale, setLocale } = useI18n();
   const m = msgs.nav;
   const { data: session } = useSession();
-  const isTeacher = !!session;
+  const role = (session?.user as { role?: string } | undefined)?.role;
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
@@ -23,11 +23,25 @@ export default function NavBar() {
           <Link href="/leaderboard" className="px-3 py-1.5 text-sm text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
             {m.scores}
           </Link>
-          {isTeacher ? (
-            <Link href="/teacher" className="px-3 py-1.5 text-sm text-orange-400 hover:text-orange-300 rounded-lg hover:bg-slate-800 transition-colors font-semibold">
-              Teacher
+
+          {role === 'student' && (
+            <Link href="/student/profile" className="px-3 py-1.5 text-sm text-blue-400 hover:text-blue-300 rounded-lg hover:bg-slate-800 transition-colors font-semibold">
+              My Profile
             </Link>
-          ) : (
+          )}
+
+          {role === 'teacher' && (
+            <>
+              <Link href="/teacher/students" className="px-3 py-1.5 text-sm text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
+                Students
+              </Link>
+              <Link href="/teacher" className="px-3 py-1.5 text-sm text-orange-400 hover:text-orange-300 rounded-lg hover:bg-slate-800 transition-colors font-semibold">
+                Teacher
+              </Link>
+            </>
+          )}
+
+          {!role && (
             <Link href="/teacher/login" className="px-3 py-1.5 text-sm text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
               Teacher
             </Link>
