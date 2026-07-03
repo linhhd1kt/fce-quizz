@@ -18,6 +18,8 @@ export default function TeacherDashboard() {
   const [newSessionId, setNewSessionId] = useState<string | null>(null);
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'session' | 'quiz'; id: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const [quizRes, sessionRes] = await Promise.all([
@@ -63,6 +65,22 @@ export default function TeacherDashboard() {
       await load();
     }
     setCreatingFor(null);
+  }
+
+  async function handleDeleteQuiz(id: string) {
+    setDeleting(true);
+    await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
+    setConfirmDelete(null);
+    setDeleting(false);
+    await load();
+  }
+
+  async function handleDeleteSession(id: string) {
+    setDeleting(true);
+    await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+    setConfirmDelete(null);
+    setDeleting(false);
+    await load();
   }
 
   async function handleSignOut() {
@@ -176,18 +194,38 @@ export default function TeacherDashboard() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/teacher/quizzes/${quiz.id}`}
-                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
-                      Edit
-                    </Link>
-                    <button onClick={() => handleCreateSession(quiz.id)} disabled={!!creatingFor}
-                      className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
-                      {creatingFor === quiz.id ? '…' : '+ Room'}
-                    </button>
-                    <button onClick={() => handleCreateBatch(quiz.id)} disabled={!!creatingFor}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
-                      {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
-                    </button>
+                    {confirmDelete?.type === 'quiz' && confirmDelete.id === quiz.id ? (
+                      <>
+                        <span className="text-xs text-slate-400">Xóa tất cả rooms + dữ liệu?</span>
+                        <button onClick={() => handleDeleteQuiz(quiz.id)} disabled={deleting}
+                          className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                          {deleting ? '…' : 'Xóa'}
+                        </button>
+                        <button onClick={() => setConfirmDelete(null)}
+                          className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
+                          Huỷ
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => setConfirmDelete({ type: 'quiz', id: quiz.id })}
+                          className="px-2 py-2 text-slate-600 hover:text-red-400 text-sm transition-colors">
+                          🗑
+                        </button>
+                        <Link href={`/teacher/quizzes/${quiz.id}`}
+                          className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
+                          Edit
+                        </Link>
+                        <button onClick={() => handleCreateSession(quiz.id)} disabled={!!creatingFor}
+                          className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                          {creatingFor === quiz.id ? '…' : '+ Room'}
+                        </button>
+                        <button onClick={() => handleCreateBatch(quiz.id)} disabled={!!creatingFor}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                          {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -217,13 +255,35 @@ export default function TeacherDashboard() {
                       <p className="text-slate-500 text-xs">{new Date(s.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => copyLink(s.code)} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
-                        Copy link
-                      </button>
-                      <Link href={`/teacher/sessions/${s.id}`}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                        View results
-                      </Link>
+                      {confirmDelete?.type === 'session' && confirmDelete.id === s.id ? (
+                        <>
+                          <span className="text-xs text-slate-400">
+                            {isBatch ? `Xóa tất cả ${totalInBatch} parts?` : 'Xóa room này?'}
+                          </span>
+                          <button onClick={() => handleDeleteSession(s.id)} disabled={deleting}
+                            className="px-3 py-1.5 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
+                            {deleting ? '…' : 'Xóa'}
+                          </button>
+                          <button onClick={() => setConfirmDelete(null)}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors">
+                            Huỷ
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => copyLink(s.code)} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                            Copy link
+                          </button>
+                          <Link href={`/teacher/sessions/${s.id}`}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                            View results
+                          </Link>
+                          <button onClick={() => setConfirmDelete({ type: 'session', id: s.id })}
+                            className="px-1 text-slate-600 hover:text-red-400 text-sm transition-colors">
+                            🗑
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
