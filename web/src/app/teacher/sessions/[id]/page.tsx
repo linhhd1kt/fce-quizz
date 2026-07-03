@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { formatTime } from '@/lib/scoring';
@@ -13,11 +13,17 @@ export default function SessionDetailPage() {
   const [session, setSession] = useState<SessionData | null>(null);
   const [attempts, setAttempts] = useState<AttemptRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetch(`/api/sessions/${id}`)
-      .then((r) => r.json())
-      .then((data) => { setSession(data.session); setAttempts(data.attempts ?? []); setLoading(false); });
+    function fetchData() {
+      fetch(`/api/sessions/${id}`)
+        .then((r) => r.json())
+        .then((data) => { setSession(data.session); setAttempts(data.attempts ?? []); setLoading(false); });
+    }
+    fetchData();
+    intervalRef.current = setInterval(fetchData, 3000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [id]);
 
   function copyLink() {
