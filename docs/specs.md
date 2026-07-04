@@ -1,6 +1,6 @@
 # FCEQuiz — Master Specification
 
-**Last updated:** 2026-07-02  
+**Last updated:** 2026-07-04  
 **Status:** Living document — update alongside every code change
 
 ---
@@ -15,6 +15,7 @@
 6. [Student Quiz Player](#6-student-quiz-player)
 7. [Student Auth & Profile](#7-student-auth--profile)
 8. [Middleware & Route Protection](#8-middleware--route-protection)
+9. [§11 — /join page, Lobby & Podium](#11----join-page-lobby--podium)
 
 ---
 
@@ -800,3 +801,224 @@ Public leaderboard at `/student/leaderboard` shows top 10 students ranked by tot
 
 - `/student/leaderboard` — dark theme, rank badges 🥇🥈🥉 for top 3, loading/empty states
 - `/student/profile` — "Xem bảng xếp hạng →" link added
+
+---
+
+## §11 — /join page, Lobby & Podium
+
+**Date:** 2026-07-04 | **Status:** Planned | **Depends on:** §6, §8
+
+### Overview
+
+Three interlinked features that transform FCEQuiz into a synchronous multiplayer game (Wayground/Quizizz-inspired):
+
+1. **/join page** — students enter a room code on a dedicated landing page.
+2. **Lobby** — students wait until teacher starts; teacher sees live join count per room.
+3. **Podium** — end screen showing final rankings, triggered automatically or manually.
+
+### Database — `sessions.status` column
+
+Replace the binary `is_active` flag with a three-state enum:
+
+| Status | Meaning |
+|--------|---------|
+| `waiting` | Room created; students can join lobby; game not started |
+| `active` | Teacher started game; students are answering |
+| `ended` | Game over; podium is shown |
+
+**Migration SQL:**
+
+```sql
+ALTER TABLE sessions ADD COLUMN status text NOT NULL DEFAULT 'waiting';
+
+-- Existing sessions were all already in active play; set them active.
+UPDATE sessions SET status = 'active';
+
+-- is_active column kept (not dropped) to avoid breaking existing queries.
+-- Treat is_active as deprecated; all new logic reads status.
+```
+
+**Drizzle schema addition (`web/src/db/schema.ts`):**
+
+```typescript
+status: text('status').notNull().default('waiting'),
+// 'waiting' | 'active' | 'ended'
+```
+
+### State machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> waiting : session created
+    waiting --> active : teacher clicks Start
+    active --> ended : teacher clicks End Game
+    active --> ended : all students finished (auto)
+    ended --> [*]
+```
+
+Auto-trigger rule: when the last student submits answers, `POST /api/attempts` checks whether all `session_progress` rows for the session have `is_finished = true`. If so, it sets `sessions.status = 'ended'`. Guard: skip auto-trigger if `session_progress` has 0 rows (nobody joined via lobby).
+
+---
+
+### Feature 1: /join page
+
+**Route:** `/join` (public, no auth)
+
+Simple page with a single code input. On submit it redirects to `/s/[code]` — no backend call needed on this page itself.
+
+```
+┌──────────────────────────────┐
+│  FCEQuiz                     │
+│                              │
+│  Enter your room code        │
+│  ┌──────────────┐  ┌──────┐  │
+│  │  A B C 1 2  │  │ Join │  │
+│  └──────────────┘  └──────┘  │
+│                              │
+└──────────────────────────────┘
+```
+
+- Input: auto-uppercase, max 6 chars.
+- Submit → `router.push('/s/' + code.trim().toUpperCase())`.
+- Empty input → disabled Join button.
+
+**File:** `web/src/app/join/page.tsx` (new, client component)
+
+---
+
+### Feature 2: Lobby
+
+#### Student side — `/s/[code]`
+
+The quiz player adds a `status` check after fetching the session. New behavior:
+
+```mermaid
+flowchart TD
+    A([Navigate to /s/code]) --> B["GET /api/sessions/lookup?code=code"]
+    B --> C{status?}
+    C -- "waiting" --> D["Show name input form"]
+    D --> E["Student submits name → POST /api/lobby/join"]
+    E --> F["Lobby waiting screen + poll every 2s"]
+    F --> G{status changed?}
+    G -- "still waiting" --> F
+    G -- "active" --> H["Start quiz immediately"]
+    G -- "ended" --> I["Redirect /s/code/podium"]
+    C -- "active" --> H
+    C -- "ended" --> I
+    C -- "not found" --> J["Error: Room not found or closed."]
+```
+
+**Lobby waiting screen:**
+
+```
+┌──────────────────────────────┐
+│  Quiz: FCE Vocabulary        │
+│                              │
+│  You're in the lobby!        │
+│  Hi, Nguyen Van A 👋         │
+│                              │
+│  Waiting for teacher to      │
+│  start the game...           │
+│  ● ● ●  (animated)          │
+└──────────────────────────────┘
+```
+
+**Lobby join:** `POST /api/lobby/join` with `{ code, studentName }`. Server upserts a `session_progress` row with `current_question = 0, score = 0, is_finished = false`. This row serves as a presence signal; the polling endpoint counts these rows.
+
+**Polling endpoint:** `GET /api/sessions/lookup?code=` — existing `by-code` route refactored (or a new lightweight route) that returns `{ id, status, quizTitle, timePerQuestion }`. No auth required. Called every 2 seconds from lobby.
+
+#### Teacher side — `/teacher`
+
+Teacher dashboard polls its existing `/api/sessions` every 3s (new — currently loads once on mount). Response enriched with:
+
+- `lobbyCount`: COUNT of `session_progress` rows for this session (all rows = all who joined).
+- `finishedCount`: COUNT where `is_finished = true`.
+
+**Dashboard UI changes:**
+
+| Status | Session row shows |
+|--------|------------------|
+| `waiting` | `[waiting]` badge · "N in lobby" · **[▶ Start]** button · 🗑 |
+| `active` | `[live]` badge · "N/M finished" · **[⏹ End]** button · View results · 🗑 |
+| `ended` | `[ended]` badge · View results · 🗑 |
+
+**Start game:** `PATCH /api/sessions/[id]` `{ status: 'active' }` → teacher auth required. Students polling lobby detect `status = 'active'` within ≤2s and start quiz.
+
+**End game (manual):** `PATCH /api/sessions/[id]` `{ status: 'ended' }` → students polling detect `status = 'ended'` and redirect to podium.
+
+---
+
+### Feature 3: Podium
+
+**Route:** `/s/[code]/podium` (public, no auth)
+
+Final results screen shown to students after game ends. Teacher link from dashboard to `/s/[code]/podium` for each ended session.
+
+```
+┌──────────────────────────────────────┐
+│  🏆  Final Results                   │
+│  FCE Vocabulary                      │
+│                                      │
+│  🥇  Nguyen Van A      18 / 20       │
+│  🥈  Tran Thi B        15 / 20       │
+│  🥉  Le Van C          14 / 20       │
+│  4.  Pham Thi D        12 / 20       │
+│  5.  Hoang Van E       10 / 20       │
+│                                      │
+│  [Play again]        [Home]          │
+└──────────────────────────────────────┘
+```
+
+- Data source: `GET /api/sessions/[id]/podium` — joins `attempts` for this session, orders by `score DESC, time_spent_ms ASC` (tiebreak: faster wins).
+- All students who submitted attempts appear; top 3 get medal icons.
+- Students who joined lobby but did not finish (no attempt row) are not shown.
+- "Play again" → `/s/[code]` (returns to name input if session is ended — shows error; effectively a no-op; teacher would need to create a new session).
+
+**Auto-redirect:** When `POST /api/attempts` detects all finished and sets `status = 'ended'`, the response includes `{ podiumRedirect: true }`. The quiz finish screen redirects to `/s/[code]/podium` instead of the normal results page.
+
+Students still in lobby when teacher manually ends game: their 2s poll returns `status = 'ended'` → redirect to `/s/[code]/podium` (they have no attempt row so they appear as spectators only).
+
+---
+
+### API summary
+
+| Method | Route | Auth | Purpose |
+|--------|-------|------|---------|
+| GET | `/api/sessions/lookup?code=` | none | Student poll: returns `{ id, status, quizTitle, timePerQuestion }` |
+| POST | `/api/lobby/join` | none | Upsert lobby presence in `session_progress` |
+| PATCH | `/api/sessions/[id]` | teacher | Update status: `{ status: 'active' \| 'ended' }` |
+| GET | `/api/sessions/[id]/podium` | none | Final rankings from `attempts` |
+| GET | `/api/sessions` | teacher | Enriched with `lobbyCount`, `finishedCount`, `status` |
+
+---
+
+### Files
+
+| File | Change |
+|------|--------|
+| `web/src/db/schema.ts` | Add `status` column to sessions |
+| `web/db/migrations/0011_session_status.sql` | Migration SQL |
+| `web/src/app/join/page.tsx` | New: /join landing page |
+| `web/src/app/s/[code]/page.tsx` | Add lobby state (waiting screen + 2s poll) |
+| `web/src/app/s/[code]/podium/page.tsx` | New: podium screen |
+| `web/src/app/api/sessions/lookup/route.ts` | New: lightweight status poll (GET ?code=) |
+| `web/src/app/api/lobby/join/route.ts` | New: upsert lobby presence |
+| `web/src/app/api/sessions/[id]/route.ts` | Add PATCH handler for status update |
+| `web/src/app/api/sessions/[id]/podium/route.ts` | New: ranked results from attempts |
+| `web/src/app/api/sessions/route.ts` | Enrich list with lobbyCount, finishedCount, status |
+| `web/src/app/api/attempts/route.ts` | Auto-trigger status=ended when all finished |
+| `web/src/app/teacher/page.tsx` | Show status badges, Start/End buttons, lobby count |
+
+---
+
+### E2E test scenarios
+
+| Scenario | Details |
+|----------|---------|
+| Student enters code on /join → lands on lobby | Code exists, status=waiting |
+| Student waits in lobby, teacher starts → quiz begins | Status poll detects active |
+| Multiple students join lobby → teacher sees count | lobbyCount increments |
+| Last student finishes → all auto-redirected to podium | Auto-trigger |
+| Teacher clicks End Game mid-session → podium shown | Manual trigger |
+| Student in lobby when teacher ends → redirect to podium | Poll detects ended |
+| Podium shows correct ranking (score DESC, time ASC) | Tiebreak verified |
