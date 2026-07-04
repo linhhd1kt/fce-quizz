@@ -15,8 +15,11 @@ export async function POST(
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
-  const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
-  if (!session?.isActive) {
+  const [session] = await db
+    .select({ id: sessions.id, status: sessions.status })
+    .from(sessions)
+    .where(eq(sessions.id, id));
+  if (!session || session.status === 'ended') {
     return NextResponse.json({ error: 'Session not found or inactive' }, { status: 404 });
   }
 
