@@ -67,9 +67,18 @@ export default function TeacherDashboard() {
     setCreatingFor(null);
   }
 
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   async function handleDeleteQuiz(id: string) {
     setDeleting(true);
-    await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
+    setDeleteError(null);
+    const res = await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setDeleteError(`Lỗi ${res.status}: ${body.error ?? 'unknown'}`);
+      setDeleting(false);
+      return;
+    }
     setConfirmDelete(null);
     setDeleting(false);
     await load();
@@ -77,7 +86,14 @@ export default function TeacherDashboard() {
 
   async function handleDeleteSession(id: string) {
     setDeleting(true);
-    await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+    setDeleteError(null);
+    const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setDeleteError(`Lỗi ${res.status}: ${body.error ?? 'unknown'}`);
+      setDeleting(false);
+      return;
+    }
     setConfirmDelete(null);
     setDeleting(false);
     await load();
@@ -131,6 +147,12 @@ export default function TeacherDashboard() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-10">
+        {deleteError && (
+          <div className="bg-red-950 border border-red-700 rounded-2xl p-4 flex items-center justify-between gap-4">
+            <p className="text-red-400 text-sm">{deleteError}</p>
+            <button onClick={() => setDeleteError(null)} className="text-slate-500 hover:text-slate-300 text-xl leading-none">×</button>
+          </div>
+        )}
         {newSessionCode && newSessionId && (
           <div className="bg-emerald-950 border border-emerald-700 rounded-2xl p-5 flex items-center justify-between gap-4">
             <div>
