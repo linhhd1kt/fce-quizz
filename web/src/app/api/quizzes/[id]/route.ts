@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
-import { quizzes } from '@/db/schema';
+import { quizzes, attempts } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthUserId } from '@/lib/server-auth';
 
@@ -37,6 +37,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     and(eq(quizzes.id, id), eq(quizzes.teacherId, teacherId))
   );
   if (!quiz) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  await db.delete(attempts).where(eq(attempts.quizId, id));
   await db.delete(quizzes).where(eq(quizzes.id, id));
   return NextResponse.json({ ok: true });
 }

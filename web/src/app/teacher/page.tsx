@@ -68,33 +68,33 @@ export default function TeacherDashboard() {
     setCreatingFor(null);
   }
 
-  async function handleDeleteQuiz(id: string) {
+  async function handleDeleteQuiz(id: string, title: string) {
     setDeleting(true);
     const res = await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      toast.error(`Xóa thất bại: ${body.error ?? res.status}`);
+      toast.error(`Failed to delete "${title}": ${body.error ?? res.status}`);
       setDeleting(false);
       return;
     }
     setConfirmDelete(null);
     setDeleting(false);
-    toast.success('Đã xóa quiz');
+    toast.success(`Deleted "${title}"`);
     await load();
   }
 
-  async function handleDeleteSession(id: string) {
+  async function handleDeleteSession(id: string, code: string) {
     setDeleting(true);
     const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      toast.error(`Xóa thất bại: ${body.error ?? res.status}`);
+      toast.error(`Failed to delete room ${code}: ${body.error ?? res.status}`);
       setDeleting(false);
       return;
     }
     setConfirmDelete(null);
     setDeleting(false);
-    toast.success('Đã xóa room');
+    toast.success(`Deleted room ${code}`);
     await load();
   }
 
@@ -212,7 +212,7 @@ export default function TeacherDashboard() {
                     {confirmDelete?.type === 'quiz' && confirmDelete.id === quiz.id ? (
                       <>
                         <span className="text-xs text-slate-400">Xóa tất cả rooms + dữ liệu?</span>
-                        <button onClick={() => handleDeleteQuiz(quiz.id)} disabled={deleting}
+                        <button onClick={() => handleDeleteQuiz(quiz.id, quiz.title)} disabled={deleting}
                           className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
                           {deleting ? '…' : 'Xóa'}
                         </button>
@@ -275,7 +275,7 @@ export default function TeacherDashboard() {
                           <span className="text-xs text-slate-400">
                             {isBatch ? `Xóa tất cả ${totalInBatch} parts?` : 'Xóa room này?'}
                           </span>
-                          <button onClick={() => handleDeleteSession(s.id)} disabled={deleting}
+                          <button onClick={() => handleDeleteSession(s.id, s.code)} disabled={deleting}
                             className="px-3 py-1.5 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
                             {deleting ? '…' : 'Xóa'}
                           </button>
