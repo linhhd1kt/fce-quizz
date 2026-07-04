@@ -1,5 +1,15 @@
 # FCEQuiz — Project Rules
 
+## Language
+
+**English only in code.** No Vietnamese anywhere in the codebase:
+- UI strings, labels, button text, placeholder text
+- Toast / error / success messages
+- Comments, variable names, function names
+- Commit messages, docs, spec, plan files
+
+Chat with developer: Vietnamese.
+
 ## Docs (single source of truth)
 
 - **Spec:** `docs/specs.md` — all feature specs with Mermaid flow diagrams (one file, append new sections)
