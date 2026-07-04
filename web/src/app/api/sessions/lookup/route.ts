@@ -3,18 +3,16 @@ import { db } from '@/db/client';
 import { sessions, quizzes } from '@/db/schema';
 import { eq, ilike } from 'drizzle-orm';
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
-  const { code } = await params;
+export async function GET(req: NextRequest) {
+  const code = req.nextUrl.searchParams.get('code');
+  if (!code) return NextResponse.json({ error: 'code required' }, { status: 400 });
+
   const [row] = await db
     .select({
       id: sessions.id,
-      code: sessions.code,
-      isActive: sessions.isActive,
       status: sessions.status,
-      questionsSubset: sessions.questionsSubset,
-      batchId: sessions.batchId,
-      batchOrder: sessions.batchOrder,
-      quizzes,
+      quizTitle: quizzes.title,
+      timePerQuestion: quizzes.timePerQuestion,
     })
     .from(sessions)
     .leftJoin(quizzes, eq(sessions.quizId, quizzes.id))
