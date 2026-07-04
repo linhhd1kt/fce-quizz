@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
-import { attempts, sessions, quizzes, studentStats, studentQuestionStats } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { attempts, sessions, quizzes, studentStats, studentQuestionStats, sessionProgress } from '@/db/schema';
+import { eq, and, sql, count } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { getAuthUserId } from '@/lib/server-auth';
 import { updateStreak } from '@/lib/streak';
@@ -30,11 +30,11 @@ export async function POST(req: NextRequest) {
   }
 
   const [session] = await db
-    .select({ id: sessions.id, quizId: sessions.quizId, isActive: sessions.isActive, questionsSubset: sessions.questionsSubset })
+    .select({ id: sessions.id, quizId: sessions.quizId, status: sessions.status, questionsSubset: sessions.questionsSubset })
     .from(sessions)
     .where(eq(sessions.id, sessionId));
 
-  if (!session || !session.isActive || !session.quizId) {
+  if (!session || session.status === 'ended' || !session.quizId) {
     return NextResponse.json({ error: 'Session not found or inactive.' }, { status: 404 });
   }
 
@@ -135,7 +135,43 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json(attempt, { status: 201 });
+  // Auto-trigger: end session when all students who joined lobby have finished
+  let podiumRedirect = false;
+  if (session.status === 'active') {
+    await db
+      .insert(sessionProgress)
+      .values({
+        sessionId,
+        studentName,
+        currentQuestion: totalQuestions,
+        score,
+        totalQuestions,
+        isFinished: true,
+        updatedAt: sql`now()`,
+      })
+      .onConflictDoUpdate({
+        target: [sessionProgress.sessionId, sessionProgress.studentName],
+        set: { isFinished: true, score, currentQuestion: totalQuestions, updatedAt: sql`now()` },
+      });
+
+    const [counts] = await db
+      .select({
+        total: count(),
+        finished: count(sql`CASE WHEN ${sessionProgress.isFinished} = true THEN 1 END`),
+      })
+      .from(sessionProgress)
+      .where(eq(sessionProgress.sessionId, sessionId));
+
+    if (counts && counts.total > 0 && Number(counts.total) === Number(counts.finished)) {
+      await db
+        .update(sessions)
+        .set({ status: 'ended' })
+        .where(eq(sessions.id, sessionId));
+      podiumRedirect = true;
+    }
+  }
+
+  return NextResponse.json({ ...attempt, podiumRedirect }, { status: 201 });
 }
 
 export async function GET(req: NextRequest) {
