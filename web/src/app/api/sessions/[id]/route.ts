@@ -43,3 +43,25 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   return NextResponse.json({ ok: true });
 }
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const teacherId = await getAuthUserId();
+  if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+
+  const body = await req.json().catch(() => ({}));
+  const { status } = body as { status?: string };
+
+  if (status !== 'active' && status !== 'ended') {
+    return NextResponse.json({ error: 'status must be active or ended' }, { status: 400 });
+  }
+
+  const [updated] = await db
+    .update(sessions)
+    .set({ status })
+    .where(and(eq(sessions.id, id), eq(sessions.teacherId, teacherId)))
+    .returning({ id: sessions.id, status: sessions.status });
+
+  if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(updated);
+}
