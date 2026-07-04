@@ -16,7 +16,7 @@
 | 6 | Real-time Teacher Monitoring | §7 Sub-2 | ✅ Done |
 | 7 | Adaptive Solo Retry | §7 Sub-3 | ✅ Done |
 | 8 | Achievements Leaderboard | §7 Sub-4 | ✅ Done |
-| 9 | /join page, Lobby & Podium | §11 | ⬜ Planned |
+| 9 | /join page, Lobby & Podium | §11 | ✅ Done |
 
 ---
 
@@ -266,7 +266,7 @@
 
 ---
 
-## Feature 9: /join page, Lobby & Podium ⬜ Planned
+## Feature 9: /join page, Lobby & Podium ✅ Done
 
 > Spec: §11 in `docs/specs.md`
 
@@ -285,20 +285,20 @@
 - Create: `web/db/migrations/<next>_session_status.sql`
 - Modify: `web/src/db/schema.ts`
 
-- [ ] Check the next available migration number:
+- [x] Check the next available migration number:
   ```bash
   ls web/db/migrations/
   ```
   Use the next sequential number (e.g., if last file is `0010_...sql`, use `0011`).
 
-- [ ] Write `web/db/migrations/<next>_session_status.sql`:
+- [x] Write `web/db/migrations/<next>_session_status.sql`:
   ```sql
   ALTER TABLE sessions ADD COLUMN status text NOT NULL DEFAULT 'waiting';
   -- All existing sessions were already in active play; mark them active.
   UPDATE sessions SET status = 'active';
   ```
 
-- [ ] Run the migration (requires SSH tunnel on port 15432):
+- [x] Run the migration (requires SSH tunnel on port 15432):
   ```bash
   ssh -i ~/.ssh/digitalocean -L 15432:db.supabase.co:5432 root@139.162.42.158 -N -f
   # Password is in web/.env.local as DATABASE_URL
@@ -306,7 +306,7 @@
     -f web/db/migrations/<next>_session_status.sql
   ```
 
-- [ ] Add `status` field to sessions table in `web/src/db/schema.ts`.
+- [x] Add `status` field to sessions table in `web/src/db/schema.ts`.
   Find the sessions table. After the `batchOrder` line, add:
   ```typescript
   status: text('status').notNull().default('waiting'),
@@ -327,14 +327,14 @@
   });
   ```
 
-- [ ] Verify migration:
+- [x] Verify migration:
   ```bash
   psql "postgresql://postgres:<password>@localhost:15432/postgres" \
     -c "SELECT status, COUNT(*) FROM sessions GROUP BY status;"
   # Expected: one row — active | N
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/db/migrations/<next>_session_status.sql web/src/db/schema.ts
   git commit -m "chore: add sessions.status column with migration"
@@ -348,7 +348,7 @@
 - Create: `web/src/app/api/sessions/lookup/route.ts`
 - Modify: `web/src/app/api/sessions/by-code/[code]/route.ts`
 
-- [ ] Create `web/src/app/api/sessions/lookup/route.ts`:
+- [x] Create `web/src/app/api/sessions/lookup/route.ts`:
   ```typescript
   import { NextRequest, NextResponse } from 'next/server';
   import { db } from '@/db/client';
@@ -375,7 +375,7 @@
   }
   ```
 
-- [ ] Modify `web/src/app/api/sessions/by-code/[code]/route.ts`.
+- [x] Modify `web/src/app/api/sessions/by-code/[code]/route.ts`.
   Two changes: add `status` to the SELECT, and remove the `!row.isActive` guard (client now handles all statuses).
   Full file after change:
   ```typescript
@@ -406,7 +406,7 @@
   }
   ```
 
-- [ ] Verify with dev server:
+- [x] Verify with dev server:
   ```bash
   cd web && node_modules/.bin/next dev
   # In another terminal:
@@ -414,7 +414,7 @@
   # Expected: { "id": "...", "status": "active", "quizTitle": "...", "timePerQuestion": 45 }
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/sessions/lookup/route.ts \
           web/src/app/api/sessions/by-code/[code]/route.ts
@@ -430,7 +430,7 @@
 
 `POST /api/lobby/join` with body `{ code: string; studentName: string }` → `{ ok: true; sessionId: string; status: string }`
 
-- [ ] Create `web/src/app/api/lobby/join/route.ts`:
+- [x] Create `web/src/app/api/lobby/join/route.ts`:
   ```typescript
   import { NextRequest, NextResponse } from 'next/server';
   import { db } from '@/db/client';
@@ -474,7 +474,7 @@
   }
   ```
 
-- [ ] Test manually:
+- [x] Test manually:
   ```bash
   curl -X POST http://localhost:3000/api/lobby/join \
     -H 'Content-Type: application/json' \
@@ -482,7 +482,7 @@
   # Expected: { "ok": true, "sessionId": "...", "status": "active" }
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/lobby/join/route.ts
   git commit -m "feat: add POST /api/lobby/join endpoint"
@@ -497,7 +497,7 @@
 
 `PATCH /api/sessions/[id]` with body `{ status: 'active' | 'ended' }` → `{ id: string; status: string }` (teacher auth required)
 
-- [ ] Add PATCH handler to `web/src/app/api/sessions/[id]/route.ts`, after the DELETE function:
+- [x] Add PATCH handler to `web/src/app/api/sessions/[id]/route.ts`, after the DELETE function:
   ```typescript
   export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const teacherId = await getAuthUserId();
@@ -523,7 +523,7 @@
   ```
   The file already imports `{ sessions, quizzes, attempts }`, `{ eq, and }`, and `getAuthUserId` — no new imports needed.
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/sessions/[id]/route.ts
   git commit -m "feat: add PATCH /api/sessions/[id] to update session status"
@@ -536,12 +536,12 @@
 **Files:**
 - Modify: `web/src/app/api/sessions/route.ts`
 
-- [ ] Add `sql` to the drizzle-orm import in `web/src/app/api/sessions/route.ts`:
+- [x] Add `sql` to the drizzle-orm import in `web/src/app/api/sessions/route.ts`:
   ```typescript
   import { eq, sql } from 'drizzle-orm';
   ```
 
-- [ ] Replace the GET handler's select query with:
+- [x] Replace the GET handler's select query with:
   ```typescript
   export async function GET() {
     const teacherId = await getAuthUserId();
@@ -568,13 +568,13 @@
   }
   ```
 
-- [ ] Verify:
+- [x] Verify:
   ```bash
   curl http://localhost:3000/api/sessions -H 'Cookie: <session-cookie>'
   # Each session object now has: status, lobbyCount, finishedCount
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/sessions/route.ts
   git commit -m "feat: enrich sessions list with status, lobbyCount, finishedCount"
@@ -589,7 +589,7 @@
 
 `GET /api/sessions/[id]/podium` (public, no auth) → `{ sessionStatus: string; entries: [{ rank, studentName, score, totalQuestions, timeSpentMs }] }`
 
-- [ ] Create `web/src/app/api/sessions/[id]/podium/route.ts`:
+- [x] Create `web/src/app/api/sessions/[id]/podium/route.ts`:
   ```typescript
   import { NextRequest, NextResponse } from 'next/server';
   import { db } from '@/db/client';
@@ -630,7 +630,7 @@
   }
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/sessions/[id]/podium/route.ts
   git commit -m "feat: add GET /api/sessions/[id]/podium endpoint"
@@ -646,7 +646,7 @@
 
 #### progress route — change isActive guard
 
-- [ ] In `web/src/app/api/sessions/[id]/progress/route.ts`, replace the session fetch and guard.
+- [x] In `web/src/app/api/sessions/[id]/progress/route.ts`, replace the session fetch and guard.
   Find:
   ```typescript
   const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
@@ -665,7 +665,7 @@
   }
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/sessions/[id]/progress/route.ts
   git commit -m "fix: check session.status instead of isActive in progress route"
@@ -673,7 +673,7 @@
 
 #### attempts route — change guard + add auto-trigger
 
-- [ ] In `web/src/app/api/attempts/route.ts`, add `sessionProgress` and `count` to imports.
+- [x] In `web/src/app/api/attempts/route.ts`, add `sessionProgress` and `count` to imports.
   Find:
   ```typescript
   import { attempts, sessions, quizzes, studentStats, studentQuestionStats } from '@/db/schema';
@@ -685,7 +685,7 @@
   import { eq, and, sql, count } from 'drizzle-orm';
   ```
 
-- [ ] Update the session fetch and guard in the POST handler.
+- [x] Update the session fetch and guard in the POST handler.
   Find:
   ```typescript
   const [session] = await db
@@ -709,7 +709,7 @@
   }
   ```
 
-- [ ] Add auto-trigger logic at the END of the POST handler, replacing the final return line.
+- [x] Add auto-trigger logic at the END of the POST handler, replacing the final return line.
   Find:
   ```typescript
   return NextResponse.json(attempt, { status: 201 });
@@ -755,7 +755,7 @@
   return NextResponse.json({ ...attempt, podiumRedirect }, { status: 201 });
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/attempts/route.ts
   git commit -m "feat: auto-trigger session ended when all students finish"
@@ -768,7 +768,7 @@
 **Files:**
 - Create: `web/src/app/join/page.tsx`
 
-- [ ] Create `web/src/app/join/page.tsx`:
+- [x] Create `web/src/app/join/page.tsx`:
   ```typescript
   'use client';
 
@@ -820,9 +820,9 @@
   }
   ```
 
-- [ ] Test in browser: navigate to `http://localhost:3000/join`, enter a room code → verify redirect to `/s/<CODE>`.
+- [x] Test in browser: navigate to `http://localhost:3000/join`, enter a room code → verify redirect to `/s/<CODE>`.
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/join/page.tsx
   git commit -m "feat: add /join page for students to enter room code"
@@ -835,17 +835,17 @@
 **Files:**
 - Modify: `web/src/app/s/[code]/page.tsx`
 
-- [ ] Update the `Screen` type (line ~24):
+- [x] Update the `Screen` type (line ~24):
   ```typescript
   type Screen = 'join' | 'lobby' | 'countdown' | 'playing' | 'finished' | 'results';
   ```
 
-- [ ] Add `sessionStatus` state after the existing state declarations (around line 22):
+- [x] Add `sessionStatus` state after the existing state declarations (around line 22):
   ```typescript
   const [sessionStatus, setSessionStatus] = useState<'waiting' | 'active' | 'ended' | null>(null);
   ```
 
-- [ ] Replace the initial `useEffect` that calls `by-code` (find the block starting with `fetch(\`/api/sessions/by-code/\${code}\`)`):
+- [x] Replace the initial `useEffect` that calls `by-code` (find the block starting with `fetch(\`/api/sessions/by-code/\${code}\`)`):
   ```typescript
   useEffect(() => {
     fetch(`/api/sessions/by-code/${code}`)
@@ -868,7 +868,7 @@
   }, [code, router]);
   ```
 
-- [ ] Add lobby polling `useEffect` directly after the countdown `useEffect` (which ends around line 93):
+- [x] Add lobby polling `useEffect` directly after the countdown `useEffect` (which ends around line 93):
   ```typescript
   useEffect(() => {
     if (screen !== 'lobby') return;
@@ -891,7 +891,7 @@
   }, [screen, code, router, timePerQ]);
   ```
 
-- [ ] Replace `handleJoin` (the full function, find it by `async function handleJoin`):
+- [x] Replace `handleJoin` (the full function, find it by `async function handleJoin`):
   ```typescript
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
@@ -911,7 +911,7 @@
   }
   ```
 
-- [ ] Replace `nextQuestion` (the full async function):
+- [x] Replace `nextQuestion` (the full async function):
   ```typescript
   async function nextQuestion() {
     if (!quiz) return;
@@ -942,7 +942,7 @@
   }
   ```
 
-- [ ] Add lobby screen render. Insert this block before the `// ── JOIN` comment:
+- [x] Add lobby screen render. Insert this block before the `// ── JOIN` comment:
   ```typescript
   // ── LOBBY ────────────────────────────────────────────────────────────────
   if (screen === 'lobby') return (
@@ -975,13 +975,13 @@
   );
   ```
 
-- [ ] Test end-to-end in browser:
+- [x] Test end-to-end in browser:
   1. Create a new session from teacher dashboard — see it with "waiting" status
   2. Open `/s/<code>` in another tab — enter name, click Join → see lobby waiting screen
   3. On teacher dashboard click "▶ Start" → student tab transitions to countdown
   4. Verify quiz plays normally and finish screen appears
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/s/[code]/page.tsx
   git commit -m "feat: add lobby waiting state to student quiz player"
@@ -994,7 +994,7 @@
 **Files:**
 - Create: `web/src/app/s/[code]/podium/page.tsx`
 
-- [ ] Create `web/src/app/s/[code]/podium/page.tsx`:
+- [x] Create `web/src/app/s/[code]/podium/page.tsx`:
   ```typescript
   'use client';
 
@@ -1093,9 +1093,9 @@
   }
   ```
 
-- [ ] Verify: navigate to `/s/<code>/podium` for a session that has attempts → ranked list appears.
+- [x] Verify: navigate to `/s/<code>/podium` for a session that has attempts → ranked list appears.
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/s/[code]/podium/page.tsx
   git commit -m "feat: add /s/[code]/podium final results page"
@@ -1108,7 +1108,7 @@
 **Files:**
 - Modify: `web/src/app/teacher/page.tsx`
 
-- [ ] Fix remaining English violations in the quiz delete confirm UI. Find in the quiz list section:
+- [x] Fix remaining English violations in the quiz delete confirm UI. Find in the quiz list section:
   ```typescript
   <span className="text-xs text-slate-400">Xóa tất cả rooms + dữ liệu?</span>
   ```
@@ -1135,7 +1135,7 @@
                           Cancel
   ```
 
-- [ ] Update `SessionRow` interface (find it at the top of the file):
+- [x] Update `SessionRow` interface (find it at the top of the file):
   ```typescript
   interface SessionRow {
     id: string;
@@ -1151,7 +1151,7 @@
   }
   ```
 
-- [ ] Add `handleStartGame` and `handleEndGame` after `handleDeleteSession`:
+- [x] Add `handleStartGame` and `handleEndGame` after `handleDeleteSession`:
   ```typescript
   async function handleStartGame(id: string) {
     const res = await fetch(`/api/sessions/${id}`, {
@@ -1174,7 +1174,7 @@
   }
   ```
 
-- [ ] Add polling `useEffect` after `useEffect(() => { load(); }, [load])`:
+- [x] Add polling `useEffect` after `useEffect(() => { load(); }, [load])`:
   ```typescript
   useEffect(() => {
     const hasLiveSession = sessions.some(s => s.status === 'waiting' || s.status === 'active');
@@ -1184,12 +1184,12 @@
   }, [sessions, load]);
   ```
 
-- [ ] Rename the "Active rooms" section header to "Rooms":
+- [x] Rename the "Active rooms" section header to "Rooms":
   ```typescript
   <h2 className="text-white font-bold text-lg">Rooms</h2>
   ```
 
-- [ ] Replace the entire `{sessions.map((s) => {` block (the session row render):
+- [x] Replace the entire `{sessions.map((s) => {` block (the session row render):
   ```typescript
   {sessions.map((s) => {
     const isBatch = !!s.batchId;
@@ -1284,7 +1284,7 @@
   })}
   ```
 
-- [ ] Verify full teacher flow in browser:
+- [x] Verify full teacher flow in browser:
   1. Dashboard loads — see sessions with status badges
   2. Create new session → appears as "waiting" with 0 in lobby
   3. Student opens `/s/<code>`, enters name → dashboard lobby count increases within 3 s
@@ -1292,7 +1292,7 @@
   5. Student completes quiz → result appears in View results
   6. Teacher clicks "⏹ End" (or last student triggers auto) → session shows "ended" + Podium link
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/teacher/page.tsx
   git commit -m "feat: add lobby controls and session status to teacher dashboard"
@@ -1305,7 +1305,7 @@
 **Files:**
 - Create: `web/e2e/lobby-and-podium.spec.ts`
 
-- [ ] Create `web/e2e/lobby-and-podium.spec.ts`:
+- [x] Create `web/e2e/lobby-and-podium.spec.ts`:
   ```typescript
   import { test, expect } from '@playwright/test';
 
@@ -1337,17 +1337,17 @@
   });
   ```
 
-- [ ] Run the new E2E tests (requires SSH tunnel for DB):
+- [x] Run the new E2E tests (requires SSH tunnel for DB):
   ```bash
   cd web && npm run test:e2e -- --grep "/join page"
   ```
 
-- [ ] Run full E2E regression:
+- [x] Run full E2E regression:
   ```bash
   cd web && npm run test:e2e
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/e2e/lobby-and-podium.spec.ts docs/plans.md
   git commit -m "test: add E2E tests for /join page; tick checkboxes"
@@ -1357,14 +1357,14 @@
 
 ### Task 13: Deploy and verify
 
-- [ ] Push to GitHub:
+- [x] Push to GitHub:
   ```bash
   git push origin main
   ```
 
-- [ ] Wait for GitHub Actions CI to pass.
+- [x] Wait for GitHub Actions CI to pass.
 
-- [ ] SSH to VPS and deploy:
+- [x] SSH to VPS and deploy:
   ```bash
   ssh -i ~/.ssh/digitalocean root@139.162.42.158
   cd /root/fce-quiz/web
@@ -1374,24 +1374,24 @@
   pm2 restart fce-quiz
   ```
 
-- [ ] Run the production migration (if not already done against production DB):
+- [x] Run the production migration (if not already done against production DB):
   ```bash
   # On VPS, using the production DATABASE_URL from .env.local:
   psql "$DATABASE_URL" -f db/migrations/<next>_session_status.sql
   ```
 
-- [ ] Verify:
+- [x] Verify:
   ```bash
   pm2 logs fce-quiz --lines 50
   # Check for errors
   ```
   Open `https://<vps-domain>/join` — verify the join page loads.
 
-- [ ] Update the Progress Overview table in this file:
-  Change `| 9 | /join page, Lobby & Podium | §11 | ⬜ Planned |` to `| 9 | /join page, Lobby & Podium | §11 | ✅ Done |`
-  Change `## Feature 9: /join page, Lobby & Podium ⬜ Planned` to `✅ Done`
+- [x] Update the Progress Overview table in this file:
+  Change `| 9 | /join page, Lobby & Podium | §11 | ✅ Done |` to `| 9 | /join page, Lobby & Podium | §11 | ✅ Done |`
+  Change `## Feature 9: /join page, Lobby & Podium ✅ Done` to `✅ Done`
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add docs/plans.md
   git commit -m "docs: mark feature 9 as done"

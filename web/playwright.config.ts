@@ -25,6 +25,11 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+    {
+      name: 'public',
+      testMatch: '**/lobby-and-podium.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
   webServer: {
     command: 'npm run dev',

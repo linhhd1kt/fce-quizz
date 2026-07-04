@@ -1,20 +1,32 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Live Leaderboard', () => {
+// Unauthenticated test — must clear session before navigating
+test.describe('Live Leaderboard — unauthenticated', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('unauthenticated user is redirected from live view', async ({ page }) => {
     await page.goto('/teacher/sessions/00000000-0000-0000-0000-000000000000/live');
     await page.waitForURL(/\/teacher\/login/, { timeout: 5000 });
   });
+});
 
+test.describe('Live Leaderboard', () => {
   test('teacher can access live view page', async ({ browser }) => {
-    const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/teacher.json' });
+    const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
     const teacherPage = await teacherContext.newPage();
 
     await teacherPage.goto('/teacher');
     await teacherPage.waitForLoadState('networkidle');
 
     const firstSessionLink = teacherPage.locator('a[href*="/teacher/sessions/"]').first();
-    const href = await firstSessionLink.getAttribute('href').catch(() => null);
+    const count = await firstSessionLink.count();
+    if (count === 0) {
+      await teacherContext.close();
+      test.skip();
+      return;
+    }
+
+    const href = await firstSessionLink.getAttribute('href', { timeout: 5000 }).catch(() => null);
 
     if (!href) {
       await teacherContext.close();
@@ -33,14 +45,21 @@ test.describe('Live Leaderboard', () => {
   });
 
   test('live view link exists on session detail page', async ({ browser }) => {
-    const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/teacher.json' });
+    const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
     const teacherPage = await teacherContext.newPage();
 
     await teacherPage.goto('/teacher');
     await teacherPage.waitForLoadState('networkidle');
 
     const firstSessionLink = teacherPage.locator('a[href*="/teacher/sessions/"]').first();
-    const href = await firstSessionLink.getAttribute('href').catch(() => null);
+    const count = await firstSessionLink.count();
+    if (count === 0) {
+      await teacherContext.close();
+      test.skip();
+      return;
+    }
+
+    const href = await firstSessionLink.getAttribute('href', { timeout: 5000 }).catch(() => null);
 
     if (!href) {
       await teacherContext.close();

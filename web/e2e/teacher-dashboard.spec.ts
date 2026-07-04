@@ -20,12 +20,15 @@ const MOCK_SESSIONS = [
   {
     id: 's1',
     code: 'XYZ789',
+    status: 'active',
     isActive: true,
     createdAt: '2026-06-30T00:00:00.000Z',
     quizTitle: 'FCE Practice Set 1',
     quizId: 'q1',
     batchId: null,
     batchOrder: null,
+    lobbyCount: 5,
+    finishedCount: 3,
   },
 ];
 
@@ -138,26 +141,26 @@ test.describe('Teacher Dashboard — authenticated', () => {
     await expect(page.getByRole('button', { name: 'Copy link' }).first()).toBeVisible();
   });
 
-  // Req 6 — Active Rooms section shows sessions with room code and quiz title
+  // Req 6 — Rooms section shows sessions with room code and quiz title
   test('active rooms section displays sessions with room code and quiz title', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Active rooms' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Rooms' })).toBeVisible();
 
     // Room code in orange monospace
     await expect(page.getByText('XYZ789')).toBeVisible();
 
     // Quiz title
-    const activeRoomsSection = page.locator('section', { hasText: 'Active rooms' });
-    await expect(activeRoomsSection.getByText('FCE Practice Set 1')).toBeVisible();
+    const roomsSection = page.locator('section', { hasText: 'Rooms' });
+    await expect(roomsSection.getByText('FCE Practice Set 1')).toBeVisible();
 
     // "Copy link" and "View results" buttons
-    await expect(activeRoomsSection.getByRole('button', { name: 'Copy link' })).toBeVisible();
-    await expect(activeRoomsSection.getByRole('link', { name: 'View results' })).toBeVisible();
+    await expect(roomsSection.getByRole('button', { name: 'Copy link' })).toBeVisible();
+    await expect(roomsSection.getByRole('link', { name: 'View results' })).toBeVisible();
   });
 
   // Req 7 — "View results" navigates to /teacher/sessions/[id]
   test('clicking "View results" navigates to /teacher/sessions/[id]', async ({ page }) => {
-    const activeRoomsSection = page.locator('section', { hasText: 'Active rooms' });
-    await activeRoomsSection.getByRole('link', { name: 'View results' }).click();
+    const roomsSection = page.locator('section', { hasText: 'Rooms' });
+    await roomsSection.getByRole('link', { name: 'View results' }).click();
     await expect(page).toHaveURL(/\/teacher\/sessions\/s1/);
   });
 });

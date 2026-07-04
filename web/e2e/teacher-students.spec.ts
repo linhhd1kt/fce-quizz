@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ storageState: 'e2e/.auth/teacher.json' });
+test.use({ storageState: 'e2e/.auth/user.json' });
 
 test('teacher can add student, see PIN, and delete', async ({ page }) => {
   await page.goto('/teacher/students');
