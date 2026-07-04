@@ -14,7 +14,7 @@ const TILES = [
   { bg: '#00c9a7', shadow: 'rgba(0,201,167,0.4)' },
 ] as const;
 
-type Screen = 'join' | 'countdown' | 'playing' | 'finished' | 'results';
+type Screen = 'join' | 'lobby' | 'countdown' | 'playing' | 'finished' | 'results';
 type Phase = 'question' | 'feedback';
 
 interface PlayState {
@@ -50,6 +50,7 @@ export default function StudentSessionPage() {
 
   const [screen, setScreen] = useState<Screen>('join');
   const [sessionId, setSessionId] = useState('');
+  const [sessionStatus, setSessionStatus] = useState<'waiting' | 'active' | 'ended' | null>(null);
   const [quiz, setQuiz] = useState<QuizRow | null>(null);
   const [studentName, setStudentName] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -82,6 +83,7 @@ export default function StudentSessionPage() {
       .then((s) => {
         if (!s) { setLoadError('Room not found or closed.'); return; }
         setSessionId(s.id);
+        setSessionStatus(s.status ?? 'active');
         setQuiz(s.quizzes);
         if (s.questionsSubset) setSessionQuestions(s.questionsSubset as MultipleChoiceQuestion[]);
         if (s.batchId) {
@@ -91,8 +93,9 @@ export default function StudentSessionPage() {
             .then((r) => r.ok ? r.json() : null)
             .then((parts) => { if (parts) setBatchParts(parts); });
         }
+        if (s.status === 'ended') router.push(`/s/${code}/podium`);
       });
-  }, [code]);
+  }, [code, router]);
 
   useEffect(() => {
     if (screen !== 'countdown') return;
@@ -104,6 +107,26 @@ export default function StudentSessionPage() {
     }, 1000);
     return () => clearInterval(t);
   }, [screen]);
+
+  useEffect(() => {
+    if (screen !== 'lobby') return;
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/sessions/lookup?code=${code}`);
+      if (!res.ok) return;
+      const data = await res.json() as { status: string };
+      if (data.status === 'active') {
+        clearInterval(interval);
+        setActiveQuestions(null);
+        setPlay({ phase: 'question', questionIndex: 0, selected: null, timeLeft: timePerQ, answers: [], questionStartedAt: Date.now() });
+        setScreen('countdown');
+        setCountdown(3);
+      } else if (data.status === 'ended') {
+        clearInterval(interval);
+        router.push(`/s/${code}/podium`);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [screen, code, router, timePerQ]);
 
   // Initialize teacher edit draft when entering feedback phase
   useEffect(() => {
@@ -186,7 +209,7 @@ export default function StudentSessionPage() {
     const next = play.questionIndex + 1;
     if (next >= questions.length) {
       const score = calculateScore(play.answers);
-      await fetch('/api/attempts', {
+      const res = await fetch('/api/attempts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -196,6 +219,13 @@ export default function StudentSessionPage() {
           answers: play.answers,
         }),
       });
+      if (res.ok) {
+        const data = await res.json() as { podiumRedirect?: boolean };
+        if (data.podiumRedirect) {
+          router.push(`/s/${code}/podium`);
+          return;
+        }
+      }
       setScreen('finished');
     } else {
       setPlay((prev) => ({ ...prev, phase: 'question', questionIndex: next, selected: null, timeLeft: timePerQ, questionStartedAt: Date.now() }));
@@ -214,7 +244,16 @@ export default function StudentSessionPage() {
     const name = nameInput.trim();
     if (!name) return;
     setStudentName(name);
-    startPlay(null);
+    if (sessionStatus === 'waiting') {
+      await fetch('/api/lobby/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, studentName: name }),
+      });
+      setScreen('lobby');
+    } else {
+      startPlay(null);
+    }
   }
 
   async function showResults() {
@@ -240,6 +279,36 @@ export default function StudentSessionPage() {
   if (!quiz) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
       <p className="text-slate-500 text-sm">Loading room…</p>
+    </div>
+  );
+
+  // ── LOBBY ────────────────────────────────────────────────────────────────
+  if (screen === 'lobby') return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4" style={{ background: '#2d0a1e' }}>
+      <GridPattern />
+      <div className="relative w-full max-w-sm space-y-6 text-center">
+        <div className="space-y-2">
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-orange-400 bg-orange-400/10 border border-orange-400/30">
+            {code.toUpperCase()}
+          </span>
+          <h1 className="text-white text-xl font-bold">{quiz?.title}</h1>
+        </div>
+        <div className="space-y-3">
+          <p className="text-white font-semibold">You&apos;re in the lobby!</p>
+          <p className="text-white/50 text-sm">Hi, {studentName} 👋</p>
+          <p className="text-white/40 text-sm">Waiting for teacher to start the game…</p>
+          <div className="flex justify-center gap-2 pt-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-orange-400"
+                style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`@keyframes pulse { 0%,100%{opacity:0.2} 50%{opacity:1} }`}</style>
     </div>
   );
 
