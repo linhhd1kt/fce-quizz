@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 
 interface QuizRow { id: string; title: string; questions: unknown[]; time_per_question: number; source?: string; }
-interface SessionRow { id: string; code: string; isActive: boolean; createdAt: string; quizTitle: string; batchId?: string | null; batchOrder?: number | null; }
+interface SessionRow { id: string; code: string; status: string; isActive: boolean; createdAt: string; quizTitle: string; batchId?: string | null; batchOrder?: number | null; lobbyCount: number; finishedCount: number; }
 interface BatchPart { id: string; code: string; batchOrder: number; questionCount: number; }
 interface BatchResult { batchId: string; quizTitle: string; parts: BatchPart[]; }
 
@@ -33,6 +33,13 @@ export default function TeacherDashboard() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const hasLiveSession = sessions.some(s => s.status === 'waiting' || s.status === 'active');
+    if (!hasLiveSession) return;
+    const interval = setInterval(load, 3000);
+    return () => clearInterval(interval);
+  }, [sessions, load]);
 
   async function handleCreateSession(quizId: string) {
     setCreatingFor(quizId);
@@ -95,6 +102,26 @@ export default function TeacherDashboard() {
     setConfirmDelete(null);
     setDeleting(false);
     toast.success(`Deleted room ${code}`);
+    await load();
+  }
+
+  async function handleStartGame(id: string) {
+    const res = await fetch(`/api/sessions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'active' }),
+    });
+    if (!res.ok) { toast.error('Failed to start game'); return; }
+    await load();
+  }
+
+  async function handleEndGame(id: string) {
+    const res = await fetch(`/api/sessions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ended' }),
+    });
+    if (!res.ok) { toast.error('Failed to end game'); return; }
     await load();
   }
 
@@ -211,14 +238,14 @@ export default function TeacherDashboard() {
                   <div className="flex items-center gap-2 shrink-0">
                     {confirmDelete?.type === 'quiz' && confirmDelete.id === quiz.id ? (
                       <>
-                        <span className="text-xs text-slate-400">Xóa tất cả rooms + dữ liệu?</span>
+                        <span className="text-xs text-slate-400">Delete quiz + all room data?</span>
                         <button onClick={() => handleDeleteQuiz(quiz.id, quiz.title)} disabled={deleting}
                           className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
-                          {deleting ? '…' : 'Xóa'}
+                          {deleting ? '…' : 'Delete'}
                         </button>
                         <button onClick={() => setConfirmDelete(null)}
                           className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
-                          Huỷ
+                          Cancel
                         </button>
                       </>
                     ) : (
@@ -250,11 +277,12 @@ export default function TeacherDashboard() {
 
         {sessions.length > 0 && (
           <section className="space-y-4">
-            <h2 className="text-white font-bold text-lg">Active rooms</h2>
+            <h2 className="text-white font-bold text-lg">Rooms</h2>
             <div className="space-y-2">
               {sessions.map((s) => {
                 const isBatch = !!s.batchId;
                 const totalInBatch = isBatch ? sessions.filter(x => x.batchId === s.batchId).length : null;
+                const status = s.status ?? 'active';
                 return (
                   <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 flex items-center gap-4">
                     <span className="font-mono font-black text-lg text-orange-400 w-20 shrink-0">{s.code}</span>
@@ -266,22 +294,41 @@ export default function TeacherDashboard() {
                             Part {s.batchOrder}/{totalInBatch}
                           </span>
                         )}
+                        {status === 'waiting' && (
+                          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600 font-semibold">
+                            waiting
+                          </span>
+                        )}
+                        {status === 'active' && (
+                          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800 font-semibold">
+                            live
+                          </span>
+                        )}
+                        {status === 'ended' && (
+                          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 border border-slate-700 font-semibold">
+                            ended
+                          </span>
+                        )}
                       </div>
-                      <p className="text-slate-500 text-xs">{new Date(s.createdAt).toLocaleDateString()}</p>
+                      <p className="text-slate-500 text-xs mt-0.5">
+                        {status === 'waiting' && `${s.lobbyCount} in lobby · `}
+                        {status === 'active' && `${s.finishedCount}/${s.lobbyCount} finished · `}
+                        {new Date(s.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {confirmDelete?.type === 'session' && confirmDelete.id === s.id ? (
                         <>
                           <span className="text-xs text-slate-400">
-                            {isBatch ? `Xóa tất cả ${totalInBatch} parts?` : 'Xóa room này?'}
+                            {isBatch ? `Delete all ${totalInBatch} parts?` : 'Delete this room?'}
                           </span>
                           <button onClick={() => handleDeleteSession(s.id, s.code)} disabled={deleting}
                             className="px-3 py-1.5 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
-                            {deleting ? '…' : 'Xóa'}
+                            {deleting ? '…' : 'Delete'}
                           </button>
                           <button onClick={() => setConfirmDelete(null)}
                             className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors">
-                            Huỷ
+                            Cancel
                           </button>
                         </>
                       ) : (
@@ -289,10 +336,30 @@ export default function TeacherDashboard() {
                           <button onClick={() => copyLink(s.code)} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
                             Copy link
                           </button>
-                          <Link href={`/teacher/sessions/${s.id}`}
-                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                            View results
-                          </Link>
+                          {status === 'waiting' && (
+                            <button onClick={() => handleStartGame(s.id)}
+                              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors">
+                              ▶ Start
+                            </button>
+                          )}
+                          {status === 'active' && (
+                            <button onClick={() => handleEndGame(s.id)}
+                              className="px-3 py-1.5 bg-red-800 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                              ⏹ End
+                            </button>
+                          )}
+                          {(status === 'active' || status === 'ended') && (
+                            <Link href={`/teacher/sessions/${s.id}`}
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                              View results
+                            </Link>
+                          )}
+                          {status === 'ended' && (
+                            <Link href={`/s/${s.code}/podium`}
+                              className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold rounded-lg transition-colors">
+                              Podium
+                            </Link>
+                          )}
                           <button onClick={() => setConfirmDelete({ type: 'session', id: s.id })}
                             className="px-1 text-slate-600 hover:text-red-400 text-sm transition-colors">
                             🗑
