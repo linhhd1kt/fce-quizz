@@ -54,6 +54,7 @@ export const sessions = pgTable('sessions', {
   questionsSubset: jsonb('questions_subset'),
   batchId: uuid('batch_id'),
   batchOrder: integer('batch_order'),
+  status: text('status').notNull().default('waiting'),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`now()`),
 });
 
