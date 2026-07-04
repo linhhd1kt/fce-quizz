@@ -28,3 +28,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(updated);
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const teacherId = await getAuthUserId();
+  if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { id } = await params;
+  const [quiz] = await db.select({ id: quizzes.id }).from(quizzes).where(
+    and(eq(quizzes.id, id), eq(quizzes.teacherId, teacherId))
+  );
+  if (!quiz) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  await db.delete(quizzes).where(eq(quizzes.id, id));
+  return NextResponse.json({ ok: true });
+}
