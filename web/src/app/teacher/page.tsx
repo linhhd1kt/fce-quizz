@@ -337,10 +337,18 @@ export default function TeacherDashboard() {
                             Copy link
                           </button>
                           {status === 'waiting' && (
-                            <button onClick={() => handleStartGame(s.id)}
-                              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors">
-                              ▶ Start
-                            </button>
+                            <>
+                              <Link
+                                href={`/teacher/sessions/${s.id}/lobby`}
+                                className="px-3 py-1.5 bg-violet-700 hover:bg-violet-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                              >
+                                👁 Lobby
+                              </Link>
+                              <button onClick={() => handleStartGame(s.id)}
+                                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors">
+                                ▶ Start
+                              </button>
+                            </>
                           )}
                           {status === 'active' && (
                             <button onClick={() => handleEndGame(s.id)}
