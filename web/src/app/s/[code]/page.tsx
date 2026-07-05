@@ -62,6 +62,7 @@ export default function StudentSessionPage() {
   const [batchId, setBatchId] = useState<string | null>(null);
   const [batchOrder, setBatchOrder] = useState<number | null>(null);
   const [batchParts, setBatchParts] = useState<{ id: string; code: string; batchOrder: number }[] | null>(null);
+  const [players, setPlayers] = useState<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Teacher edit state
@@ -127,6 +128,20 @@ export default function StudentSessionPage() {
     }, 2000);
     return () => clearInterval(interval);
   }, [screen, code, router, timePerQ]);
+
+  useEffect(() => {
+    if (screen !== 'lobby' || !sessionId) return;
+    const poll = async () => {
+      const res = await fetch(`/api/sessions/${sessionId}/players`);
+      if (res.ok) {
+        const data = await res.json() as { players: string[] };
+        setPlayers(data.players);
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, [screen, sessionId]);
 
   // Initialize teacher edit draft when entering feedback phase
   useEffect(() => {
@@ -284,28 +299,52 @@ export default function StudentSessionPage() {
 
   // ── LOBBY ────────────────────────────────────────────────────────────────
   if (screen === 'lobby') return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4" style={{ background: '#2d0a1e' }}>
-      <GridPattern />
-      <div className="relative w-full max-w-sm space-y-6 text-center">
-        <div className="space-y-2">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-orange-400 bg-orange-400/10 border border-orange-400/30">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 bg-gradient-to-br from-slate-950 via-violet-950 to-slate-950">
+      <div className="w-full max-w-md space-y-6 text-center">
+        {/* Room code — prominent */}
+        <div className="inline-block px-5 py-2 rounded-2xl bg-orange-500/20 border border-orange-500/40">
+          <span className="font-mono text-4xl font-black text-orange-400 tracking-widest">
             {code.toUpperCase()}
           </span>
-          <h1 className="text-white text-xl font-bold">{quiz?.title}</h1>
         </div>
-        <div className="space-y-3">
-          <p className="text-white font-semibold">You&apos;re in the lobby!</p>
+
+        {/* Quiz title */}
+        <p className="text-white/60 text-sm">{quiz?.title}</p>
+
+        {/* Greeting */}
+        <div className="space-y-1">
+          <h1 className="text-white text-2xl font-bold">You&apos;re in the lobby!</h1>
           <p className="text-white/50 text-sm">Hi, {studentName} 👋</p>
-          <p className="text-white/40 text-sm">Waiting for teacher to start the game…</p>
-          <div className="flex justify-center gap-2 pt-2">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full bg-orange-400"
-                style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
-              />
+        </div>
+
+        {/* Player grid */}
+        {players.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {players.map((p) => (
+              <span
+                key={p}
+                className="rounded-full px-3 py-1 bg-white/10 border border-white/20 text-sm text-white"
+              >
+                {p}
+              </span>
             ))}
           </div>
+        )}
+
+        {/* Count */}
+        <p className="text-white/40 text-sm">
+          {players.length} player{players.length !== 1 ? 's' : ''} joined
+        </p>
+
+        {/* Animated dots */}
+        <div className="flex justify-center gap-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-2 h-2 rounded-full bg-orange-400"
+              style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+            />
+          ))}
         </div>
       </div>
       <style>{`@keyframes pulse { 0%,100%{opacity:0.2} 50%{opacity:1} }`}</style>
