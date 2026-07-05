@@ -1,6 +1,6 @@
 # FCEQuiz — Master Specification
 
-**Last updated:** 2026-07-04  
+**Last updated:** 2026-07-05  
 **Status:** Living document — update alongside every code change
 
 ---
@@ -16,6 +16,7 @@
 7. [Student Auth & Profile](#7-student-auth--profile)
 8. [Middleware & Route Protection](#8-middleware--route-protection)
 9. [§11 — /join page, Lobby & Podium](#11----join-page-lobby--podium)
+10. [§12 — Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D](#12----wayground-redesign-player-grid-teacher-lobby-podium-3d)
 
 ---
 
@@ -1022,3 +1023,178 @@ Students still in lobby when teacher manually ends game: their 2s poll returns `
 | Teacher clicks End Game mid-session → podium shown | Manual trigger |
 | Student in lobby when teacher ends → redirect to podium | Poll detects ended |
 | Podium shows correct ranking (score DESC, time ASC) | Tiebreak verified |
+
+---
+
+## §12 — Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D
+
+**Date:** 2026-07-05 | **Status:** Planned | **Depends on:** §11
+
+### Overview
+
+Visual and UX redesign of the three lobby/podium screens to match Wayground.app's multiplayer game feel:
+
+1. **Student lobby** — gradient background, realtime player name grid, prominent room code
+2. **Teacher lobby page** — new fullscreen page optimized for projector, shows player grid + Start button
+3. **Podium** — 3D CSS blocks, confetti animation, reveal sequence, Play again button, score percentage
+
+No logic changes — state machine from §11 is kept as-is. No new npm dependencies.
+
+---
+
+### §12.1 — New API: Player List
+
+**`GET /api/sessions/[id]/players`** (public, no auth)
+
+Returns the list of student names currently in the lobby for a session.
+
+```typescript
+// Response
+{ players: string[] }
+
+// Query: session_progress WHERE session_id = id → studentName[]
+```
+
+Called every 2 seconds by both student lobby and teacher lobby page.
+
+---
+
+### §12.2 — Student Lobby Redesign (`/s/[code]`)
+
+The `lobby` screen inside `web/src/app/s/[code]/page.tsx` is restyled.
+
+**Background:** gradient `from-slate-950 via-violet-950 to-slate-950`
+
+**Layout:**
+
+```
+┌─────────────────────────────────┐
+│  ┌────────────────────────┐     │
+│  │       ABCXYZ           │     │  ← room code: large, orange pill badge
+│  └────────────────────────┘     │
+│  FCE Vocabulary                 │  ← quiz title
+│                                 │
+│  You're in the lobby!           │  ← h1
+│  Hi, Nguyen Van A 👋            │  ← subtitle
+│                                 │
+│  [Ana] [Bob] [Chi] [Duc]        │  ← player grid, wraps
+│  [Em]  [Fai] [Gia]              │
+│                                 │
+│  7 players joined               │  ← count
+│  ● ● ●  (animated dots)        │
+└─────────────────────────────────┘
+```
+
+**Player chips:** `rounded-full px-3 py-1 bg-white/10 border border-white/20 text-sm text-white`
+
+**Poll:** existing 2s lobby poll (lookup?code=) remains unchanged; add parallel 2s poll of `/api/sessions/[id]/players` storing result in `players: string[]` state.
+
+---
+
+### §12.3 — Teacher Lobby Page (new)
+
+**Route:** `/teacher/sessions/[id]/lobby` (teacher auth required)
+
+New fullscreen page for projecting on classroom screen.
+
+**Layout:**
+
+```
+┌──────────────────────────────────────────┐
+│  FCE Vocabulary              [← Back]    │
+│                                          │
+│         ┌─────────────────┐              │
+│         │    A B C X Y Z  │              │  ← monospace, text-8xl
+│         │   room code     │              │
+│         └─────────────────┘              │
+│                                          │
+│  12 players joined                       │
+│  [Ana] [Bob] [Chi] [Duc] [Em]  [Fai]    │  ← grid
+│  [Gia] [Hai] [Ivy] [Jac] [Kai] [Lam]   │
+│                                          │
+│         [ ▶  Start Game  ]              │  ← large button
+└──────────────────────────────────────────┘
+```
+
+**File:** `web/src/app/teacher/sessions/[id]/lobby/page.tsx` (new, `'use client'`)
+
+**Behavior:**
+- Fetches session info from `GET /api/sessions/[id]` (teacher-authenticated, already exists — returns `session.code` and `session.quiz.title`)
+- Polls `/api/sessions/[id]/players` every 2s for player list
+- "▶ Start Game" → `PATCH /api/sessions/[id]` `{ status: 'active' }` → `router.push('/teacher')`
+- "← Back" → `router.back()`
+- Background: same gradient as student lobby
+
+**Teacher dashboard change:** Add "👁 Lobby" link next to "▶ Start" button for sessions with `status === 'waiting'`:
+
+```tsx
+<Link href={`/teacher/sessions/${s.id}/lobby`}
+  className="px-3 py-1.5 bg-violet-700 hover:bg-violet-600 text-white text-xs font-semibold rounded-lg">
+  👁 Lobby
+</Link>
+```
+
+---
+
+### §12.4 — Podium Redesign (`/s/[code]/podium`)
+
+Complete visual redesign of `web/src/app/s/[code]/podium/page.tsx`.
+
+**Background:** `from-slate-950 via-violet-950 to-slate-950`
+
+**3D Podium blocks (CSS only):**
+
+```
+         🥇 NAME
+     🥈  ████ 🥉
+    NAME  ██  NAME
+   █████  ██  ████
+   █████  ██  ████
+    2nd   1st  3rd
+```
+
+Block heights: 1st = h-32, 2nd = h-24, 3rd = h-20  
+Colors: 1st = `bg-yellow-500`, 2nd = `bg-slate-400`, 3rd = `bg-amber-700`
+
+**Reveal animation (CSS only):**
+- 3rd appears at t=0.5s (slide up + fade in)
+- 2nd appears at t=1.2s
+- 1st appears at t=2.0s (larger, more dramatic)
+
+**Confetti (pure CSS `@keyframes`, no npm):**
+- ~40 colored `<div>` elements, absolute positioned, random horizontal start
+- `@keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1 } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0 } }`
+- 6 colors, staggered `animationDelay`
+
+**Score display:** `18 / 20 • 90%` (percentage = Math.round(score/totalQuestions*100))
+
+**Remaining players (4th+):** simple list below podium, `text-slate-400 text-sm`
+
+**Buttons:**
+```tsx
+<button onClick={() => router.push(`/s/${code}`)}>▶ Play again</button>
+<Link href="/">Home</Link>
+```
+
+---
+
+### §12.5 — Files
+
+| File | Change |
+|------|--------|
+| `web/src/app/api/sessions/[id]/players/route.ts` | New: GET player names |
+| `web/src/app/teacher/sessions/[id]/lobby/page.tsx` | New: teacher lobby fullscreen page |
+| `web/src/app/s/[code]/page.tsx` | Update lobby screen: gradient bg, player grid |
+| `web/src/app/s/[code]/podium/page.tsx` | Full redesign: 3D blocks, confetti, animation |
+| `web/src/app/teacher/page.tsx` | Add "👁 Lobby" link for waiting sessions |
+
+---
+
+### §12.6 — E2E test scenarios
+
+| Scenario | Details |
+|----------|---------|
+| Lobby shows player names as students join | Poll /players, names appear in grid |
+| Teacher lobby page shows room code + player grid | Fullscreen, Start button works |
+| Podium shows 3D blocks + Play again button | Top 3 in blocks, rest in list |
+| Score shows X/Y • Z% format | Percentage calculated correctly |
