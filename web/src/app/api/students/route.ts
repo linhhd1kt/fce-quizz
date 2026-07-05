@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { db } from '@/db/client';
 import { students, studentStats } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 
 function generatePin(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -14,7 +14,7 @@ function generateUsername(displayName: string): string {
 }
 
 export async function GET() {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const rows = await db
@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: { display_name?: string };

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { db } from '@/db/client';
 import { students } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 
 function generatePin(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -13,7 +13,7 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { sessions, quizzes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 import type { MultipleChoiceQuestion } from '@/types/quiz';
 import { chunkByTargetGames } from '@/lib/chunk-by-target-games';
 
@@ -21,7 +21,7 @@ async function uniqueCode(): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { quizId, batchSize, targetGames } = await req.json();

@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { quizzes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 
 export async function GET() {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const data = await db.select().from(quizzes).where(eq(quizzes.teacherId, teacherId)).orderBy(quizzes.createdAt);
   return NextResponse.json(data);
 }
 
 export async function POST(req: NextRequest) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
   const [quiz] = await db.insert(quizzes).values({

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { quizzes, attempts } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const [quiz] = await db.select().from(quizzes).where(
@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const body = await req.json();
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   const [quiz] = await db.select({ id: quizzes.id }).from(quizzes).where(

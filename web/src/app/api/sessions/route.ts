@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { sessions, quizzes } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function generateCode() {
@@ -10,7 +10,7 @@ function generateCode() {
 }
 
 export async function GET() {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const data = await db
     .select({
@@ -34,7 +34,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const teacherId = await getAuthUserId();
+  const teacherId = await getAuthTeacherId();
   if (!teacherId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { quizId } = await req.json();
   if (!quizId) return NextResponse.json({ error: 'quizId required' }, { status: 400 });

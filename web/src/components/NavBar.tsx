@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useI18n, SUPPORTED_LOCALES } from '@/i18n';
 
@@ -9,6 +10,9 @@ export default function NavBar() {
   const m = msgs.nav;
   const { data: session } = useSession();
   const role = (session?.user as { role?: string } | undefined)?.role;
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/teacher')) return null;
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">

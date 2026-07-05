@@ -7,7 +7,7 @@ import os from 'os';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require('pdf-parse') as (buf: Buffer, opts?: { max?: number }) => Promise<{ text: string; numpages: number }>;
 import OpenAI from 'openai';
-import { getAuthUserId } from '@/lib/server-auth';
+import { getAuthTeacherId } from '@/lib/server-auth';
 
 export const maxDuration = 60;
 
@@ -226,7 +226,7 @@ async function callAI(
 }
 
 export async function POST(req: NextRequest) {
-  const userId = await getAuthUserId();
+  const userId = await getAuthTeacherId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const apiKey = process.env.GITHUB_TOKEN;
