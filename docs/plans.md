@@ -17,7 +17,7 @@
 | 7 | Adaptive Solo Retry | §7 Sub-3 | ✅ Done |
 | 8 | Achievements Leaderboard | §7 Sub-4 | ✅ Done |
 | 9 | /join page, Lobby & Podium | §11 | ✅ Done |
-| 10 | Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D | §12 | ⬜ Planned |
+| 10 | Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D | §12 | ✅ Done |
 
 ---
 
@@ -1401,7 +1401,7 @@
 
 ---
 
-## Feature 10: Wayground Redesign — Player Grid, Teacher Lobby, Podium 3D ⬜ Planned
+## Feature 10: Wayground Redesign — Player Grid, Teacher Lobby, Podium 3D ✅ Done
 
 **Spec:** §12 | **Depends on:** Feature 9
 
