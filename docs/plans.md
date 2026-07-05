@@ -17,6 +17,7 @@
 | 7 | Adaptive Solo Retry | §7 Sub-3 | ✅ Done |
 | 8 | Achievements Leaderboard | §7 Sub-4 | ✅ Done |
 | 9 | /join page, Lobby & Podium | §11 | ✅ Done |
+| 10 | Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D | §12 | ⬜ Planned |
 
 ---
 
@@ -1397,3 +1398,722 @@
   git commit -m "docs: mark feature 9 as done"
   git push origin main
   ```
+
+---
+
+## Feature 10: Wayground Redesign — Player Grid, Teacher Lobby, Podium 3D ⬜ Planned
+
+**Spec:** §12 | **Depends on:** Feature 9
+
+### Task 1: `GET /api/sessions/[id]/players` — Player list API
+
+**File:** Create `web/src/app/api/sessions/[id]/players/route.ts`
+
+This is a public endpoint (no auth) that returns the list of student names currently tracked in `session_progress` for a session. Called every 2s by both student lobby and teacher lobby page.
+
+- [ ] Create the file with this content:
+
+  ```typescript
+  import { NextRequest, NextResponse } from 'next/server';
+  import { db } from '@/db/client';
+  import { sessionProgress } from '@/db/schema';
+  import { eq } from 'drizzle-orm';
+
+  export async function GET(
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) {
+    const { id } = await params;
+    const rows = await db
+      .selectDistinct({ studentName: sessionProgress.studentName })
+      .from(sessionProgress)
+      .where(eq(sessionProgress.sessionId, id));
+    return NextResponse.json({ players: rows.map((r) => r.studentName) });
+  }
+  ```
+
+- [ ] Start dev server if not running:
+  ```bash
+  cd web && node_modules/.bin/next dev
+  ```
+
+- [ ] Verify the route works (replace UUID with a real session id from DB):
+  ```bash
+  curl http://localhost:3000/api/sessions/00000000-0000-0000-0000-000000000000/players
+  # Expected: {"players":[]} (or a list of names if session has players)
+  ```
+
+- [ ] Commit:
+  ```bash
+  git add web/src/app/api/sessions/[id]/players/route.ts
+  git commit -m "feat: add GET /api/sessions/[id]/players endpoint"
+  ```
+
+- [ ] Tick this task's checkbox in `docs/plans.md` and commit alongside code above (or in a separate commit).
+
+---
+
+### Task 2: Student lobby redesign — gradient background + player grid
+
+**File:** Modify `web/src/app/s/[code]/page.tsx`
+
+Changes:
+1. Add `players` state.
+2. Add `useEffect` that polls `/api/sessions/[sessionId]/players` every 2s while on lobby screen.
+3. Replace the lobby JSX with Wayground-style layout: gradient background, prominent room code, player chips, count.
+
+- [ ] Add `players` state near the other `useState` calls (around line 51). The exact insertion: after the line `const [batchParts, setBatchParts] = useState<...>`:
+
+  ```typescript
+  const [players, setPlayers] = useState<string[]>([]);
+  ```
+
+- [ ] Add a `useEffect` for polling players. Place it after the existing lobby poll effect (after line ~129). The effect depends on `screen`, `sessionId`:
+
+  ```typescript
+  useEffect(() => {
+    if (screen !== 'lobby' || !sessionId) return;
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/sessions/${sessionId}/players`);
+      if (res.ok) {
+        const data = await res.json() as { players: string[] };
+        setPlayers(data.players);
+      }
+    }, 2000);
+    // Fetch immediately on mount too
+    fetch(`/api/sessions/${sessionId}/players`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setPlayers(data.players); });
+    return () => clearInterval(interval);
+  }, [screen, sessionId]);
+  ```
+
+- [ ] Replace the entire lobby JSX block (lines 285–313, starting `// ── LOBBY` and ending before `// ── JOIN`). The new lobby:
+
+  ```tsx
+  // ── LOBBY ────────────────────────────────────────────────────────────────
+  if (screen === 'lobby') return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 bg-gradient-to-br from-slate-950 via-violet-950 to-slate-950">
+      <div className="w-full max-w-md space-y-6 text-center">
+        {/* Room code — prominent */}
+        <div className="inline-block px-5 py-2 rounded-2xl bg-orange-500/20 border border-orange-500/40">
+          <span className="font-mono text-4xl font-black text-orange-400 tracking-widest">
+            {code.toUpperCase()}
+          </span>
+        </div>
+
+        {/* Quiz title */}
+        <p className="text-white/60 text-sm">{quiz?.title}</p>
+
+        {/* Greeting */}
+        <div className="space-y-1">
+          <h1 className="text-white text-2xl font-bold">You&apos;re in the lobby!</h1>
+          <p className="text-white/50 text-sm">Hi, {studentName} 👋</p>
+        </div>
+
+        {/* Player grid */}
+        {players.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {players.map((p) => (
+              <span
+                key={p}
+                className="rounded-full px-3 py-1 bg-white/10 border border-white/20 text-sm text-white"
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Count */}
+        <p className="text-white/40 text-sm">
+          {players.length} player{players.length !== 1 ? 's' : ''} joined
+        </p>
+
+        {/* Animated dots */}
+        <div className="flex justify-center gap-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-2 h-2 rounded-full bg-orange-400"
+              style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+            />
+          ))}
+        </div>
+      </div>
+      <style>{`@keyframes pulse { 0%,100%{opacity:0.2} 50%{opacity:1} }`}</style>
+    </div>
+  );
+  ```
+
+- [ ] Open browser at `http://localhost:3000/s/TESTCODE` and enter a name when session status is `waiting`. Verify:
+  - Background is dark gradient (not solid dark red `#2d0a1e`)
+  - Room code shows large in orange monospace
+  - Player chips appear after 2s (check with a real waiting session or mock)
+  - Animated dots still pulse
+
+- [ ] Commit:
+  ```bash
+  git add web/src/app/s/[code]/page.tsx
+  git commit -m "feat: redesign student lobby with gradient bg and player grid"
+  ```
+
+- [ ] Tick checkbox in `docs/plans.md` and include in commit above.
+
+---
+
+### Task 3: Podium 3D redesign — blocks, confetti, reveal, score%
+
+**File:** Replace `web/src/app/s/[code]/podium/page.tsx` entirely.
+
+Key design:
+- Gradient background (`from-slate-950 via-violet-950 to-slate-950`)
+- 3D CSS podium: 2nd (h-24, slate) | 1st (h-32, yellow) | 3rd (h-20, amber) — left to right
+- CSS-only confetti: 40 `<div>` elements, `@keyframes fall`
+- Reveal animation: 3rd appears at `animationDelay: 0.5s`, 2nd at `1.2s`, 1st at `2.0s` (all slide up from `translateY(40px)`)
+- Score format: `18 / 20 • 90%`
+- Buttons: "▶ Play again" (→ `/s/${code}`) and "Home" (→ `/`)
+- 4th+ players: simple list below podium
+
+- [ ] Replace the full content of `web/src/app/s/[code]/podium/page.tsx` with:
+
+  ```tsx
+  'use client';
+
+  import { useEffect, useState } from 'react';
+  import { useParams, useRouter } from 'next/navigation';
+  import Link from 'next/link';
+
+  interface PodiumEntry {
+    rank: number;
+    studentName: string;
+    score: number;
+    totalQuestions: number;
+    timeSpentMs: number;
+  }
+
+  const CONFETTI_COLORS = ['#f59e0b', '#8b5cf6', '#10b981', '#ef4444', '#3b82f6', '#f97316'];
+
+  function Confetti() {
+    const pieces = Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      left: `${i * 2.5}%`,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: `${(i * 0.08).toFixed(2)}s`,
+      duration: `${3 + (i % 3)}s`,
+      width: `${6 + (i % 5)}px`,
+      height: `${12 + (i % 7)}px`,
+    }));
+    return (
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {pieces.map((p) => (
+          <div
+            key={p.id}
+            className="absolute top-0"
+            style={{
+              left: p.left,
+              width: p.width,
+              height: p.height,
+              background: p.color,
+              borderRadius: '2px',
+              animationName: 'fall',
+              animationDuration: p.duration,
+              animationDelay: p.delay,
+              animationTimingFunction: 'linear',
+              animationFillMode: 'both',
+              animationIterationCount: '1',
+            }}
+          />
+        ))}
+        <style>{`@keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
+      </div>
+    );
+  }
+
+  const PODIUM_CONFIG = {
+    1: { height: 'h-32', bg: 'bg-yellow-500', medal: '🥇', textSize: 'text-lg' },
+    2: { height: 'h-24', bg: 'bg-slate-400', medal: '🥈', textSize: 'text-base' },
+    3: { height: 'h-20', bg: 'bg-amber-700', medal: '🥉', textSize: 'text-base' },
+  } as const;
+
+  function PodiumBlock({ entry, animDelay }: { entry: PodiumEntry; animDelay: string }) {
+    const rank = entry.rank as 1 | 2 | 3;
+    const cfg = PODIUM_CONFIG[rank];
+    const pct = Math.round((entry.score / entry.totalQuestions) * 100);
+    return (
+      <div
+        className="flex flex-col items-center"
+        style={{
+          animationName: 'slideUp',
+          animationDuration: '0.6s',
+          animationDelay: animDelay,
+          animationTimingFunction: 'cubic-bezier(0.34,1.56,0.64,1)',
+          animationFillMode: 'both',
+        }}
+      >
+        <span className="text-3xl mb-1">{cfg.medal}</span>
+        <p className={`text-white font-bold mb-1 text-center w-24 truncate ${cfg.textSize}`}>{entry.studentName}</p>
+        <p className="text-white/50 text-xs mb-2">
+          {entry.score} / {entry.totalQuestions} • {pct}%
+        </p>
+        <div className={`w-24 sm:w-28 ${cfg.height} ${cfg.bg} rounded-t-xl flex items-center justify-center shadow-lg`}>
+          <span className="text-white/30 text-4xl font-black">{rank}</span>
+        </div>
+      </div>
+    );
+  }
+
+  export default function PodiumPage() {
+    const { code } = useParams<{ code: string }>();
+    const router = useRouter();
+    const [entries, setEntries] = useState<PodiumEntry[]>([]);
+    const [quizTitle, setQuizTitle] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      fetch(`/api/sessions/lookup?code=${code}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then(async (session) => {
+          if (!session) { setLoading(false); return; }
+          setQuizTitle(session.quizTitle ?? '');
+          const res = await fetch(`/api/sessions/${session.id}/podium`);
+          if (res.ok) {
+            const data = await res.json() as { entries: PodiumEntry[] };
+            setEntries(data.entries);
+          }
+          setLoading(false);
+        });
+    }, [code]);
+
+    if (loading) return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-violet-950 to-slate-950">
+        <p className="text-slate-500 text-sm">Loading results…</p>
+      </div>
+    );
+
+    const top3 = entries.filter((e) => e.rank <= 3);
+    const rest = entries.filter((e) => e.rank > 3);
+    const byRank = (r: number) => top3.find((e) => e.rank === r);
+
+    const REVEAL_DELAYS: Record<number, string> = { 3: '0.5s', 2: '1.2s', 1: '2.0s' };
+
+    return (
+      <div className="min-h-screen relative flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-br from-slate-950 via-violet-950 to-slate-950 overflow-hidden">
+        <Confetti />
+
+        <div className="relative z-10 w-full max-w-xl space-y-8 text-center">
+          <div>
+            <h1 className="text-white text-3xl font-black">Final Results</h1>
+            {quizTitle && <p className="text-white/40 text-sm mt-1">{quizTitle}</p>}
+          </div>
+
+          {entries.length === 0 ? (
+            <p className="text-slate-500 text-sm">No results yet.</p>
+          ) : (
+            <>
+              {/* Podium: 2nd | 1st | 3rd */}
+              <div className="flex items-end justify-center gap-4">
+                {byRank(2) && <PodiumBlock entry={byRank(2)!} animDelay={REVEAL_DELAYS[2]} />}
+                {byRank(1) && <PodiumBlock entry={byRank(1)!} animDelay={REVEAL_DELAYS[1]} />}
+                {byRank(3) && <PodiumBlock entry={byRank(3)!} animDelay={REVEAL_DELAYS[3]} />}
+              </div>
+
+              {/* 4th+ */}
+              {rest.length > 0 && (
+                <div className="space-y-1.5">
+                  {rest.map((entry) => {
+                    const pct = Math.round((entry.score / entry.totalQuestions) * 100);
+                    return (
+                      <div key={entry.studentName} className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5">
+                        <span className="text-slate-500 text-sm w-6 text-right shrink-0">{entry.rank}.</span>
+                        <span className="flex-1 text-white/70 text-sm truncate text-left">{entry.studentName}</span>
+                        <span className="text-slate-400 text-sm shrink-0">{entry.score} / {entry.totalQuestions} • {pct}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push(`/s/${code}`)}
+              className="flex-1 py-3.5 rounded-2xl text-white font-black text-base transition hover:brightness-110 active:scale-95"
+              style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 20px' }}
+            >
+              ▶ Play again
+            </button>
+            <Link
+              href="/"
+              className="px-6 py-3.5 rounded-2xl text-slate-300 font-semibold text-base bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              Home
+            </Link>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+  ```
+
+- [ ] Open `http://localhost:3000/s/SOMECODE/podium` (use a real ended session code from DB or the teacher dashboard). Verify:
+  - Dark violet gradient background
+  - Confetti pieces fall from top
+  - 2nd block on left (silver, shorter), 1st in center (gold, tallest), 3rd on right (bronze)
+  - Blocks slide up with staggered delay
+  - Score shows `X / Y • Z%` format
+  - "▶ Play again" button is visible
+  - "Home" link is visible
+
+- [ ] Commit:
+  ```bash
+  git add web/src/app/s/[code]/podium/page.tsx
+  git commit -m "feat: redesign podium with 3D blocks, confetti, and score percentage"
+  ```
+
+- [ ] Tick checkbox in `docs/plans.md` and include in commit.
+
+---
+
+### Task 4: Teacher lobby page — fullscreen projector view
+
+**File:** Create `web/src/app/teacher/sessions/[id]/lobby/page.tsx`
+
+This page is for the teacher to project on a classroom screen. It shows the room code large, the player list live, and a Start Game button. Teacher auth is enforced by the existing Next.js middleware (`/teacher/*` is protected).
+
+- [ ] Create directory and file:
+  ```bash
+  mkdir -p web/src/app/teacher/sessions/\[id\]/lobby
+  ```
+
+- [ ] Create `web/src/app/teacher/sessions/[id]/lobby/page.tsx`:
+
+  ```tsx
+  'use client';
+
+  import { useEffect, useState, useCallback } from 'react';
+  import { useParams, useRouter } from 'next/navigation';
+
+  interface SessionInfo {
+    id: string;
+    code: string;
+    quiz: { title: string } | null;
+  }
+
+  export default function TeacherLobbyPage() {
+    const { id } = useParams<{ id: string }>();
+    const router = useRouter();
+    const [session, setSession] = useState<SessionInfo | null>(null);
+    const [players, setPlayers] = useState<string[]>([]);
+    const [starting, setStarting] = useState(false);
+
+    // Fetch session info once (teacher-authenticated)
+    useEffect(() => {
+      fetch(`/api/sessions/${id}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data: { session: SessionInfo } | null) => {
+          if (data?.session) setSession(data.session);
+        });
+    }, [id]);
+
+    // Poll player list every 2s
+    const fetchPlayers = useCallback(async () => {
+      const res = await fetch(`/api/sessions/${id}/players`);
+      if (res.ok) {
+        const data = await res.json() as { players: string[] };
+        setPlayers(data.players);
+      }
+    }, [id]);
+
+    useEffect(() => {
+      fetchPlayers();
+      const interval = setInterval(fetchPlayers, 2000);
+      return () => clearInterval(interval);
+    }, [fetchPlayers]);
+
+    async function handleStart() {
+      setStarting(true);
+      await fetch(`/api/sessions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' }),
+      });
+      router.push('/teacher');
+    }
+
+    const code = session?.code ?? '';
+    const title = session?.quiz?.title ?? '';
+
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center px-6 bg-gradient-to-br from-slate-950 via-violet-950 to-slate-950">
+        <button
+          onClick={() => router.back()}
+          className="absolute top-4 left-4 text-white/40 hover:text-white text-sm transition-colors"
+        >
+          ← Back
+        </button>
+
+        <div className="w-full max-w-3xl space-y-10 text-center">
+          {title && <p className="text-white/60 text-lg font-medium">{title}</p>}
+
+          {/* Room code — large */}
+          <div>
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-3">Room Code</p>
+            <div className="inline-block px-10 py-5 rounded-2xl bg-white/5 border-2 border-white/10">
+              <span className="font-mono text-7xl sm:text-8xl font-black text-orange-400 tracking-widest">
+                {code.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Player count */}
+          <p className="text-white/60 text-xl">
+            {players.length} player{players.length !== 1 ? 's' : ''} joined
+          </p>
+
+          {/* Player grid */}
+          {players.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-3">
+              {players.map((p) => (
+                <span
+                  key={p}
+                  className="rounded-full px-4 py-2 bg-white/10 border border-white/20 text-white text-base font-medium"
+                >
+                  {p}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Start button */}
+          <button
+            onClick={handleStart}
+            disabled={starting || players.length === 0}
+            className="px-12 py-4 rounded-2xl text-white text-xl font-black transition disabled:opacity-40 hover:brightness-110 active:scale-95"
+            style={{ background: '#e86020', boxShadow: 'rgba(232,96,32,0.4) 0 4px 24px' }}
+          >
+            {starting ? 'Starting…' : '▶ Start Game'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+  ```
+
+- [ ] Verify the page loads at `http://localhost:3000/teacher/sessions/<real-session-id>/lobby` (use a real session id from dashboard). Confirm:
+  - Gradient background shown
+  - Room code displayed in large orange monospace
+  - Player count updates every 2s
+  - "▶ Start Game" button is visible (disabled when 0 players)
+  - "← Back" button works
+
+- [ ] Commit:
+  ```bash
+  git add web/src/app/teacher/sessions/\[id\]/lobby/page.tsx
+  git commit -m "feat: add teacher lobby fullscreen page with live player list"
+  ```
+
+- [ ] Tick checkbox in `docs/plans.md` and include in commit.
+
+---
+
+### Task 5: Teacher dashboard — "👁 Lobby" link for waiting sessions
+
+**File:** Modify `web/src/app/teacher/page.tsx`
+
+Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status === 'waiting'`. The link navigates to the new `/teacher/sessions/[id]/lobby` page.
+
+- [ ] In `web/src/app/teacher/page.tsx`, find the `status === 'waiting'` block (around line 339). It currently renders:
+
+  ```tsx
+  {status === 'waiting' && (
+    <button onClick={() => handleStartGame(s.id)}
+      className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors">
+      ▶ Start
+    </button>
+  )}
+  ```
+
+  Replace it with:
+
+  ```tsx
+  {status === 'waiting' && (
+    <>
+      <Link
+        href={`/teacher/sessions/${s.id}/lobby`}
+        className="px-3 py-1.5 bg-violet-700 hover:bg-violet-600 text-white text-xs font-semibold rounded-lg transition-colors"
+      >
+        👁 Lobby
+      </Link>
+      <button
+        onClick={() => handleStartGame(s.id)}
+        className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
+      >
+        ▶ Start
+      </button>
+    </>
+  )}
+  ```
+
+- [ ] Verify in browser at `http://localhost:3000/teacher` — create or find a waiting session, confirm the "👁 Lobby" link appears next to "▶ Start", and clicking it navigates to the new teacher lobby page.
+
+- [ ] Commit:
+  ```bash
+  git add web/src/app/teacher/page.tsx
+  git commit -m "feat: add Lobby link on teacher dashboard for waiting sessions"
+  ```
+
+- [ ] Tick checkbox in `docs/plans.md` and include in commit.
+
+---
+
+### Task 6: E2E tests + deploy
+
+**Files:**
+- Modify `web/e2e/lobby-and-podium.spec.ts` — add tests for redesigned UI
+- Deploy to production
+
+#### 6a — E2E tests
+
+- [ ] Add the following test blocks to `web/e2e/lobby-and-podium.spec.ts` (append after the existing `/join page` tests):
+
+  ```typescript
+  test.describe('Teacher Lobby Page — unauthenticated', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test('unauthenticated user is redirected from teacher lobby page', async ({ page }) => {
+      await page.goto('/teacher/sessions/00000000-0000-0000-0000-000000000000/lobby');
+      await page.waitForURL(/\/teacher\/login/, { timeout: 5000 });
+    });
+  });
+
+  test.describe('Teacher Lobby Page — authenticated', () => {
+    test('teacher can access lobby page for waiting session', async ({ browser }) => {
+      const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
+      const teacherPage = await teacherContext.newPage();
+
+      await teacherPage.goto('/teacher');
+      await teacherPage.waitForLoadState('networkidle');
+
+      // Find "👁 Lobby" link (only for waiting sessions)
+      const lobbyLink = teacherPage.locator('a[href*="/teacher/sessions/"][href*="/lobby"]').first();
+      const count = await lobbyLink.count();
+      if (count === 0) {
+        await teacherContext.close();
+        test.skip();
+        return;
+      }
+
+      await lobbyLink.click();
+      // Lobby page shows the room code (monospace large text in orange)
+      await expect(teacherPage.locator('text=Room Code')).toBeVisible({ timeout: 5000 });
+
+      await teacherContext.close();
+    });
+  });
+
+  test.describe('Podium Page', () => {
+    test('podium page has Play again button', async ({ browser }) => {
+      // Use teacher auth to find an ended session with a podium
+      const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
+      const teacherPage = await teacherContext.newPage();
+
+      await teacherPage.goto('/teacher');
+      await teacherPage.waitForLoadState('networkidle');
+
+      // Find "Podium" link (only for ended sessions)
+      const podiumLink = teacherPage.locator('a[href*="/s/"][href*="/podium"]').first();
+      const count = await podiumLink.count();
+      if (count === 0) {
+        await teacherContext.close();
+        test.skip();
+        return;
+      }
+
+      const href = await podiumLink.getAttribute('href').catch(() => null);
+      if (!href) {
+        await teacherContext.close();
+        test.skip();
+        return;
+      }
+
+      // Open podium as public (no auth needed)
+      const publicContext = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+      const podiumPage = await publicContext.newPage();
+      await podiumPage.goto(href);
+
+      await expect(podiumPage.locator('text=Play again')).toBeVisible({ timeout: 8000 });
+
+      await teacherContext.close();
+      await publicContext.close();
+    });
+  });
+  ```
+
+- [ ] Run only the lobby-and-podium spec to verify tests pass:
+  ```bash
+  cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
+    /Users/halinh/.nvm/versions/node/v20.16.0/bin/node \
+    node_modules/.bin/playwright test e2e/lobby-and-podium.spec.ts
+  ```
+  Expected: all tests pass (podium test skips if no ended session exists, that's fine).
+
+- [ ] Run full E2E regression to catch any regressions:
+  ```bash
+  cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
+    /Users/halinh/.nvm/versions/node/v20.16.0/bin/node \
+    node_modules/.bin/playwright test
+  ```
+  Expected: no failures.
+
+- [ ] Commit:
+  ```bash
+  git add web/e2e/lobby-and-podium.spec.ts docs/plans.md
+  git commit -m "test: add E2E tests for teacher lobby redirect and podium Play again"
+  ```
+
+#### 6b — Deploy
+
+- [ ] Push to GitHub:
+  ```bash
+  git push origin main
+  ```
+
+- [ ] Wait for GitHub Actions CI to pass (check at https://github.com).
+
+- [ ] SSH to VPS and deploy:
+  ```bash
+  ssh -i ~/.ssh/digitalocean root@139.162.42.158
+  cd /root/fce-quiz/web
+  git pull
+  npm install
+  npm run build
+  pm2 restart fce-quiz
+  ```
+
+- [ ] Verify:
+  ```bash
+  pm2 logs fce-quiz --lines 50
+  ```
+  Open production URL — check teacher dashboard, lobby page, and podium page.
+
+- [ ] Update progress table in `docs/plans.md`:
+  Change `| 10 | Wayground Redesign ... | §12 | ⬜ Planned |` to `| 10 | Wayground Redesign ... | §12 | ✅ Done |`
+  Also update the heading to `✅ Done`.
+
+- [ ] Commit:
+  ```bash
+  git add docs/plans.md
+  git commit -m "docs: mark feature 10 as done"
+  git push origin main
+  ```
+
