@@ -26,3 +26,70 @@ test.describe('/join page', () => {
     await expect(page).toHaveURL(/\/s\/ABC123/);
   });
 });
+
+test.describe('Teacher Lobby Page — unauthenticated', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('unauthenticated user is redirected from teacher lobby page', async ({ page }) => {
+    await page.goto('/teacher/sessions/00000000-0000-0000-0000-000000000000/lobby');
+    await page.waitForURL(/\/teacher\/login/, { timeout: 5000 });
+  });
+});
+
+test.describe('Teacher Lobby Page — authenticated', () => {
+  test('teacher can access lobby page for waiting session', async ({ browser }) => {
+    const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
+    const teacherPage = await teacherContext.newPage();
+
+    await teacherPage.goto('/teacher');
+    await teacherPage.waitForLoadState('networkidle');
+
+    const lobbyLink = teacherPage.locator('a[href*="/teacher/sessions/"][href*="/lobby"]').first();
+    const count = await lobbyLink.count();
+    if (count === 0) {
+      await teacherContext.close();
+      test.skip();
+      return;
+    }
+
+    await lobbyLink.click();
+    await expect(teacherPage.locator('text=Room Code')).toBeVisible({ timeout: 5000 });
+
+    await teacherContext.close();
+  });
+});
+
+test.describe('Podium Page', () => {
+  test('podium page has Play again button', async ({ browser }) => {
+    const teacherContext = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
+    const teacherPage = await teacherContext.newPage();
+
+    await teacherPage.goto('/teacher');
+    await teacherPage.waitForLoadState('networkidle');
+
+    const podiumLink = teacherPage.locator('a[href*="/s/"][href*="/podium"]').first();
+    const count = await podiumLink.count();
+    if (count === 0) {
+      await teacherContext.close();
+      test.skip();
+      return;
+    }
+
+    const href = await podiumLink.getAttribute('href').catch(() => null);
+    if (!href) {
+      await teacherContext.close();
+      test.skip();
+      return;
+    }
+
+    const publicContext = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const podiumPage = await publicContext.newPage();
+    await podiumPage.goto(href);
+
+    await expect(podiumPage.locator('text=Play again')).toBeVisible({ timeout: 8000 });
+
+    await teacherContext.close();
+    await publicContext.close();
+  });
+});
+
