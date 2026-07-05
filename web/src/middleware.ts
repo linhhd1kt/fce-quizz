@@ -5,6 +5,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const role = (req.auth as { user?: { role?: string } } | null)?.user?.role;
 
+  // ── Home redirect for teacher ──────────────────────────────────────────────
+  if (pathname === '/' && role === 'teacher') {
+    return NextResponse.redirect(new URL('/teacher', req.url));
+  }
+
   // ── Teacher routes ─────────────────────────────────────────────────────────
   if (pathname.startsWith('/teacher')) {
     const isPublic = pathname === '/teacher/login' || pathname === '/teacher/register';
@@ -28,4 +33,4 @@ export default auth((req) => {
   }
 });
 
-export const config = { matcher: ['/teacher/:path*', '/student/:path*'] };
+export const config = { matcher: ['/', '/teacher/:path*', '/student/:path*'] };
