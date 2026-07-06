@@ -1412,7 +1412,7 @@
 
 This is a public endpoint (no auth) that returns the list of student names currently tracked in `session_progress` for a session. Called every 2s by both student lobby and teacher lobby page.
 
-- [ ] Create the file with this content:
+- [x] Create the file with this content:
 
   ```typescript
   import { NextRequest, NextResponse } from 'next/server';
@@ -1433,24 +1433,24 @@ This is a public endpoint (no auth) that returns the list of student names curre
   }
   ```
 
-- [ ] Start dev server if not running:
+- [x] Start dev server if not running:
   ```bash
   cd web && node_modules/.bin/next dev
   ```
 
-- [ ] Verify the route works (replace UUID with a real session id from DB):
+- [x] Verify the route works (replace UUID with a real session id from DB):
   ```bash
   curl http://localhost:3000/api/sessions/00000000-0000-0000-0000-000000000000/players
   # Expected: {"players":[]} (or a list of names if session has players)
   ```
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/api/sessions/[id]/players/route.ts
   git commit -m "feat: add GET /api/sessions/[id]/players endpoint"
   ```
 
-- [ ] Tick this task's checkbox in `docs/plans.md` and commit alongside code above (or in a separate commit).
+- [x] Tick this task's checkbox in `docs/plans.md` and commit alongside code above (or in a separate commit).
 
 ---
 
@@ -1463,13 +1463,13 @@ Changes:
 2. Add `useEffect` that polls `/api/sessions/[sessionId]/players` every 2s while on lobby screen.
 3. Replace the lobby JSX with Wayground-style layout: gradient background, prominent room code, player chips, count.
 
-- [ ] Add `players` state near the other `useState` calls (around line 51). The exact insertion: after the line `const [batchParts, setBatchParts] = useState<...>`:
+- [x] Add `players` state near the other `useState` calls (around line 51). The exact insertion: after the line `const [batchParts, setBatchParts] = useState<...>`:
 
   ```typescript
   const [players, setPlayers] = useState<string[]>([]);
   ```
 
-- [ ] Add a `useEffect` for polling players. Place it after the existing lobby poll effect (after line ~129). The effect depends on `screen`, `sessionId`:
+- [x] Add a `useEffect` for polling players. Place it after the existing lobby poll effect (after line ~129). The effect depends on `screen`, `sessionId`:
 
   ```typescript
   useEffect(() => {
@@ -1489,7 +1489,7 @@ Changes:
   }, [screen, sessionId]);
   ```
 
-- [ ] Replace the entire lobby JSX block (lines 285–313, starting `// ── LOBBY` and ending before `// ── JOIN`). The new lobby:
+- [x] Replace the entire lobby JSX block (lines 285–313, starting `// ── LOBBY` and ending before `// ── JOIN`). The new lobby:
 
   ```tsx
   // ── LOBBY ────────────────────────────────────────────────────────────────
@@ -1547,19 +1547,19 @@ Changes:
   );
   ```
 
-- [ ] Open browser at `http://localhost:3000/s/TESTCODE` and enter a name when session status is `waiting`. Verify:
+- [x] Open browser at `http://localhost:3000/s/TESTCODE` and enter a name when session status is `waiting`. Verify:
   - Background is dark gradient (not solid dark red `#2d0a1e`)
   - Room code shows large in orange monospace
   - Player chips appear after 2s (check with a real waiting session or mock)
   - Animated dots still pulse
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/s/[code]/page.tsx
   git commit -m "feat: redesign student lobby with gradient bg and player grid"
   ```
 
-- [ ] Tick checkbox in `docs/plans.md` and include in commit above.
+- [x] Tick checkbox in `docs/plans.md` and include in commit above.
 
 ---
 
@@ -1576,7 +1576,7 @@ Key design:
 - Buttons: "▶ Play again" (→ `/s/${code}`) and "Home" (→ `/`)
 - 4th+ players: simple list below podium
 
-- [ ] Replace the full content of `web/src/app/s/[code]/podium/page.tsx` with:
+- [x] Replace the full content of `web/src/app/s/[code]/podium/page.tsx` with:
 
   ```tsx
   'use client';
@@ -1766,7 +1766,7 @@ Key design:
   }
   ```
 
-- [ ] Open `http://localhost:3000/s/SOMECODE/podium` (use a real ended session code from DB or the teacher dashboard). Verify:
+- [x] Open `http://localhost:3000/s/SOMECODE/podium` (use a real ended session code from DB or the teacher dashboard). Verify:
   - Dark violet gradient background
   - Confetti pieces fall from top
   - 2nd block on left (silver, shorter), 1st in center (gold, tallest), 3rd on right (bronze)
@@ -1775,13 +1775,13 @@ Key design:
   - "▶ Play again" button is visible
   - "Home" link is visible
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/s/[code]/podium/page.tsx
   git commit -m "feat: redesign podium with 3D blocks, confetti, and score percentage"
   ```
 
-- [ ] Tick checkbox in `docs/plans.md` and include in commit.
+- [x] Tick checkbox in `docs/plans.md` and include in commit.
 
 ---
 
@@ -1791,12 +1791,12 @@ Key design:
 
 This page is for the teacher to project on a classroom screen. It shows the room code large, the player list live, and a Start Game button. Teacher auth is enforced by the existing Next.js middleware (`/teacher/*` is protected).
 
-- [ ] Create directory and file:
+- [x] Create directory and file:
   ```bash
   mkdir -p web/src/app/teacher/sessions/\[id\]/lobby
   ```
 
-- [ ] Create `web/src/app/teacher/sessions/[id]/lobby/page.tsx`:
+- [x] Create `web/src/app/teacher/sessions/[id]/lobby/page.tsx`:
 
   ```tsx
   'use client';
@@ -1910,20 +1910,20 @@ This page is for the teacher to project on a classroom screen. It shows the room
   }
   ```
 
-- [ ] Verify the page loads at `http://localhost:3000/teacher/sessions/<real-session-id>/lobby` (use a real session id from dashboard). Confirm:
+- [x] Verify the page loads at `http://localhost:3000/teacher/sessions/<real-session-id>/lobby` (use a real session id from dashboard). Confirm:
   - Gradient background shown
   - Room code displayed in large orange monospace
   - Player count updates every 2s
   - "▶ Start Game" button is visible (disabled when 0 players)
   - "← Back" button works
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/teacher/sessions/\[id\]/lobby/page.tsx
   git commit -m "feat: add teacher lobby fullscreen page with live player list"
   ```
 
-- [ ] Tick checkbox in `docs/plans.md` and include in commit.
+- [x] Tick checkbox in `docs/plans.md` and include in commit.
 
 ---
 
@@ -1933,7 +1933,7 @@ This page is for the teacher to project on a classroom screen. It shows the room
 
 Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status === 'waiting'`. The link navigates to the new `/teacher/sessions/[id]/lobby` page.
 
-- [ ] In `web/src/app/teacher/page.tsx`, find the `status === 'waiting'` block (around line 339). It currently renders:
+- [x] In `web/src/app/teacher/page.tsx`, find the `status === 'waiting'` block (around line 339). It currently renders:
 
   ```tsx
   {status === 'waiting' && (
@@ -1965,15 +1965,15 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   )}
   ```
 
-- [ ] Verify in browser at `http://localhost:3000/teacher` — create or find a waiting session, confirm the "👁 Lobby" link appears next to "▶ Start", and clicking it navigates to the new teacher lobby page.
+- [x] Verify in browser at `http://localhost:3000/teacher` — create or find a waiting session, confirm the "👁 Lobby" link appears next to "▶ Start", and clicking it navigates to the new teacher lobby page.
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/src/app/teacher/page.tsx
   git commit -m "feat: add Lobby link on teacher dashboard for waiting sessions"
   ```
 
-- [ ] Tick checkbox in `docs/plans.md` and include in commit.
+- [x] Tick checkbox in `docs/plans.md` and include in commit.
 
 ---
 
@@ -1985,7 +1985,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 6a — E2E tests
 
-- [ ] Add the following test blocks to `web/e2e/lobby-and-podium.spec.ts` (append after the existing `/join page` tests):
+- [x] Add the following test blocks to `web/e2e/lobby-and-podium.spec.ts` (append after the existing `/join page` tests):
 
   ```typescript
   test.describe('Teacher Lobby Page — unauthenticated', () => {
@@ -2060,7 +2060,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   });
   ```
 
-- [ ] Run only the lobby-and-podium spec to verify tests pass:
+- [x] Run only the lobby-and-podium spec to verify tests pass:
   ```bash
   cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
     /Users/halinh/.nvm/versions/node/v20.16.0/bin/node \
@@ -2068,7 +2068,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```
   Expected: all tests pass (podium test skips if no ended session exists, that's fine).
 
-- [ ] Run full E2E regression to catch any regressions:
+- [x] Run full E2E regression to catch any regressions:
   ```bash
   cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
     /Users/halinh/.nvm/versions/node/v20.16.0/bin/node \
@@ -2076,7 +2076,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```
   Expected: no failures.
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add web/e2e/lobby-and-podium.spec.ts docs/plans.md
   git commit -m "test: add E2E tests for teacher lobby redirect and podium Play again"
@@ -2084,14 +2084,14 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 6b — Deploy
 
-- [ ] Push to GitHub:
+- [x] Push to GitHub:
   ```bash
   git push origin main
   ```
 
-- [ ] Wait for GitHub Actions CI to pass (check at https://github.com).
+- [x] Wait for GitHub Actions CI to pass (check at https://github.com).
 
-- [ ] SSH to VPS and deploy:
+- [x] SSH to VPS and deploy:
   ```bash
   ssh -i ~/.ssh/digitalocean root@139.162.42.158
   cd /root/fce-quiz/web
@@ -2101,17 +2101,17 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   pm2 restart fce-quiz
   ```
 
-- [ ] Verify:
+- [x] Verify:
   ```bash
   pm2 logs fce-quiz --lines 50
   ```
   Open production URL — check teacher dashboard, lobby page, and podium page.
 
-- [ ] Update progress table in `docs/plans.md`:
+- [x] Update progress table in `docs/plans.md`:
   Change `| 10 | Wayground Redesign ... | §12 | ⬜ Planned |` to `| 10 | Wayground Redesign ... | §12 | ✅ Done |`
   Also update the heading to `✅ Done`.
 
-- [ ] Commit:
+- [x] Commit:
   ```bash
   git add docs/plans.md
   git commit -m "docs: mark feature 10 as done"
@@ -2136,7 +2136,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 - Create: `web/src/hooks/useTheme.ts`
 - Modify: `web/src/app/layout.tsx`
 
-- [ ] **Step 1: Add Tailwind v4 dark-mode class variant to globals.css**
+- [x] **Step 1: Add Tailwind v4 dark-mode class variant to globals.css**
 
   Open `web/src/app/globals.css`. After the first line `@import "tailwindcss";`, add:
   ```css
@@ -2144,7 +2144,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```
   This makes all `dark:*` utility classes activate when any ancestor has class `dark` (equivalent to `darkMode: 'class'` in Tailwind v3).
 
-- [ ] **Step 2: Create `web/src/hooks/useTheme.ts`**
+- [x] **Step 2: Create `web/src/hooks/useTheme.ts`**
 
   ```typescript
   'use client';
@@ -2175,7 +2175,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 3: Update `web/src/app/layout.tsx`**
+- [x] **Step 3: Update `web/src/app/layout.tsx`**
 
   Replace the entire file with:
   ```tsx
@@ -2214,11 +2214,11 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 4: Verify in browser**
+- [x] **Step 4: Verify in browser**
 
   Run `cd web && node_modules/.bin/next dev`. Open `http://localhost:3000`. The page should look the same as before (dark background), because the anti-flash script defaults to dark mode. Open DevTools → Elements: `<html>` should have class `dark`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   ```bash
   git add web/src/app/globals.css web/src/hooks/useTheme.ts web/src/app/layout.tsx
   git commit -m "feat: add dark/light theme system with useTheme hook and anti-flash script"
@@ -2231,7 +2231,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Create: `web/src/components/teacher/TeacherSidebar.tsx`
 
-- [ ] **Step 1: Create the directory and file**
+- [x] **Step 1: Create the directory and file**
 
   Create `web/src/components/teacher/TeacherSidebar.tsx`:
   ```tsx
@@ -2360,7 +2360,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
   ```bash
   git add web/src/components/teacher/TeacherSidebar.tsx
   git commit -m "feat: add TeacherSidebar component with nav, theme toggle, sign out"
@@ -2373,7 +2373,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Create: `web/src/components/teacher/QuizzesPanel.tsx`
 
-- [ ] **Step 1: Create `web/src/components/teacher/QuizzesPanel.tsx`**
+- [x] **Step 1: Create `web/src/components/teacher/QuizzesPanel.tsx`**
 
   ```tsx
   'use client';
@@ -2444,7 +2444,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
   ```bash
   git add web/src/components/teacher/QuizzesPanel.tsx
   git commit -m "feat: add QuizzesPanel second-panel component"
@@ -2457,7 +2457,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Modify: `web/src/app/teacher/layout.tsx`
 
-- [ ] **Step 1: Replace `web/src/app/teacher/layout.tsx` entirely**
+- [x] **Step 1: Replace `web/src/app/teacher/layout.tsx` entirely**
 
   ```tsx
   'use client';
@@ -2501,7 +2501,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
   > `Suspense` around `QuizzesPanel` is required because it uses `useSearchParams()`.
 
-- [ ] **Step 2: Verify dev server starts without errors**
+- [x] **Step 2: Verify dev server starts without errors**
 
   ```bash
   cd web && node_modules/.bin/next dev
@@ -2510,7 +2510,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   Navigate to `http://localhost:3000/teacher/login` — should show the login form without sidebar.
   Navigate to `http://localhost:3000/teacher` — should redirect to `/teacher/quizzes` (after Task 11.7). For now it loads the old teacher/page.tsx content, but with the sidebar visible on the left.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add web/src/app/teacher/layout.tsx
   git commit -m "feat: rebuild teacher layout as Wayground sidebar shell"
@@ -2523,7 +2523,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Create: `web/src/app/teacher/quizzes/page.tsx`
 
-- [ ] **Step 1: Create `web/src/app/teacher/quizzes/page.tsx`**
+- [x] **Step 1: Create `web/src/app/teacher/quizzes/page.tsx`**
 
   ```tsx
   'use client';
@@ -2813,7 +2813,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Verify in browser**
+- [x] **Step 2: Verify in browser**
 
   Navigate to `http://localhost:3000/teacher/quizzes`. Confirm:
   - Search input works (type a letter, list filters)
@@ -2821,7 +2821,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   - Quiz cards show with Edit + ▶ Start + Batch buttons
   - Clicking "▶ Start" creates a room and shows the banner
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add web/src/app/teacher/quizzes/page.tsx
   git commit -m "feat: add teacher quizzes page with search and tabs"
@@ -2834,7 +2834,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Create: `web/src/app/teacher/sessions/page.tsx`
 
-- [ ] **Step 1: Create `web/src/app/teacher/sessions/page.tsx`**
+- [x] **Step 1: Create `web/src/app/teacher/sessions/page.tsx`**
 
   ```tsx
   'use client';
@@ -3095,14 +3095,14 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Verify in browser**
+- [x] **Step 2: Verify in browser**
 
   Navigate to `http://localhost:3000/teacher/sessions`. Confirm:
   - Sessions list loads
   - Filter tabs work (click Waiting, Active, Ended)
   - Action buttons (Lobby, Start, End, View results, Podium, Delete) appear correctly per status
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add web/src/app/teacher/sessions/page.tsx
   git commit -m "feat: add teacher sessions page with filter tabs"
@@ -3115,7 +3115,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Modify: `web/src/app/teacher/page.tsx`
 
-- [ ] **Step 1: Replace `web/src/app/teacher/page.tsx` entirely**
+- [x] **Step 1: Replace `web/src/app/teacher/page.tsx` entirely**
 
   ```tsx
   import { redirect } from 'next/navigation';
@@ -3125,11 +3125,11 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Verify redirect**
+- [x] **Step 2: Verify redirect**
 
   Navigate to `http://localhost:3000/teacher`. Should immediately land on `/teacher/quizzes`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add web/src/app/teacher/page.tsx
   git commit -m "feat: redirect /teacher to /teacher/quizzes"
@@ -3146,7 +3146,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 11.8a — quizzes/new/page.tsx
 
-- [ ] **Step 1: Remove the sticky header block**
+- [x] **Step 1: Remove the sticky header block**
 
   In `web/src/app/teacher/quizzes/new/page.tsx`, find and remove the `<header>` block. The return statement starts at `return (` followed by `<div className="min-h-screen bg-slate-950">`. Replace:
 
@@ -3173,11 +3173,11 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
         <h1 className="text-slate-900 dark:text-white font-bold text-lg">Upload new quiz</h1>
   ```
 
-- [ ] **Step 2: Verify in browser**
+- [x] **Step 2: Verify in browser**
 
   Navigate to `http://localhost:3000/teacher/quizzes/new`. The page renders with the sidebar on the left, no duplicate header at top. The "Upload new quiz" title appears in the main content.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add web/src/app/teacher/quizzes/new/page.tsx
   git commit -m "fix: remove sticky header from quizzes/new page"
@@ -3185,7 +3185,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 11.8b — quizzes/[id]/page.tsx
 
-- [ ] **Step 1: Remove the sticky header from quiz editor**
+- [x] **Step 1: Remove the sticky header from quiz editor**
 
   In `web/src/app/teacher/quizzes/[id]/page.tsx`, find the return JSX (starts at `return (`). Replace:
 
@@ -3230,7 +3230,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
         </div>
   ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
   ```bash
   git add web/src/app/teacher/quizzes/[id]/page.tsx
   git commit -m "fix: remove sticky header from quiz editor page"
@@ -3238,7 +3238,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 11.8c — sessions/[id]/page.tsx
 
-- [ ] **Step 1: Remove the sticky header from session detail page**
+- [x] **Step 1: Remove the sticky header from session detail page**
 
   In `web/src/app/teacher/sessions/[id]/page.tsx`, find the return JSX. Replace:
 
@@ -3285,7 +3285,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
         </div>
   ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
   ```bash
   git add web/src/app/teacher/sessions/[id]/page.tsx
   git commit -m "fix: remove sticky header from session detail page"
@@ -3298,7 +3298,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Create: `web/src/components/student/StudentSidebar.tsx`
 
-- [ ] **Step 1: Create `web/src/components/student/StudentSidebar.tsx`**
+- [x] **Step 1: Create `web/src/components/student/StudentSidebar.tsx`**
 
   ```tsx
   'use client';
@@ -3428,7 +3428,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
   ```bash
   git add web/src/components/student/StudentSidebar.tsx
   git commit -m "feat: add StudentSidebar component"
@@ -3441,7 +3441,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Create: `web/src/app/student/layout.tsx`
 
-- [ ] **Step 1: Create `web/src/app/student/layout.tsx`**
+- [x] **Step 1: Create `web/src/app/student/layout.tsx`**
 
   ```tsx
   'use client';
@@ -3475,7 +3475,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   }
   ```
 
-- [ ] **Step 2: Remove back link from leaderboard page**
+- [x] **Step 2: Remove back link from leaderboard page**
 
   In `web/src/app/student/leaderboard/page.tsx`, find and remove the "← Trang cá nhân" link:
   ```tsx
@@ -3486,11 +3486,11 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```
   The sidebar already provides navigation to Profile — this back link is redundant.
 
-- [ ] **Step 3: Verify in browser**
+- [x] **Step 3: Verify in browser**
 
   Navigate to `http://localhost:3000/student/login` → login → arrives at `/student/profile`. Profile page should show with the StudentSidebar on the left. Navigate to Leaderboard via sidebar — "← Trang cá nhân" link should be gone.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
   ```bash
   git add web/src/app/student/layout.tsx web/src/app/student/leaderboard/page.tsx
   git commit -m "feat: add student layout with StudentSidebar shell"
@@ -3503,7 +3503,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 **Files:**
 - Modify: `web/src/components/NavBar.tsx`
 
-- [ ] **Step 1: Update the early-return check in NavBar**
+- [x] **Step 1: Update the early-return check in NavBar**
 
   In `web/src/components/NavBar.tsx`, find:
   ```tsx
@@ -3515,11 +3515,11 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   if (pathname?.startsWith('/teacher') || pathname?.startsWith('/student')) return null;
   ```
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
   Navigate to `http://localhost:3000/student/profile` — the NavBar at the top should no longer appear. The StudentSidebar is the only navigation. Game pages like `/s/TESTCODE` should still show the NavBar.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   ```bash
   git add web/src/components/NavBar.tsx
   git commit -m "fix: hide NavBar on /student/* routes"
@@ -3535,7 +3535,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 11.12a — Update teacher-dashboard.spec.ts
 
-- [ ] **Step 1: Update the beforeEach URL**
+- [x] **Step 1: Update the beforeEach URL**
 
   In `web/e2e/teacher-dashboard.spec.ts`, find:
   ```typescript
@@ -3550,7 +3550,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   await page.getByText('Created').waitFor({ timeout: 15_000 });
   ```
 
-- [ ] **Step 2: Update the "Quiz Sets" heading assertion**
+- [x] **Step 2: Update the "Quiz Sets" heading assertion**
 
   Find:
   ```typescript
@@ -3562,7 +3562,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   await expect(page.getByText('Created')).toBeVisible();
   ```
 
-- [ ] **Step 3: Update "+ Upload new" test**
+- [x] **Step 3: Update "+ Upload new" test**
 
   Find:
   ```typescript
@@ -3580,7 +3580,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 #### 11.12b — Create wayground-layout.spec.ts
 
-- [ ] **Step 4: Create `web/e2e/wayground-layout.spec.ts`**
+- [x] **Step 4: Create `web/e2e/wayground-layout.spec.ts`**
 
   ```typescript
   import { test, expect } from '@playwright/test';
@@ -3731,7 +3731,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   });
   ```
 
-- [ ] **Step 5: Add student layout E2E tests to wayground-layout.spec.ts**
+- [x] **Step 5: Add student layout E2E tests to wayground-layout.spec.ts**
 
   Append to `web/e2e/wayground-layout.spec.ts`:
   ```typescript
@@ -3758,7 +3758,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   });
   ```
 
-- [ ] **Step 6: Run the new E2E tests**
+- [x] **Step 6: Run the new E2E tests**
 
   ```bash
   cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
@@ -3767,7 +3767,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```
   Expected: all pass.
 
-- [ ] **Step 6: Run full regression**
+- [x] **Step 6: Run full regression**
 
   ```bash
   cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
@@ -3776,7 +3776,7 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```
   Expected: all pass, no regressions.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
   ```bash
   git add web/e2e/wayground-layout.spec.ts web/e2e/teacher-dashboard.spec.ts docs/plans.md
@@ -3787,14 +3787,14 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 ### Task 11.13: Deploy and verify
 
-- [ ] **Step 1: Push to GitHub**
+- [x] **Step 1: Push to GitHub**
   ```bash
   git push origin main
   ```
 
-- [ ] **Step 2: Wait for GitHub Actions CI to pass** (check at https://github.com).
+- [x] **Step 2: Wait for GitHub Actions CI to pass** (check at https://github.com).
 
-- [ ] **Step 3: SSH to VPS and deploy**
+- [x] **Step 3: SSH to VPS and deploy**
   ```bash
   ssh -i ~/.ssh/digitalocean root@139.162.42.158
   cd /root/fce-quiz/web
@@ -3804,13 +3804,13 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   pm2 restart fce-quiz
   ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
   ```bash
   pm2 logs fce-quiz --lines 50
   ```
   Open production URL → teacher login → `/teacher/quizzes` shows sidebar layout.
 
-- [ ] **Step 5: Mark done and commit**
+- [x] **Step 5: Mark done and commit**
   ```bash
   git add docs/plans.md
   git commit -m "docs: mark feature 11 as done"
