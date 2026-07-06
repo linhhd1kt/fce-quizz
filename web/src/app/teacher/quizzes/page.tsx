@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -25,6 +25,10 @@ interface BatchResult {
 }
 
 export default function QuizzesPage() {
+  return <Suspense><QuizzesContent /></Suspense>;
+}
+
+function QuizzesContent() {
   const searchParams = useSearchParams();
   const filter = searchParams.get('filter');
 
