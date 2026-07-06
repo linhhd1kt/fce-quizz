@@ -1491,3 +1491,90 @@ if (pathname?.startsWith('/teacher') || pathname?.startsWith('/student')) return
 | Theme toggle trên student sidebar | Dùng chung useTheme với teacher |
 | NavBar ẩn trên /student/* | Không còn double nav |
 | /s/[code] game pages vẫn hiện NavBar | Unaffected |
+
+---
+
+## §14 — Wayground Student Dashboard Redesign
+
+**Objective:** Replace the 72px left sidebar on `/student/*` with a horizontal top navbar matching Wayground's student interface. Add dedicated Home and Activity pages.
+
+### §14.1 — Layout
+
+Replace `StudentSidebar` with `StudentTopNav`:
+- Full-width horizontal bar, height 56px, sticky top
+- Background: `bg-white dark:bg-slate-900`, border-bottom
+
+```
+[FCEQuiz]    [Home]  [Activity]  [Scores]         [🌙]  [H]
+```
+
+- Logo: "FCEQuiz" → `/student/home`
+- Nav tabs: **Home** | **Activity** | **Scores**
+- Right: theme toggle button + avatar circle (initials, click → sign out)
+
+Active tab: `bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg`
+Inactive tab: `text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50`
+
+### §14.2 — Routes
+
+| Tab | Route | Content |
+|-----|-------|---------|
+| Home | `/student/home` | Join code box + greeting card + recent games grid |
+| Activity | `/student/activity` | Full game history + practice queue + stats + badges |
+| Scores | `/student/leaderboard` | Leaderboard rankings (existing data) |
+| — | `/student/profile` | Server redirect → `/student/home` |
+
+### §14.3 — Home Page
+
+Two-column header row:
+- **Left card** — "Join a game": text input (auto-uppercase, max 8 chars) + "Find" button → `router.push('/s/{code}')`
+- **Right card** — "Hello, [displayName]!": avatar circle with initial, 🔥 streak, games count + avg %
+
+Below: "Recent games" grid (3 cols desktop, 2 cols tablet, 1 col mobile):
+- Each card: quiz title + `AccuracyBar` component + time-ago label + accuracy% text
+- Show up to 6 most recent games from `/api/student/profile`
+
+Empty state: "No games yet. Enter a game code above to start playing!"
+
+### §14.4 — AccuracyBar Component
+
+Inline component (not extracted to separate file — only used within student pages):
+```
+[bg-slate-200 w-full h-1.5 rounded-full]
+  [bg-{color} h-full rounded-full style="width: {pct}%"]
+```
+Color thresholds: `pct >= 75` → `bg-emerald-500` · `pct >= 50` → `bg-amber-500` · else → `bg-red-500`
+
+### §14.5 — Activity Page
+
+Sections displayed in order:
+1. **Badges** — flex-wrap badge pills with emoji + label
+2. **Practice** — quiz items with due counts, link to `/student/practice/{quizId}`
+3. **Stats** — 3-column grid: Games played · Avg score · Correct answers
+4. **All games** — full history list; each row: quiz title + time-ago (left), `AccuracyBar` + score text (right)
+
+Data sources: `/api/student/profile` + `/api/student/practice-summary`
+
+### §14.6 — Files
+
+| File | Action |
+|------|--------|
+| `web/src/components/student/StudentTopNav.tsx` | Create |
+| `web/src/app/student/home/page.tsx` | Create |
+| `web/src/app/student/activity/page.tsx` | Create |
+| `web/src/app/student/layout.tsx` | Modify (StudentSidebar → StudentTopNav, flex-col layout) |
+| `web/src/app/student/profile/page.tsx` | Modify (server component redirect → /student/home) |
+| `web/src/components/student/StudentSidebar.tsx` | Delete |
+| `web/e2e/wayground-layout.spec.ts` | Modify (update student section tests) |
+
+### §14.7 — E2E Tests
+
+| Scenario | Details |
+|----------|---------|
+| Student login → top nav visible | `header` with Home, Activity, Scores tabs present |
+| Home page greeting | "Hello" text visible after login |
+| Home join code → navigates | Enter code, click Find → URL changes to /s/CODE |
+| Activity tab → history visible | Navigate to /student/activity, history items shown |
+| Scores tab → leaderboard visible | Navigate to /student/leaderboard |
+| Theme toggle persists | Click toggle → dark mode applied |
+| /student/profile redirects | Page redirects to /student/home |
