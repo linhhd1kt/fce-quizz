@@ -17,6 +17,7 @@
 8. [Middleware & Route Protection](#8-middleware--route-protection)
 9. [§11 — /join page, Lobby & Podium](#11----join-page-lobby--podium)
 10. [§12 — Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D](#12----wayground-redesign-player-grid-teacher-lobby-podium-3d)
+11. [§13 — Wayground Teacher Dashboard Redesign](#13----wayground-teacher-dashboard-redesign)
 
 ---
 
@@ -1198,3 +1199,223 @@ Colors: 1st = `bg-yellow-500`, 2nd = `bg-slate-400`, 3rd = `bg-amber-700`
 | Teacher lobby page shows room code + player grid | Fullscreen, Start button works |
 | Podium shows 3D blocks + Play again button | Top 3 in blocks, rest in list |
 | Score shows X/Y • Z% format | Percentage calculated correctly |
+
+---
+
+## §13 — Wayground Teacher Dashboard Redesign
+
+**Date:** 2026-07-06 | **Status:** Planned | **Depends on:** §4, §12
+
+### Overview
+
+Redesign toàn bộ teacher area theo layout Wayground: sidebar cố định 72px bên trái, second panel 240px cho Quizzes sub-navigation, main content area. Hỗ trợ light/dark theme toggle lưu vào localStorage. Primary color: blue `#2563eb`.
+
+Tất cả teacher pages (kể cả Lobby và Live) đều có sidebar. Login/register vẫn standalone (không có sidebar).
+
+---
+
+### §13.1 — Layout Architecture
+
+```
+┌──────────┬─────────────────┬──────────────────────────────┐
+│ Sidebar  │  Second Panel   │       Main Content           │
+│  72px    │  240px          │       flex-1                 │
+│          │  (Quizzes only) │                              │
+└──────────┴─────────────────┴──────────────────────────────┘
+```
+
+**File:** `web/src/app/teacher/layout.tsx`
+
+- Client component (`'use client'`)
+- Bỏ qua sidebar nếu path là `/teacher/login` hoặc `/teacher/register` → render `{children}` only
+- Các route còn lại: render `<TeacherSidebar>` + `<QuizzesPanel>` (chỉ khi path bắt đầu `/teacher/quizzes`) + `<main>`
+- Shell: `h-screen overflow-hidden flex` — full viewport
+- Main: `flex-1 overflow-y-auto` — scrollable
+
+```mermaid
+flowchart LR
+    A([Teacher route]) --> B{login or register?}
+    B -- yes --> C[children only]
+    B -- no --> D[TeacherSidebar + optional QuizzesPanel + main]
+    D --> E{pathname starts /teacher/quizzes?}
+    E -- yes --> F[show QuizzesPanel]
+    E -- no --> G[full-width main]
+```
+
+---
+
+### §13.2 — Sidebar
+
+**File:** `web/src/components/teacher/TeacherSidebar.tsx`
+
+```
+┌────────┐
+│  Logo  │  FCEQuiz → /teacher/quizzes
+├────────┤
+│  📚   │  Quizzes      /teacher/quizzes
+│  ▶    │  Sessions     /teacher/sessions
+│  👥   │  Students     /teacher/students
+├────────┤  flex-1 spacer
+│  ☀/🌙 │  Theme toggle
+│  ↪    │  Sign out
+│  [TL] │  Avatar (teacher initials)
+└────────┘
+```
+
+- **Active state:** `bg-blue-600 text-white rounded-xl`
+- **Inactive:** `text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-xl`
+- **Width:** `w-[72px]` fixed, `border-r border-slate-200 dark:border-slate-800`
+- Icons: inline SVG (không thêm npm dependency mới)
+
+---
+
+### §13.3 — Second Panel
+
+**File:** `web/src/components/teacher/QuizzesPanel.tsx`
+
+Hiển thị chỉ khi `pathname.startsWith('/teacher/quizzes')`.
+
+```
+┌──────────────────┐
+│ Quizzes          │  header font-semibold
+├──────────────────┤
+│ ✏  All (N)       │  /teacher/quizzes
+│ 🕐 Recently used │  /teacher/quizzes?filter=recent
+├──────────────────┤  flex-1
+│ N / 20 quizzes   │  bottom counter
+│ [████████░░]     │  progress bar (N/20)*100%
+└──────────────────┘
+```
+
+- "Recently used" = quizzes có ít nhất 1 session (client-side filter)
+- Props: `{ quizCount: number }`
+- Width: `w-[240px]`, `border-r border-slate-200 dark:border-slate-800`
+
+---
+
+### §13.4 — Theme System
+
+**File:** `web/src/hooks/useTheme.ts`
+
+```typescript
+// localStorage key: 'fce-theme', values: 'light' | 'dark'
+// Thêm/bỏ class 'dark' trên document.documentElement
+export function useTheme(): { theme: 'light' | 'dark'; toggleTheme: () => void }
+```
+
+Inline script trong `<head>` của root layout để áp dụng theme trước React hydrate (tránh flash):
+
+```html
+<script dangerouslySetInnerHTML={{ __html:
+  `(function(){var t=localStorage.getItem('fce-theme');if(t==='dark')document.documentElement.classList.add('dark');})()`
+}} />
+```
+
+`tailwind.config.ts` phải có `darkMode: 'class'`.
+
+**Token map:**
+
+| Element | Light | Dark |
+|---------|-------|------|
+| Shell bg | `bg-slate-50` | `bg-slate-950` |
+| Sidebar | `bg-white border-slate-200` | `bg-slate-900 border-slate-800` |
+| Panel | `bg-white border-slate-200` | `bg-slate-950 border-slate-800` |
+| Main | `bg-slate-50` | `bg-slate-950` |
+| Text | `text-slate-900` | `text-slate-100` |
+| Muted | `text-slate-500` | `text-slate-400` |
+| Primary | `bg-blue-600` | `bg-blue-500` |
+
+---
+
+### §13.5 — Routes
+
+| Route | Mô tả | Second panel? |
+|-------|-------|---------------|
+| `/teacher` | Redirect → `/teacher/quizzes` | — |
+| `/teacher/quizzes` | **MỚI** Quiz list | ✅ |
+| `/teacher/quizzes?filter=recent` | Recently used (client filter) | ✅ |
+| `/teacher/quizzes/new` | Giữ nguyên logic PDF upload | ✅ |
+| `/teacher/quizzes/[id]` | Giữ nguyên logic quiz editor | ✅ |
+| `/teacher/sessions` | **MỚI** Session list | ❌ |
+| `/teacher/sessions/[id]` | Giữ nguyên | ❌ |
+| `/teacher/sessions/[id]/lobby` | Giữ nguyên + sidebar | ❌ |
+| `/teacher/sessions/[id]/live` | Giữ nguyên + sidebar | ❌ |
+| `/teacher/students` | Giữ nguyên logic | ❌ |
+| `/teacher/login` | Standalone, không sidebar | — |
+| `/teacher/register` | Standalone, không sidebar | — |
+
+---
+
+### §13.6 — Quizzes Page
+
+**File:** `web/src/app/teacher/quizzes/page.tsx` — logic tách từ `teacher/page.tsx`
+
+```
+[🔍 Search by quiz name...           ]    [+ Add quiz]
+
+All (N)                                   [Sort ▾]
+
+┌──────────────────────────────────────────────────────┐
+│  📝  Grammar B2                  [Edit]  [▶ Start]   │
+│      40 questions · 45s/q · FCE.pdf                  │
+└──────────────────────────────────────────────────────┘
+```
+
+- Search: client-side filter theo title
+- "▶ Start" → POST /api/sessions → toast với session code
+- "Edit" → `/teacher/quizzes/[id]`
+- "+ Add quiz" → `/teacher/quizzes/new`
+
+---
+
+### §13.7 — Sessions Page
+
+**File:** `web/src/app/teacher/sessions/page.tsx` — logic tách từ `teacher/page.tsx`
+
+```
+Sessions
+
+[All]  [Waiting]  [Active]  [Ended]
+
+┌──────────────────────────────────────────────────────┐
+│  ABC123  Grammar B2  ● waiting  3 players            │
+│  [👁 Lobby]  [▶ Start]  [🗑]                          │
+└──────────────────────────────────────────────────────┘
+```
+
+- Session được tạo từ Quizzes page (click "▶ Start" bên cạnh quiz) — Sessions page chỉ để view/manage
+- Filter tabs: client-side theo `status`
+- Auto-refresh mỗi 3s khi có session active/waiting
+- Giữ nguyên toàn bộ button logic (Start, End, Lobby, Podium, Delete, View results)
+
+---
+
+### §13.8 — Files
+
+| File | Thay đổi |
+|------|----------|
+| `web/src/app/teacher/layout.tsx` | **MỚI** TeacherShell |
+| `web/src/app/teacher/page.tsx` | Đổi thành `redirect('/teacher/quizzes')` |
+| `web/src/app/teacher/quizzes/page.tsx` | **MỚI** quiz list (tách từ teacher/page.tsx) |
+| `web/src/app/teacher/sessions/page.tsx` | **MỚI** session list (tách từ teacher/page.tsx) |
+| `web/src/app/teacher/quizzes/new/page.tsx` | Bỏ old sticky header, giữ nguyên logic |
+| `web/src/app/teacher/quizzes/[id]/page.tsx` | Bỏ old sticky header, giữ nguyên logic |
+| `web/src/components/teacher/TeacherSidebar.tsx` | **MỚI** |
+| `web/src/components/teacher/QuizzesPanel.tsx` | **MỚI** |
+| `web/src/hooks/useTheme.ts` | **MỚI** |
+| `web/src/app/layout.tsx` | Thêm inline script chống flash theme |
+| `web/tailwind.config.ts` | Verify/thêm `darkMode: 'class'` |
+
+---
+
+### §13.9 — E2E Tests
+
+| Scenario | Details |
+|----------|---------|
+| Teacher login → redirect /teacher/quizzes | Middleware + page redirect |
+| Sidebar nav: Quizzes → Sessions → Students | Active state đổi theo route |
+| Second panel visible chỉ trên Quizzes routes | Ẩn trên Sessions/Students |
+| Theme toggle → dark → refresh → vẫn dark | localStorage persist |
+| Quiz search filter client-side | Nhập text → danh sách lọc ngay |
+| Session filter tabs Waiting/Active/Ended | Filter đúng theo status |
+| Sidebar hiển thị trên Lobby và Live pages | Không bị ẩn trên fullscreen pages |
