@@ -146,9 +146,34 @@ test.describe('Wayground layout — theme toggle', () => {
 });
 
 test.describe('Wayground layout — student', () => {
-  test('/student/leaderboard has no back link to Trang ca nhan', async ({ page }) => {
-    await page.goto('/student/leaderboard');
+  test('student login page has username and PIN inputs', async ({ page }) => {
+    await page.goto('/student/login');
     await page.waitForLoadState('domcontentloaded');
-    await expect(page.getByText('← Trang cá nhân')).toHaveCount(0);
+    await expect(page.getByPlaceholder('Username')).toBeVisible();
+    await expect(page.getByPlaceholder('6-digit PIN')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
+  });
+
+  test('/student/profile redirects away (to home or login)', async ({ page }) => {
+    await page.goto('/student/profile');
+    await page.waitForLoadState('networkidle');
+    // Should redirect to /student/home or /student/login — not stay on /student/profile
+    await expect(page).not.toHaveURL(/\/student\/profile$/);
+  });
+
+  test('/student/home redirects to login when not authenticated', async ({ page }) => {
+    await page.goto('/student/home');
+    await page.waitForLoadState('networkidle');
+    // Unauthenticated → middleware redirects to /student/login
+    await expect(page).toHaveURL(/\/student\/login/);
+  });
+
+  test('student register page has display name, username, PIN inputs', async ({ page }) => {
+    await page.goto('/student/register');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByPlaceholder(/Display name/)).toBeVisible();
+    await expect(page.getByPlaceholder(/Username/)).toBeVisible();
+    await expect(page.getByPlaceholder('6-digit PIN')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create account' })).toBeVisible();
   });
 });
