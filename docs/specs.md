@@ -1353,7 +1353,7 @@ Inline script trong `<head>` của root layout để áp dụng theme trước R
 ```
 [🔍 Search by quiz name...           ]    [+ Add quiz]
 
-All (N)                                   [Sort ▾]
+Created (N)  |  Draft (0)  |  Archived (0)    [Sort ▾]
 
 ┌──────────────────────────────────────────────────────┐
 │  📝  Grammar B2                  [Edit]  [▶ Start]   │
@@ -1400,6 +1400,7 @@ Sessions
 | `web/src/app/teacher/sessions/page.tsx` | **MỚI** session list (tách từ teacher/page.tsx) |
 | `web/src/app/teacher/quizzes/new/page.tsx` | Bỏ old sticky header, giữ nguyên logic |
 | `web/src/app/teacher/quizzes/[id]/page.tsx` | Bỏ old sticky header, giữ nguyên logic |
+| `web/src/app/teacher/sessions/[id]/page.tsx` | Bỏ old sticky header, giữ nguyên logic |
 | `web/src/components/teacher/TeacherSidebar.tsx` | **MỚI** |
 | `web/src/components/teacher/QuizzesPanel.tsx` | **MỚI** |
 | `web/src/hooks/useTheme.ts` | **MỚI** |
@@ -1419,3 +1420,74 @@ Sessions
 | Quiz search filter client-side | Nhập text → danh sách lọc ngay |
 | Session filter tabs Waiting/Active/Ended | Filter đúng theo status |
 | Sidebar hiển thị trên Lobby và Live pages | Không bị ẩn trên fullscreen pages |
+
+---
+
+### §13.10 — Student Layout (Wayground-style)
+
+Student management pages (`/student/*`) cũng dùng sidebar layout giống teacher — cùng design language, cùng theme system.
+
+**Scope:** Tất cả `/student/*` trừ `/student/login` và `/student/register` (standalone).  
+Game pages (`/s/*`) giữ nguyên fullscreen, không sidebar.  
+NavBar hiện tại ẩn trên `/student/*` (cập nhật `NavBar.tsx` thêm check `pathname?.startsWith('/student')`).
+
+**File:** `web/src/app/student/layout.tsx`
+
+- Client component, logic tương tự `teacher/layout.tsx`
+- Bỏ qua sidebar cho `/student/login` và `/student/register`
+- Shell: `h-screen overflow-hidden flex`
+- Không có second panel
+
+**File:** `web/src/components/student/StudentSidebar.tsx`
+
+```
+┌────────┐
+│  Logo  │  FCEQuiz → /student/profile
+├────────┤
+│  👤   │  Profile       /student/profile
+│  📚   │  Practice      /student/profile (section)
+│  🏆   │  Leaderboard   /student/leaderboard
+├────────┤  flex-1 spacer
+│  ☀/🌙 │  Theme toggle  (dùng chung useTheme)
+│  ↪    │  Sign out
+│  [SN] │  Avatar (student display name initials)
+└────────┘
+```
+
+- Active state: `bg-blue-600 text-white rounded-xl`
+- Width: `w-[72px]`, cùng style với TeacherSidebar
+
+**Student pages — layout adjustments:**
+
+| Page | Thay đổi |
+|------|----------|
+| `student/profile/page.tsx` | Bỏ "← Trang cá nhân" link dư thừa; nội dung vẫn giữ nguyên |
+| `student/leaderboard/page.tsx` | Bỏ "← Trang cá nhân" link dư thừa |
+| `student/practice/[quizId]/page.tsx` | Không thay đổi (game-like, full content area) |
+
+**Middleware — cập nhật:**
+
+```typescript
+// NavBar.tsx — thêm student check
+if (pathname?.startsWith('/teacher') || pathname?.startsWith('/student')) return null;
+```
+
+**Files:**
+
+| File | Thay đổi |
+|------|----------|
+| `web/src/app/student/layout.tsx` | **MỚI** StudentShell |
+| `web/src/components/student/StudentSidebar.tsx` | **MỚI** |
+| `web/src/components/NavBar.tsx` | Ẩn thêm trên `/student/*` |
+| `web/src/app/student/profile/page.tsx` | Bỏ nav link dư thừa |
+| `web/src/app/student/leaderboard/page.tsx` | Bỏ nav link dư thừa |
+
+**E2E tests:**
+
+| Scenario | Details |
+|----------|---------|
+| Student login → /student/profile có sidebar | Sidebar hiển thị |
+| Student sidebar nav: Profile → Leaderboard | Active state đổi |
+| Theme toggle trên student sidebar | Dùng chung useTheme với teacher |
+| NavBar ẩn trên /student/* | Không còn double nav |
+| /s/[code] game pages vẫn hiện NavBar | Unaffected |
