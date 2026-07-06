@@ -18,6 +18,7 @@
 | 8 | Achievements Leaderboard | §7 Sub-4 | ✅ Done |
 | 9 | /join page, Lobby & Podium | §11 | ✅ Done |
 | 10 | Wayground Redesign: Player Grid, Teacher Lobby, Podium 3D | §12 | ✅ Done |
+| 11 | Wayground Teacher + Student Dashboard Redesign | §13 | 🚧 In progress |
 
 ---
 
@@ -2114,6 +2115,1705 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
   ```bash
   git add docs/plans.md
   git commit -m "docs: mark feature 10 as done"
+  git push origin main
+  ```
+
+
+---
+
+## Feature 11: Wayground Teacher + Student Dashboard Redesign (§13) 🚧
+
+**Spec:** §13 | **Depends on:** Features 2, 4, 5, 6, 9, 10
+
+**Architecture:** Add a 72px TeacherSidebar + 240px QuizzesPanel (on `/teacher/quizzes/*` only) shell inside `teacher/layout.tsx`. Extract quiz list → `quizzes/page.tsx` and session list → `sessions/page.tsx` from the old monolith `teacher/page.tsx`. Mirror the same approach for student with `StudentSidebar` + `student/layout.tsx`. Dark/light theme via `useTheme.ts` hook + Tailwind v4 `@variant dark`.
+
+---
+
+### Task 11.1: Theme system — dark variant + useTheme hook + root layout anti-flash
+
+**Files:**
+- Modify: `web/src/app/globals.css`
+- Create: `web/src/hooks/useTheme.ts`
+- Modify: `web/src/app/layout.tsx`
+
+- [ ] **Step 1: Add Tailwind v4 dark-mode class variant to globals.css**
+
+  Open `web/src/app/globals.css`. After the first line `@import "tailwindcss";`, add:
+  ```css
+  @variant dark (&:where(.dark, .dark *));
+  ```
+  This makes all `dark:*` utility classes activate when any ancestor has class `dark` (equivalent to `darkMode: 'class'` in Tailwind v3).
+
+- [ ] **Step 2: Create `web/src/hooks/useTheme.ts`**
+
+  ```typescript
+  'use client';
+  import { useState, useEffect } from 'react';
+
+  export function useTheme(): { theme: 'light' | 'dark'; toggleTheme: () => void } {
+    const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+    useEffect(() => {
+      const stored = localStorage.getItem('fce-theme');
+      const resolved: 'light' | 'dark' = stored === 'light' ? 'light' : 'dark';
+      setTheme(resolved);
+      if (resolved === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }, []);
+
+    const toggleTheme = () => {
+      const next: 'light' | 'dark' = theme === 'dark' ? 'light' : 'dark';
+      setTheme(next);
+      localStorage.setItem('fce-theme', next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
+    };
+
+    return { theme, toggleTheme };
+  }
+  ```
+
+- [ ] **Step 3: Update `web/src/app/layout.tsx`**
+
+  Replace the entire file with:
+  ```tsx
+  import type { Metadata } from 'next';
+  import { Geist } from 'next/font/google';
+  import './globals.css';
+  import Providers from '@/components/Providers';
+  import NavBar from '@/components/NavBar';
+
+  const geist = Geist({ subsets: ['latin'] });
+
+  export const metadata: Metadata = {
+    title: 'FCE Quiz',
+    description: 'Practice B2 First for Schools exam questions',
+  };
+
+  export default function RootLayout({ children }: { children: React.ReactNode }) {
+    return (
+      <html lang="en">
+        <head>
+          {/* Anti-flash: apply dark class before React hydrates. Default: dark. */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){var t=localStorage.getItem('fce-theme');if(t!=='light')document.documentElement.classList.add('dark');})()`
+            }}
+          />
+        </head>
+        <body className={`${geist.className} bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen`}>
+          <Providers>
+            <NavBar />
+            <main>{children}</main>
+          </Providers>
+        </body>
+      </html>
+    );
+  }
+  ```
+
+- [ ] **Step 4: Verify in browser**
+
+  Run `cd web && node_modules/.bin/next dev`. Open `http://localhost:3000`. The page should look the same as before (dark background), because the anti-flash script defaults to dark mode. Open DevTools → Elements: `<html>` should have class `dark`.
+
+- [ ] **Step 5: Commit**
+  ```bash
+  git add web/src/app/globals.css web/src/hooks/useTheme.ts web/src/app/layout.tsx
+  git commit -m "feat: add dark/light theme system with useTheme hook and anti-flash script"
+  ```
+
+---
+
+### Task 11.2: TeacherSidebar component
+
+**Files:**
+- Create: `web/src/components/teacher/TeacherSidebar.tsx`
+
+- [ ] **Step 1: Create the directory and file**
+
+  Create `web/src/components/teacher/TeacherSidebar.tsx`:
+  ```tsx
+  'use client';
+
+  import Link from 'next/link';
+  import { usePathname } from 'next/navigation';
+  import { signOut, useSession } from 'next-auth/react';
+  import { useTheme } from '@/hooks/useTheme';
+
+  function BookIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    );
+  }
+  function MonitorIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+    );
+  }
+  function UsersIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    );
+  }
+  function SunIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    );
+  }
+  function MoonIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    );
+  }
+  function LogOutIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    );
+  }
+
+  const NAV_ITEMS = [
+    { href: '/teacher/quizzes', label: 'Quizzes', Icon: BookIcon },
+    { href: '/teacher/sessions', label: 'Sessions', Icon: MonitorIcon },
+    { href: '/teacher/students', label: 'Students', Icon: UsersIcon },
+  ];
+
+  export default function TeacherSidebar() {
+    const pathname = usePathname();
+    const { data: session } = useSession();
+    const { theme, toggleTheme } = useTheme();
+    const initials = (session?.user?.name ?? 'T')[0]?.toUpperCase() ?? 'T';
+
+    return (
+      <aside className="w-[72px] shrink-0 h-full border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col items-center py-3 gap-1">
+        {/* Logo */}
+        <Link
+          href="/teacher/quizzes"
+          className="w-10 h-10 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-base mb-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title="FCEQuiz"
+        >
+          FQ
+        </Link>
+
+        {/* Nav */}
+        {NAV_ITEMS.map(({ href, label, Icon }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              title={label}
+              className={`w-12 h-12 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors ${
+                active
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Icon />
+              <span className="text-[9px] font-medium leading-none">{label}</span>
+            </Link>
+          );
+        })}
+
+        <div className="flex-1" />
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="w-12 h-12 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
+
+        {/* Sign out */}
+        <button
+          onClick={() => signOut({ redirectTo: '/teacher/login' })}
+          title="Sign out"
+          className="w-12 h-12 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <LogOutIcon />
+        </button>
+
+        {/* Avatar */}
+        <div
+          className="w-9 h-9 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center mt-1 shrink-0"
+          title={session?.user?.name ?? ''}
+        >
+          {initials}
+        </div>
+      </aside>
+    );
+  }
+  ```
+
+- [ ] **Step 2: Commit**
+  ```bash
+  git add web/src/components/teacher/TeacherSidebar.tsx
+  git commit -m "feat: add TeacherSidebar component with nav, theme toggle, sign out"
+  ```
+
+---
+
+### Task 11.3: QuizzesPanel component
+
+**Files:**
+- Create: `web/src/components/teacher/QuizzesPanel.tsx`
+
+- [ ] **Step 1: Create `web/src/components/teacher/QuizzesPanel.tsx`**
+
+  ```tsx
+  'use client';
+
+  import Link from 'next/link';
+  import { usePathname, useSearchParams } from 'next/navigation';
+  import { useEffect, useState } from 'react';
+
+  const MAX_QUIZZES = 20;
+
+  export default function QuizzesPanel() {
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const filter = searchParams.get('filter');
+    const [quizCount, setQuizCount] = useState(0);
+
+    useEffect(() => {
+      fetch('/api/quizzes')
+        .then((r) => r.json())
+        .then((d: unknown) => { if (Array.isArray(d)) setQuizCount(d.length); })
+        .catch(() => {});
+    }, [pathname]);
+
+    const progress = Math.min((quizCount / MAX_QUIZZES) * 100, 100);
+    const isRecent = filter === 'recent';
+
+    return (
+      <aside className="w-[240px] shrink-0 h-full border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col py-4">
+        <p className="px-4 text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Quizzes</p>
+
+        <Link
+          href="/teacher/quizzes"
+          className={`mx-2 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
+            !isRecent
+              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-medium'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
+          }`}
+        >
+          <span>✏️</span>
+          <span>All <span className="text-slate-400 dark:text-slate-500">({quizCount})</span></span>
+        </Link>
+
+        <Link
+          href="/teacher/quizzes?filter=recent"
+          className={`mx-2 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
+            isRecent
+              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-medium'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
+          }`}
+        >
+          <span>🕐</span>
+          <span>Recently used</span>
+        </Link>
+
+        <div className="flex-1" />
+
+        <div className="px-4 space-y-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400">{quizCount} / {MAX_QUIZZES} quizzes</p>
+          <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </aside>
+    );
+  }
+  ```
+
+- [ ] **Step 2: Commit**
+  ```bash
+  git add web/src/components/teacher/QuizzesPanel.tsx
+  git commit -m "feat: add QuizzesPanel second-panel component"
+  ```
+
+---
+
+### Task 11.4: Teacher layout — rebuild as Wayground shell
+
+**Files:**
+- Modify: `web/src/app/teacher/layout.tsx`
+
+- [ ] **Step 1: Replace `web/src/app/teacher/layout.tsx` entirely**
+
+  ```tsx
+  'use client';
+
+  import { usePathname } from 'next/navigation';
+  import { Toaster } from 'sonner';
+  import { Suspense } from 'react';
+  import TeacherSidebar from '@/components/teacher/TeacherSidebar';
+  import QuizzesPanel from '@/components/teacher/QuizzesPanel';
+
+  export default function TeacherLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isPublic = pathname === '/teacher/login' || pathname === '/teacher/register';
+    const showQuizzesPanel = pathname.startsWith('/teacher/quizzes');
+
+    if (isPublic) {
+      return (
+        <>
+          {children}
+          <Toaster richColors position="top-right" />
+        </>
+      );
+    }
+
+    return (
+      <div className="h-screen overflow-hidden flex bg-slate-50 dark:bg-slate-950">
+        <TeacherSidebar />
+        {showQuizzesPanel && (
+          <Suspense>
+            <QuizzesPanel />
+          </Suspense>
+        )}
+        <main className="flex-1 overflow-y-auto min-w-0">
+          {children}
+        </main>
+        <Toaster richColors position="top-right" />
+      </div>
+    );
+  }
+  ```
+
+  > `Suspense` around `QuizzesPanel` is required because it uses `useSearchParams()`.
+
+- [ ] **Step 2: Verify dev server starts without errors**
+
+  ```bash
+  cd web && node_modules/.bin/next dev
+  ```
+
+  Navigate to `http://localhost:3000/teacher/login` — should show the login form without sidebar.
+  Navigate to `http://localhost:3000/teacher` — should redirect to `/teacher/quizzes` (after Task 11.7). For now it loads the old teacher/page.tsx content, but with the sidebar visible on the left.
+
+- [ ] **Step 3: Commit**
+  ```bash
+  git add web/src/app/teacher/layout.tsx
+  git commit -m "feat: rebuild teacher layout as Wayground sidebar shell"
+  ```
+
+---
+
+### Task 11.5: Quizzes page — extract quiz list from teacher/page.tsx
+
+**Files:**
+- Create: `web/src/app/teacher/quizzes/page.tsx`
+
+- [ ] **Step 1: Create `web/src/app/teacher/quizzes/page.tsx`**
+
+  ```tsx
+  'use client';
+
+  import { useEffect, useState, useCallback } from 'react';
+  import { useSearchParams } from 'next/navigation';
+  import Link from 'next/link';
+  import { toast } from 'sonner';
+
+  interface QuizRow {
+    id: string;
+    title: string;
+    questions: unknown[];
+    time_per_question: number;
+    source?: string;
+  }
+
+  interface SessionRow {
+    id: string;
+    quizId: string;
+  }
+
+  interface BatchResult {
+    batchId: string;
+    quizTitle: string;
+    parts: { id: string; code: string; batchOrder: number; questionCount: number }[];
+  }
+
+  export default function QuizzesPage() {
+    const searchParams = useSearchParams();
+    const filter = searchParams.get('filter');
+
+    const [quizzes, setQuizzes] = useState<QuizRow[]>([]);
+    const [sessions, setSessions] = useState<SessionRow[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [creatingFor, setCreatingFor] = useState<string | null>(null);
+    const [newSessionCode, setNewSessionCode] = useState<string | null>(null);
+    const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const load = useCallback(async () => {
+      const [qRes, sRes] = await Promise.all([
+        fetch('/api/quizzes').then((r) => r.json()),
+        fetch('/api/sessions').then((r) => r.json()),
+      ]);
+      setQuizzes(Array.isArray(qRes) ? qRes : []);
+      setSessions(Array.isArray(sRes) ? sRes : []);
+      setLoading(false);
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    const quizIdsWithSessions = new Set(sessions.map((s) => s.quizId));
+
+    const filtered = quizzes.filter((q) => {
+      const matchesSearch = q.title.toLowerCase().includes(search.toLowerCase());
+      const matchesFilter = filter !== 'recent' || quizIdsWithSessions.has(q.id);
+      return matchesSearch && matchesFilter;
+    });
+
+    async function handleCreate(quizId: string) {
+      setCreatingFor(quizId);
+      const res = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId }),
+      });
+      if (res.ok) {
+        const s = await res.json() as { code: string };
+        setNewSessionCode(s.code);
+        setBatchResult(null);
+        await load();
+      }
+      setCreatingFor(null);
+    }
+
+    async function handleCreateBatch(quizId: string) {
+      setCreatingFor(quizId + ':batch');
+      const res = await fetch('/api/sessions/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizId }),
+      });
+      if (res.ok) {
+        const result = await res.json() as BatchResult;
+        setBatchResult(result);
+        setNewSessionCode(null);
+        await load();
+      }
+      setCreatingFor(null);
+    }
+
+    async function handleDelete(id: string, title: string) {
+      setDeleting(true);
+      const res = await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        toast.error(`Failed to delete "${title}": ${body.error ?? res.status}`);
+      } else {
+        toast.success(`Deleted "${title}"`);
+        await load();
+      }
+      setConfirmDelete(null);
+      setDeleting(false);
+    }
+
+    function copyLink(code: string) {
+      const url = `${window.location.origin}/s/${code}`;
+      navigator.clipboard?.writeText(url).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = url;
+        el.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      });
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-slate-500 text-sm">Loading…</p>
+        </div>
+      );
+    }
+
+    const createdCount = quizzes.length;
+
+    return (
+      <div className="px-6 py-6 max-w-4xl mx-auto space-y-6">
+        {/* New session banner */}
+        {newSessionCode && (
+          <div className="bg-emerald-950 border border-emerald-700 rounded-2xl p-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-emerald-400 font-bold text-sm">✓ Room created!</p>
+              <p className="text-white font-mono text-3xl font-black mt-1 tracking-widest">{newSessionCode}</p>
+              <p className="text-emerald-600 text-xs mt-1">{window.location.origin}/s/{newSessionCode}</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => copyLink(newSessionCode)}
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-xl font-semibold transition-colors"
+              >
+                {copied ? '✓ Copied' : 'Copy link'}
+              </button>
+              <button
+                onClick={() => setNewSessionCode(null)}
+                className="text-xs text-slate-500 hover:text-slate-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Batch banner */}
+        {batchResult && (
+          <div className="bg-blue-950 border border-blue-700 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-blue-400 font-bold text-sm">
+                ✓ Batch created — {batchResult.parts.length} parts · {batchResult.quizTitle}
+              </p>
+              <button onClick={() => setBatchResult(null)} className="text-slate-500 hover:text-slate-300 text-xl leading-none">×</button>
+            </div>
+            <div className="space-y-2">
+              {batchResult.parts.map((part) => (
+                <div key={part.id} className="flex items-center gap-3 bg-blue-900/30 rounded-xl px-4 py-2.5">
+                  <span className="text-blue-300 text-xs font-semibold w-14 shrink-0">Part {part.batchOrder}/{batchResult.parts.length}</span>
+                  <span className="font-mono font-black text-white text-lg tracking-widest w-20">{part.code}</span>
+                  <span className="text-slate-400 text-xs flex-1">{part.questionCount} questions</span>
+                  <button onClick={() => copyLink(part.code)} className="text-xs text-blue-400 hover:text-blue-200 transition-colors">
+                    Copy
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Search + Add quiz */}
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search by quiz name…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+          />
+          <Link
+            href="/teacher/quizzes/new"
+            className="shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            + Add quiz
+          </Link>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <button className="text-sm font-semibold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-3 -mb-3">
+            Created ({createdCount})
+          </button>
+          <button className="text-sm text-slate-400 dark:text-slate-600">Draft (0)</button>
+          <button className="text-sm text-slate-400 dark:text-slate-600">Archived (0)</button>
+        </div>
+
+        {/* Quiz list */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+            <p className="text-slate-500 text-sm">{search ? 'No quizzes match your search.' : 'No quiz sets yet.'}</p>
+            {!search && (
+              <Link href="/teacher/quizzes/new" className="text-blue-400 hover:underline text-sm">
+                Upload your first quiz →
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((quiz) => (
+              <div key={quiz.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-slate-900 dark:text-white font-semibold truncate">{quiz.title}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">
+                    {quiz.questions.length} questions · {quiz.time_per_question}s/q{quiz.source ? ` · ${quiz.source}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {confirmDelete === quiz.id ? (
+                    <>
+                      <span className="text-xs text-slate-400">Delete quiz + all room data?</span>
+                      <button
+                        onClick={() => handleDelete(quiz.id, quiz.title)}
+                        disabled={deleting}
+                        className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+                      >
+                        {deleting ? '…' : 'Delete'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(null)}
+                        className="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setConfirmDelete(quiz.id)}
+                        className="px-2 py-2 text-slate-400 hover:text-red-400 text-sm transition-colors"
+                      >
+                        🗑
+                      </button>
+                      <Link
+                        href={`/teacher/quizzes/${quiz.id}`}
+                        className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleCreate(quiz.id)}
+                        disabled={!!creatingFor}
+                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+                      >
+                        {creatingFor === quiz.id ? '…' : '▶ Start'}
+                      </button>
+                      <button
+                        onClick={() => handleCreateBatch(quiz.id)}
+                        disabled={!!creatingFor}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+                      >
+                        {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  ```
+
+- [ ] **Step 2: Verify in browser**
+
+  Navigate to `http://localhost:3000/teacher/quizzes`. Confirm:
+  - Search input works (type a letter, list filters)
+  - "Created (N)" tab shows correct count
+  - Quiz cards show with Edit + ▶ Start + Batch buttons
+  - Clicking "▶ Start" creates a room and shows the banner
+
+- [ ] **Step 3: Commit**
+  ```bash
+  git add web/src/app/teacher/quizzes/page.tsx
+  git commit -m "feat: add teacher quizzes page with search and tabs"
+  ```
+
+---
+
+### Task 11.6: Sessions page — extract session list from teacher/page.tsx
+
+**Files:**
+- Create: `web/src/app/teacher/sessions/page.tsx`
+
+- [ ] **Step 1: Create `web/src/app/teacher/sessions/page.tsx`**
+
+  ```tsx
+  'use client';
+
+  import { useEffect, useState, useCallback } from 'react';
+  import Link from 'next/link';
+  import { toast } from 'sonner';
+
+  interface SessionRow {
+    id: string;
+    code: string;
+    status: string;
+    quizTitle: string;
+    quizId: string;
+    batchId?: string | null;
+    batchOrder?: number | null;
+    lobbyCount: number;
+    finishedCount: number;
+    createdAt: string;
+  }
+
+  type FilterTab = 'all' | 'waiting' | 'active' | 'ended';
+
+  export default function SessionsPage() {
+    const [sessions, setSessions] = useState<SessionRow[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState<FilterTab>('all');
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const load = useCallback(async () => {
+      const res = await fetch('/api/sessions');
+      const data = await res.json() as SessionRow[];
+      setSessions(Array.isArray(data) ? data : []);
+      setLoading(false);
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    // Auto-refresh when active/waiting sessions exist
+    useEffect(() => {
+      const hasLive = sessions.some((s) => s.status === 'waiting' || s.status === 'active');
+      if (!hasLive) return;
+      const id = setInterval(load, 3000);
+      return () => clearInterval(id);
+    }, [sessions, load]);
+
+    async function handleStart(id: string) {
+      const res = await fetch(`/api/sessions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' }),
+      });
+      if (!res.ok) { toast.error('Failed to start game'); return; }
+      await load();
+    }
+
+    async function handleEnd(id: string) {
+      const res = await fetch(`/api/sessions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'ended' }),
+      });
+      if (!res.ok) { toast.error('Failed to end game'); return; }
+      await load();
+    }
+
+    async function handleDelete(id: string, code: string) {
+      setDeleting(true);
+      const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        toast.error(`Failed to delete room ${code}: ${body.error ?? res.status}`);
+      } else {
+        toast.success(`Deleted room ${code}`);
+        await load();
+      }
+      setConfirmDelete(null);
+      setDeleting(false);
+    }
+
+    function copyLink(code: string) {
+      const url = `${window.location.origin}/s/${code}`;
+      navigator.clipboard?.writeText(url).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = url;
+        el.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      });
+    }
+
+    const TABS: { key: FilterTab; label: string }[] = [
+      { key: 'all', label: 'All' },
+      { key: 'waiting', label: 'Waiting' },
+      { key: 'active', label: 'Active' },
+      { key: 'ended', label: 'Ended' },
+    ];
+
+    const displayed = tab === 'all' ? sessions : sessions.filter((s) => s.status === tab);
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-slate-500 text-sm">Loading…</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="px-6 py-6 max-w-4xl mx-auto space-y-6">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Sessions</h1>
+
+        {/* Filter tabs */}
+        <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800">
+          {TABS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                tab === key
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Session list */}
+        {displayed.length === 0 ? (
+          <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+            <p className="text-slate-500 text-sm">No sessions{tab !== 'all' ? ` with status "${tab}"` : ''} yet.</p>
+            <p className="text-xs text-slate-400 mt-2">Create a session from the Quizzes page.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {displayed.map((s) => {
+              const isBatch = !!s.batchId;
+              const totalInBatch = isBatch ? sessions.filter((x) => x.batchId === s.batchId).length : null;
+              return (
+                <div key={s.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-5 py-3 flex items-center gap-4">
+                  <span className="font-mono font-black text-lg text-orange-400 w-20 shrink-0">{s.code}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{s.quizTitle}</p>
+                      {isBatch && (
+                        <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 font-semibold">
+                          Part {s.batchOrder}/{totalInBatch}
+                        </span>
+                      )}
+                      {s.status === 'waiting' && (
+                        <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 font-semibold">
+                          waiting
+                        </span>
+                      )}
+                      {s.status === 'active' && (
+                        <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-semibold">
+                          live
+                        </span>
+                      )}
+                      {s.status === 'ended' && (
+                        <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 font-semibold">
+                          ended
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      {s.status === 'waiting' && `${s.lobbyCount} in lobby · `}
+                      {s.status === 'active' && `${s.finishedCount}/${s.lobbyCount} finished · `}
+                      {new Date(s.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {confirmDelete === s.id ? (
+                      <>
+                        <span className="text-xs text-slate-400">
+                          {isBatch ? `Delete all ${totalInBatch} parts?` : 'Delete this room?'}
+                        </span>
+                        <button
+                          onClick={() => handleDelete(s.id, s.code)}
+                          disabled={deleting}
+                          className="px-3 py-1.5 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
+                        >
+                          {deleting ? '…' : 'Delete'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => copyLink(s.code)} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                          Copy link
+                        </button>
+                        {s.status === 'waiting' && (
+                          <>
+                            <Link
+                              href={`/teacher/sessions/${s.id}/lobby`}
+                              className="px-3 py-1.5 bg-violet-700 hover:bg-violet-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                            >
+                              👁 Lobby
+                            </Link>
+                            <button
+                              onClick={() => handleStart(s.id)}
+                              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                            >
+                              ▶ Start
+                            </button>
+                          </>
+                        )}
+                        {s.status === 'active' && (
+                          <button
+                            onClick={() => handleEnd(s.id)}
+                            className="px-3 py-1.5 bg-red-800 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            ⏹ End
+                          </button>
+                        )}
+                        {(s.status === 'active' || s.status === 'ended') && (
+                          <Link
+                            href={`/teacher/sessions/${s.id}`}
+                            className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            View results
+                          </Link>
+                        )}
+                        {s.status === 'ended' && (
+                          <Link
+                            href={`/s/${s.code}/podium`}
+                            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                          >
+                            Podium
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => setConfirmDelete(s.id)}
+                          className="px-1 text-slate-400 hover:text-red-400 text-sm transition-colors"
+                        >
+                          🗑
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+  ```
+
+- [ ] **Step 2: Verify in browser**
+
+  Navigate to `http://localhost:3000/teacher/sessions`. Confirm:
+  - Sessions list loads
+  - Filter tabs work (click Waiting, Active, Ended)
+  - Action buttons (Lobby, Start, End, View results, Podium, Delete) appear correctly per status
+
+- [ ] **Step 3: Commit**
+  ```bash
+  git add web/src/app/teacher/sessions/page.tsx
+  git commit -m "feat: add teacher sessions page with filter tabs"
+  ```
+
+---
+
+### Task 11.7: teacher/page.tsx — replace with redirect
+
+**Files:**
+- Modify: `web/src/app/teacher/page.tsx`
+
+- [ ] **Step 1: Replace `web/src/app/teacher/page.tsx` entirely**
+
+  ```tsx
+  import { redirect } from 'next/navigation';
+
+  export default function TeacherPage() {
+    redirect('/teacher/quizzes');
+  }
+  ```
+
+- [ ] **Step 2: Verify redirect**
+
+  Navigate to `http://localhost:3000/teacher`. Should immediately land on `/teacher/quizzes`.
+
+- [ ] **Step 3: Commit**
+  ```bash
+  git add web/src/app/teacher/page.tsx
+  git commit -m "feat: redirect /teacher to /teacher/quizzes"
+  ```
+
+---
+
+### Task 11.8: Remove old sticky headers from three sub-pages
+
+**Files:**
+- Modify: `web/src/app/teacher/quizzes/new/page.tsx`
+- Modify: `web/src/app/teacher/quizzes/[id]/page.tsx`
+- Modify: `web/src/app/teacher/sessions/[id]/page.tsx`
+
+#### 11.8a — quizzes/new/page.tsx
+
+- [ ] **Step 1: Remove the sticky header block**
+
+  In `web/src/app/teacher/quizzes/new/page.tsx`, find and remove the `<header>` block. The return statement starts at `return (` followed by `<div className="min-h-screen bg-slate-950">`. Replace:
+
+  ```tsx
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <header className="border-b border-slate-800 sticky top-0 z-10 bg-slate-950/80 backdrop-blur">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
+          <Link href="/teacher" className="text-slate-500 hover:text-slate-300 text-sm">← Dashboard</Link>
+          <span className="text-slate-700">/</span>
+          <span className="text-white text-sm font-semibold">Upload new quiz</span>
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+  ```
+
+  With:
+
+  ```tsx
+  return (
+    <div className="bg-slate-50 dark:bg-slate-950">
+      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        <h1 className="text-slate-900 dark:text-white font-bold text-lg">Upload new quiz</h1>
+  ```
+
+- [ ] **Step 2: Verify in browser**
+
+  Navigate to `http://localhost:3000/teacher/quizzes/new`. The page renders with the sidebar on the left, no duplicate header at top. The "Upload new quiz" title appears in the main content.
+
+- [ ] **Step 3: Commit**
+  ```bash
+  git add web/src/app/teacher/quizzes/new/page.tsx
+  git commit -m "fix: remove sticky header from quizzes/new page"
+  ```
+
+#### 11.8b — quizzes/[id]/page.tsx
+
+- [ ] **Step 1: Remove the sticky header from quiz editor**
+
+  In `web/src/app/teacher/quizzes/[id]/page.tsx`, find the return JSX (starts at `return (`). Replace:
+
+  ```tsx
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <header className="border-b border-slate-800 sticky top-0 z-10 bg-slate-950/80 backdrop-blur">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link href="/teacher" className="text-slate-500 hover:text-slate-300 text-sm shrink-0">← Dashboard</Link>
+            <span className="text-slate-700">/</span>
+            <span className="text-white text-sm font-semibold truncate">{quiz.title}</span>
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-3">
+  ```
+
+  With:
+
+  ```tsx
+  return (
+    <div className="bg-slate-50 dark:bg-slate-950">
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-3">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h1 className="text-slate-900 dark:text-white font-bold text-lg truncate">{quiz.title}</h1>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
+          </button>
+        </div>
+  ```
+
+- [ ] **Step 2: Commit**
+  ```bash
+  git add web/src/app/teacher/quizzes/[id]/page.tsx
+  git commit -m "fix: remove sticky header from quiz editor page"
+  ```
+
+#### 11.8c — sessions/[id]/page.tsx
+
+- [ ] **Step 1: Remove the sticky header from session detail page**
+
+  In `web/src/app/teacher/sessions/[id]/page.tsx`, find the return JSX. Replace:
+
+  ```tsx
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <header className="border-b border-slate-800 sticky top-0 z-10 bg-slate-950/80 backdrop-blur">
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/teacher" className="text-slate-500 hover:text-slate-300 text-sm">← Dashboard</Link>
+            <span className="text-slate-700">/</span>
+            <span className="text-white text-sm font-semibold truncate max-w-xs">{session.quiz?.title}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={copyLink} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Copy link /s/{session.code}
+            </button>
+            <Link href={`/teacher/sessions/${id}/live`} className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium">
+              ▶ Live View
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+  ```
+
+  With:
+
+  ```tsx
+  return (
+    <div className="bg-slate-50 dark:bg-slate-950">
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-slate-900 dark:text-white font-bold text-lg truncate">{session.quiz?.title}</h1>
+          <div className="flex items-center gap-3">
+            <button onClick={copyLink} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Copy link /s/{session.code}
+            </button>
+            <Link href={`/teacher/sessions/${id}/live`} className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium">
+              ▶ Live View
+            </Link>
+          </div>
+        </div>
+  ```
+
+- [ ] **Step 2: Commit**
+  ```bash
+  git add web/src/app/teacher/sessions/[id]/page.tsx
+  git commit -m "fix: remove sticky header from session detail page"
+  ```
+
+---
+
+### Task 11.9: StudentSidebar component
+
+**Files:**
+- Create: `web/src/components/student/StudentSidebar.tsx`
+
+- [ ] **Step 1: Create `web/src/components/student/StudentSidebar.tsx`**
+
+  ```tsx
+  'use client';
+
+  import Link from 'next/link';
+  import { usePathname } from 'next/navigation';
+  import { signOut, useSession } from 'next-auth/react';
+  import { useTheme } from '@/hooks/useTheme';
+
+  function UserIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+    );
+  }
+  function BookOpenIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+    );
+  }
+  function TrophyIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+      </svg>
+    );
+  }
+  function SunIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    );
+  }
+  function MoonIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    );
+  }
+  function LogOutIcon() {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    );
+  }
+
+  const NAV_ITEMS = [
+    { href: '/student/profile', label: 'Profile', Icon: UserIcon },
+    { href: '/student/leaderboard', label: 'Scores', Icon: TrophyIcon },
+  ];
+
+  export default function StudentSidebar() {
+    const pathname = usePathname();
+    const { data: session } = useSession();
+    const { theme, toggleTheme } = useTheme();
+    const name = (session?.user as { username?: string } | undefined)?.username
+      ?? session?.user?.name
+      ?? 'S';
+    const initials = name[0]?.toUpperCase() ?? 'S';
+
+    return (
+      <aside className="w-[72px] shrink-0 h-full border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col items-center py-3 gap-1">
+        {/* Logo */}
+        <Link
+          href="/student/profile"
+          className="w-10 h-10 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-base mb-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title="FCEQuiz"
+        >
+          FQ
+        </Link>
+
+        {/* Nav */}
+        {NAV_ITEMS.map(({ href, label, Icon }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              title={label}
+              className={`w-12 h-12 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors ${
+                active
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Icon />
+              <span className="text-[9px] font-medium leading-none">{label}</span>
+            </Link>
+          );
+        })}
+
+        <div className="flex-1" />
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="w-12 h-12 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
+
+        {/* Sign out */}
+        <button
+          onClick={() => signOut({ redirectTo: '/student/login' })}
+          title="Sign out"
+          className="w-12 h-12 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <LogOutIcon />
+        </button>
+
+        {/* Avatar */}
+        <div
+          className="w-9 h-9 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center mt-1 shrink-0"
+          title={name}
+        >
+          {initials}
+        </div>
+      </aside>
+    );
+  }
+  ```
+
+- [ ] **Step 2: Commit**
+  ```bash
+  git add web/src/components/student/StudentSidebar.tsx
+  git commit -m "feat: add StudentSidebar component"
+  ```
+
+---
+
+### Task 11.10: Student layout
+
+**Files:**
+- Create: `web/src/app/student/layout.tsx`
+
+- [ ] **Step 1: Create `web/src/app/student/layout.tsx`**
+
+  ```tsx
+  'use client';
+
+  import { usePathname } from 'next/navigation';
+  import { Toaster } from 'sonner';
+  import StudentSidebar from '@/components/student/StudentSidebar';
+
+  export default function StudentLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isPublic = pathname === '/student/login' || pathname === '/student/register';
+
+    if (isPublic) {
+      return (
+        <>
+          {children}
+          <Toaster richColors position="top-right" />
+        </>
+      );
+    }
+
+    return (
+      <div className="h-screen overflow-hidden flex bg-slate-50 dark:bg-slate-950">
+        <StudentSidebar />
+        <main className="flex-1 overflow-y-auto min-w-0">
+          {children}
+        </main>
+        <Toaster richColors position="top-right" />
+      </div>
+    );
+  }
+  ```
+
+- [ ] **Step 2: Remove back link from leaderboard page**
+
+  In `web/src/app/student/leaderboard/page.tsx`, find and remove the "← Trang cá nhân" link:
+  ```tsx
+  // REMOVE these 4 lines (the Link element + the ← text):
+  <Link href="/student/profile" className="text-sm text-slate-400 hover:text-white transition-colors">
+    ← Trang cá nhân
+  </Link>
+  ```
+  The sidebar already provides navigation to Profile — this back link is redundant.
+
+- [ ] **Step 3: Verify in browser**
+
+  Navigate to `http://localhost:3000/student/login` → login → arrives at `/student/profile`. Profile page should show with the StudentSidebar on the left. Navigate to Leaderboard via sidebar — "← Trang cá nhân" link should be gone.
+
+- [ ] **Step 4: Commit**
+  ```bash
+  git add web/src/app/student/layout.tsx web/src/app/student/leaderboard/page.tsx
+  git commit -m "feat: add student layout with StudentSidebar shell"
+  ```
+
+---
+
+### Task 11.11: Hide NavBar on /student/* routes
+
+**Files:**
+- Modify: `web/src/components/NavBar.tsx`
+
+- [ ] **Step 1: Update the early-return check in NavBar**
+
+  In `web/src/components/NavBar.tsx`, find:
+  ```tsx
+  if (pathname?.startsWith('/teacher')) return null;
+  ```
+
+  Replace with:
+  ```tsx
+  if (pathname?.startsWith('/teacher') || pathname?.startsWith('/student')) return null;
+  ```
+
+- [ ] **Step 2: Verify**
+
+  Navigate to `http://localhost:3000/student/profile` — the NavBar at the top should no longer appear. The StudentSidebar is the only navigation. Game pages like `/s/TESTCODE` should still show the NavBar.
+
+- [ ] **Step 3: Commit**
+  ```bash
+  git add web/src/components/NavBar.tsx
+  git commit -m "fix: hide NavBar on /student/* routes"
+  ```
+
+---
+
+### Task 11.12: E2E tests — update existing + add Wayground layout tests
+
+**Files:**
+- Create: `web/e2e/wayground-layout.spec.ts`
+- Modify: `web/e2e/teacher-dashboard.spec.ts` (update URLs)
+
+#### 11.12a — Update teacher-dashboard.spec.ts
+
+- [ ] **Step 1: Update the beforeEach URL**
+
+  In `web/e2e/teacher-dashboard.spec.ts`, find:
+  ```typescript
+  await page.goto('/teacher');
+  // SessionProvider polling can prevent networkidle — wait for a specific element instead
+  await page.getByRole('heading', { name: 'Quiz Sets' }).waitFor({ timeout: 15_000 });
+  ```
+
+  Replace with:
+  ```typescript
+  await page.goto('/teacher/quizzes');
+  await page.getByText('Created').waitFor({ timeout: 15_000 });
+  ```
+
+- [ ] **Step 2: Update the "Quiz Sets" heading assertion**
+
+  Find:
+  ```typescript
+  await expect(page.getByRole('heading', { name: 'Quiz Sets' })).toBeVisible();
+  ```
+
+  Replace with:
+  ```typescript
+  await expect(page.getByText('Created')).toBeVisible();
+  ```
+
+- [ ] **Step 3: Update "+ Upload new" test**
+
+  Find:
+  ```typescript
+  test('clicking "+ Upload new" navigates to /teacher/quizzes/new', async ({ page }) => {
+    await page.getByRole('link', { name: '+ Upload new' }).click();
+    await expect(page).toHaveURL(/\/teacher\/quizzes\/new/);
+  ```
+
+  Replace with:
+  ```typescript
+  test('clicking "+ Add quiz" navigates to /teacher/quizzes/new', async ({ page }) => {
+    await page.getByRole('link', { name: '+ Add quiz' }).click();
+    await expect(page).toHaveURL(/\/teacher\/quizzes\/new/);
+  ```
+
+#### 11.12b — Create wayground-layout.spec.ts
+
+- [ ] **Step 4: Create `web/e2e/wayground-layout.spec.ts`**
+
+  ```typescript
+  import { test, expect } from '@playwright/test';
+
+  const MOCK_QUIZZES = [
+    {
+      id: 'q1',
+      title: 'Grammar B2',
+      questions: Array.from({ length: 40 }, (_, i) => ({ id: i + 1 })),
+      time_per_question: 45,
+      source: 'FCE.pdf',
+    },
+  ];
+
+  const MOCK_SESSIONS = [
+    {
+      id: 's1',
+      code: 'ABC123',
+      status: 'waiting',
+      quizTitle: 'Grammar B2',
+      quizId: 'q1',
+      batchId: null,
+      batchOrder: null,
+      lobbyCount: 3,
+      finishedCount: 0,
+      createdAt: '2026-07-06T00:00:00.000Z',
+    },
+    {
+      id: 's2',
+      code: 'XYZ789',
+      status: 'ended',
+      quizTitle: 'Grammar B2',
+      quizId: 'q1',
+      batchId: null,
+      batchOrder: null,
+      lobbyCount: 5,
+      finishedCount: 5,
+      createdAt: '2026-07-05T00:00:00.000Z',
+    },
+  ];
+
+  async function mockApis(page: import('@playwright/test').Page) {
+    await page.route('/api/quizzes', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_QUIZZES) });
+      } else { await route.continue(); }
+    });
+    await page.route('/api/sessions', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SESSIONS) });
+      } else { await route.continue(); }
+    });
+  }
+
+  test.describe('Wayground layout — teacher', () => {
+    test.beforeEach(async ({ page }) => {
+      await mockApis(page);
+      await page.goto('/teacher/quizzes');
+      await page.getByText('Grammar B2').waitFor({ timeout: 15_000 });
+    });
+
+    test('sidebar is visible on quizzes page', async ({ page }) => {
+      await expect(page.locator('aside').first()).toBeVisible();
+    });
+
+    test('QuizzesPanel second panel is visible on /teacher/quizzes', async ({ page }) => {
+      await expect(page.getByText('Quizzes').first()).toBeVisible();
+      await expect(page.getByText('All')).toBeVisible();
+      await expect(page.getByText('Recently used')).toBeVisible();
+    });
+
+    test('sidebar nav: clicking Sessions hides QuizzesPanel', async ({ page }) => {
+      await page.goto('/teacher/sessions');
+      await mockApis(page);
+      await page.waitForLoadState('networkidle');
+      // On /teacher/sessions, second panel should NOT show quizzes panel header "Quizzes"
+      // The aside for QuizzesPanel won't be rendered
+      const panelCount = await page.locator('aside').count();
+      // Only one aside (the sidebar) — no second panel
+      expect(panelCount).toBe(1);
+    });
+
+    test('quiz search filters results', async ({ page }) => {
+      const input = page.getByPlaceholder('Search by quiz name…');
+      await input.fill('Grammar');
+      await expect(page.getByText('Grammar B2')).toBeVisible();
+      await input.fill('Nonexistent Quiz XYZ');
+      await expect(page.getByText('No quizzes match your search.')).toBeVisible();
+    });
+
+    test('/teacher redirects to /teacher/quizzes', async ({ page }) => {
+      await page.goto('/teacher');
+      await expect(page).toHaveURL(/\/teacher\/quizzes/, { timeout: 5000 });
+    });
+  });
+
+  test.describe('Wayground layout — sessions page', () => {
+    test.beforeEach(async ({ page }) => {
+      await mockApis(page);
+      await page.goto('/teacher/sessions');
+      await page.waitForLoadState('networkidle');
+    });
+
+    test('sessions page shows filter tabs', async ({ page }) => {
+      await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Waiting' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Active' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Ended' })).toBeVisible();
+    });
+
+    test('session filter tab Waiting shows only waiting sessions', async ({ page }) => {
+      await page.getByRole('button', { name: 'Waiting' }).click();
+      await expect(page.getByText('ABC123')).toBeVisible();
+      await expect(page.getByText('XYZ789')).not.toBeVisible();
+    });
+
+    test('session filter tab Ended shows only ended sessions', async ({ page }) => {
+      await page.getByRole('button', { name: 'Ended' }).click();
+      await expect(page.getByText('XYZ789')).toBeVisible();
+      await expect(page.getByText('ABC123')).not.toBeVisible();
+    });
+  });
+
+  test.describe('Wayground layout — theme toggle', () => {
+    test('theme toggle switches dark/light class on html element', async ({ page }) => {
+      await page.goto('/teacher/quizzes');
+      await page.route('/api/quizzes', async (route) => {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+      });
+      await page.route('/api/sessions', async (route) => {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+      });
+      await page.waitForLoadState('networkidle');
+
+      // Default is dark
+      await expect(page.locator('html')).toHaveClass(/dark/, { timeout: 3000 });
+
+      // Click theme toggle button (title contains "light mode" or "dark mode")
+      const themeBtn = page.locator('button[title*="mode"]').first();
+      await themeBtn.click();
+      // Should switch to light (no dark class)
+      await expect(page.locator('html')).not.toHaveClass(/dark/);
+
+      // Toggle back
+      await themeBtn.click();
+      await expect(page.locator('html')).toHaveClass(/dark/);
+    });
+  });
+  ```
+
+- [ ] **Step 5: Add student layout E2E tests to wayground-layout.spec.ts**
+
+  Append to `web/e2e/wayground-layout.spec.ts`:
+  ```typescript
+  test.describe('Wayground layout — student', () => {
+    test.beforeEach(async ({ page }) => {
+      // Use real student auth state if available; otherwise test via URL
+    });
+
+    test('NavBar hidden on /student/* routes', async ({ page }) => {
+      await page.goto('/student/login');
+      await page.waitForLoadState('domcontentloaded');
+      // The main NavBar (with teacher role) should NOT appear on student pages
+      await expect(page.locator('nav[data-testid="navbar"]')).toHaveCount(0);
+    });
+
+    test('/student/leaderboard has no back link to Trang ca nhan', async ({ page }) => {
+      // Login as student first via stored auth
+      await page.context().storageState(); // uses existing student auth if set up
+      await page.goto('/student/leaderboard');
+      await page.waitForLoadState('domcontentloaded');
+      // The "← Trang cá nhân" link should be absent
+      await expect(page.getByText('← Trang cá nhân')).toHaveCount(0);
+    });
+  });
+  ```
+
+- [ ] **Step 6: Run the new E2E tests**
+
+  ```bash
+  cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
+    /Users/halinh/.nvm/versions/node/v20.16.0/bin/node \
+    node_modules/.bin/playwright test e2e/wayground-layout.spec.ts
+  ```
+  Expected: all pass.
+
+- [ ] **Step 6: Run full regression**
+
+  ```bash
+  cd web && E2E_EMAIL="e2e-test@fce-quiz.local" E2E_PASSWORD="e2e-test-2026" \
+    /Users/halinh/.nvm/versions/node/v20.16.0/bin/node \
+    node_modules/.bin/playwright test
+  ```
+  Expected: all pass, no regressions.
+
+- [ ] **Step 7: Commit**
+
+  ```bash
+  git add web/e2e/wayground-layout.spec.ts web/e2e/teacher-dashboard.spec.ts docs/plans.md
+  git commit -m "test: add E2E tests for Wayground teacher + student layout"
+  ```
+
+---
+
+### Task 11.13: Deploy and verify
+
+- [ ] **Step 1: Push to GitHub**
+  ```bash
+  git push origin main
+  ```
+
+- [ ] **Step 2: Wait for GitHub Actions CI to pass** (check at https://github.com).
+
+- [ ] **Step 3: SSH to VPS and deploy**
+  ```bash
+  ssh -i ~/.ssh/digitalocean root@139.162.42.158
+  cd /root/fce-quiz/web
+  git pull
+  npm install
+  npm run build
+  pm2 restart fce-quiz
+  ```
+
+- [ ] **Step 4: Verify**
+  ```bash
+  pm2 logs fce-quiz --lines 50
+  ```
+  Open production URL → teacher login → `/teacher/quizzes` shows sidebar layout.
+
+- [ ] **Step 5: Mark done and commit**
+  ```bash
+  git add docs/plans.md
+  git commit -m "docs: mark feature 11 as done"
   git push origin main
   ```
 
