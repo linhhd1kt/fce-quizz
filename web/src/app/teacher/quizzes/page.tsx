@@ -111,7 +111,7 @@ function QuizzesContent() {
 
   function copyLink(code: string) {
     const url = `${window.location.origin}/s/${code}`;
-    navigator.clipboard?.writeText(url).catch(() => {
+    function fallback() {
       const el = document.createElement('textarea');
       el.value = url;
       el.style.cssText = 'position:fixed;opacity:0';
@@ -119,7 +119,12 @@ function QuizzesContent() {
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-    });
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).catch(fallback);
+    } else {
+      fallback();
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
