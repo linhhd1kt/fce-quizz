@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 interface LeaderboardEntry {
   rank: number;
@@ -29,9 +28,6 @@ export default function LeaderboardPage() {
 
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">🏆 Bảng xếp hạng</h1>
-          <Link href="/student/profile" className="text-sm text-slate-400 hover:text-white transition-colors">
-            ← Trang cá nhân
-          </Link>
         </div>
 
         {loading ? (
