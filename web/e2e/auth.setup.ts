@@ -17,6 +17,6 @@ setup('authenticate as teacher', async ({ page }) => {
   await page.locator('input[type="email"]').fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL('/teacher', { timeout: 15_000 });
+  await page.waitForURL('/teacher/quizzes', { timeout: 15_000 });
   await page.context().storageState({ path: authFile });
 });

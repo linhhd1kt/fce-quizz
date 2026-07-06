@@ -20,9 +20,8 @@ unauthenticatedTest.describe('Teacher Login', () => {
     await page.locator('input[type="email"]').fill('e2e-test@fce-quiz.local');
     await page.locator('input[type="password"]').fill('e2e-test-2026');
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL('/teacher', { timeout: 15_000 });
-    // Heading "Teacher" visible in dashboard header
-    await expect(page.getByText('Teacher')).toBeVisible();
+    await page.waitForURL('/teacher/quizzes', { timeout: 15_000 });
+    await expect(page.getByText('Created')).toBeVisible();
   });
 
   // Req 2 — wrong password → error message, no redirect
