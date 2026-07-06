@@ -3824,27 +3824,27 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 **Spec:** §14
 
-- [ ] **Task 12.1: StudentTopNav component**
+- [x] **Task 12.1: StudentTopNav component**
   - Create `web/src/components/student/StudentTopNav.tsx`
   - Top nav: FCEQuiz logo + Home/Activity/Scores tabs + theme toggle + avatar sign-out
 
-- [ ] **Task 12.2: Update student layout**
+- [x] **Task 12.2: Update student layout**
   - Modify `web/src/app/student/layout.tsx`
   - Replace `StudentSidebar` with `StudentTopNav`, switch to flex-col layout
 
-- [ ] **Task 12.3: Home page**
+- [x] **Task 12.3: Home page**
   - Create `web/src/app/student/home/page.tsx`
   - Join code box + greeting card + recent games grid with AccuracyBar
 
-- [ ] **Task 12.4: Activity page**
+- [x] **Task 12.4: Activity page**
   - Create `web/src/app/student/activity/page.tsx`
   - Full history + practice queue + stats + badges
 
-- [ ] **Task 12.5: Profile redirect + sidebar delete**
+- [x] **Task 12.5: Profile redirect + sidebar delete**
   - Modify `web/src/app/student/profile/page.tsx` → server redirect to /student/home
   - Delete `web/src/components/student/StudentSidebar.tsx`
 
-- [ ] **Task 12.6: E2E tests**
+- [x] **Task 12.6: E2E tests**
   - Update `web/e2e/wayground-layout.spec.ts` student section
 
 - [ ] **Task 12.7: Deploy and verify**
