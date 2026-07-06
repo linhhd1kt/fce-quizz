@@ -143,16 +143,9 @@ export default function NewQuizPage() {
   const gameChunks = quiz ? chunkByTargetGames(quiz.questions, targetGames) : [];
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <header className="border-b border-slate-800 sticky top-0 z-10 bg-slate-950/80 backdrop-blur">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Link href="/teacher" className="text-slate-500 hover:text-slate-300 text-sm">← Dashboard</Link>
-          <span className="text-slate-700">/</span>
-          <span className="text-white text-sm font-semibold">Upload new quiz</span>
-        </div>
-      </header>
-
+    <div className="bg-slate-50 dark:bg-slate-950">
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        <h1 className="text-slate-900 dark:text-white font-bold text-lg">Upload new quiz</h1>
         {/* Options */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">PDF Extraction Options</p>
