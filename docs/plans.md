@@ -3847,5 +3847,5 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 - [x] **Task 12.6: E2E tests**
   - Update `web/e2e/wayground-layout.spec.ts` student section
 
-- [ ] **Task 12.7: Deploy and verify**
+- [x] **Task 12.7: Deploy and verify**
   - Push → GitHub Actions → SSH PM2 verify
