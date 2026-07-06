@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
-import StudentSidebar from '@/components/student/StudentSidebar';
+import StudentTopNav from '@/components/student/StudentTopNav';
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,9 +18,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="h-screen overflow-hidden flex bg-slate-50 dark:bg-slate-950">
-      <StudentSidebar />
-      <main className="flex-1 overflow-y-auto min-w-0">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+      <StudentTopNav />
+      <main className="flex-1">
         {children}
       </main>
       <Toaster richColors position="top-right" />
