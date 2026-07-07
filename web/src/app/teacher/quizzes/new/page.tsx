@@ -275,7 +275,7 @@ export default function NewQuizPage() {
             disabled={ranges.length === 0}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-semibold text-sm rounded-xl transition-colors"
           >
-            Create {ranges.length} game{ranges.length !== 1 ? 's' : ''} →
+            Extract & auto-split →
           </button>
         </div>
       )}
