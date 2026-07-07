@@ -1578,3 +1578,116 @@ Data sources: `/api/student/profile` + `/api/student/practice-summary`
 | Scores tab → leaderboard visible | Navigate to /student/leaderboard |
 | Theme toggle persists | Click toggle → dark mode applied |
 | /student/profile redirects | Page redirects to /student/home |
+
+---
+
+## §15 — PDF → Multiple Games + Grouped Teacher View
+
+**Status:** Planned
+
+### §15.1 — Goal
+
+Allow a teacher to import a PDF and create multiple separate games (quizzes), one per detected MCQ section. The teacher quizzes page groups quizzes by their source PDF, with collapsible groups.
+
+### §15.2 — Upload Flow (Two-Step)
+
+**Step 1 — Detect:**
+- User selects PDF + sets time per question (existing form fields unchanged)
+- Button label changes from "Upload" to **"Detect sections"**
+- On click: `POST /api/extract-quiz/detect` (multipart, PDF only)
+  - Server runs `detectMCQPageRanges(buffer)` → returns detected page ranges
+  - Response: `{ ranges: [{ id, name, from, to }] }` — names auto-generated as "Part 1", "Part 2", …
+
+**Step 2 — Configure:**
+- Detected ranges appear below the form as an editable list
+- Each range row:
+  - Text input: game name (editable, default "Part N")
+  - Number inputs: from page, to page (editable)
+  - **Merge with next** button — combine this range with the one below (takes min `from`, max `to`)
+  - **Split** button — divide into two halves (e.g. pages 1–10 → 1–5 + 6–10)
+  - **Delete** button — remove this range
+- **+ Add range** button at the bottom — adds a blank row (user fills from/to manually)
+- **"Create N games"** button (N = current range count)
+
+**Step 3 — Create:**
+- `POST /api/extract-quiz` with multipart: PDF file + `ranges` JSON + `timePerQuestion`
+- Server processes each range independently → calls AI for each → creates one quiz per range
+- All quizzes share `source = filename` (full filename stored in DB)
+- Redirect to `/teacher/quizzes` after all quizzes created
+
+### §15.3 — Teacher Quizzes Page — Grouped View
+
+**Grouping logic (frontend):**
+- Group quizzes array by `source` field
+- Quizzes with `source` → rendered under a collapsible group header
+- Quizzes without `source` → rendered as flat list at the bottom (backward compatible)
+
+**Group header:**
+```
+▼  tuyển tập đề chuyên Nguyễn Huệ  (3 games)
+```
+- Display name: `source.replace(/\.pdf$/i, '')` (strip `.pdf` extension for display only; DB stores full filename)
+- Click to toggle collapse/expand
+- Default state: **expanded**
+- Collapse state managed via `useState<Set<string>>` (set of collapsed source keys)
+
+**Inside a group:** existing quiz row layout unchanged (title, question count, time/q, Delete / Edit / ▶ Start / + Batch buttons)
+
+### §15.4 — API Changes
+
+**New endpoint: `POST /api/extract-quiz/detect`**
+- Input: multipart PDF
+- Runs: `detectMCQPageRanges(buffer)`
+- Returns: `{ ranges: Array<{ id: string; name: string; from: number; to: number }> }`
+- No quiz creation — detect only
+
+**Modified: `POST /api/extract-quiz`**
+- Accepts new optional field: `ranges: Array<{ name: string; from: number; to: number }>`
+- If `ranges` present → create one quiz per range (loop, call AI per range, save separately)
+- If `ranges` absent → existing behavior (merge all ranges into one quiz — backward compatible)
+- All created quizzes: `source = file.name`, `timePerQuestion` from form
+
+### §15.5 — Mermaid Flow
+
+```mermaid
+flowchart TD
+    A[Teacher selects PDF + time/q] --> B[Click Detect sections]
+    B --> C[POST /api/extract-quiz/detect]
+    C --> D[detectMCQPageRanges returns PageRange array]
+    D --> E[Show editable range list]
+    E --> F{Teacher adjusts ranges}
+    F --> G[Edit name / from / to]
+    F --> H[Merge with next]
+    F --> I[Split]
+    F --> J[Delete / Add range]
+    G & H & I & J --> K[Click Create N games]
+    K --> L[POST /api/extract-quiz with ranges]
+    L --> M[AI processes each range separately]
+    M --> N[N quizzes created, all source = filename]
+    N --> O[Redirect to /teacher/quizzes]
+    O --> P[Page shows quizzes grouped by source]
+```
+
+### §15.6 — Files
+
+| File | Action |
+|------|--------|
+| `web/src/app/api/extract-quiz/detect/route.ts` | Create — detect-only endpoint |
+| `web/src/app/api/extract-quiz/route.ts` | Modify — support `ranges` param, create N quizzes |
+| `web/src/app/teacher/quizzes/new/page.tsx` | Modify — two-step upload UI |
+| `web/src/app/teacher/quizzes/page.tsx` | Modify — group by source, collapsible groups |
+
+### §15.7 — E2E Tests
+
+| Scenario | Details |
+|----------|---------|
+| Detect sections → range list appears | Upload PDF → click Detect → range rows visible |
+| Edit range name | Change name input → reflected in UI |
+| Edit from/to | Change page numbers → range updates |
+| Merge ranges | Click Merge → two rows become one |
+| Split range | Click Split → one row becomes two |
+| Delete range | Click Delete → row removed |
+| Create N games | Click Create → N quizzes appear on quizzes page |
+| Quizzes grouped by source | Source-based quizzes appear under correct group header |
+| Group collapse/expand | Click header → group hides/shows |
+| Old quizzes (no source) shown flat | Ungrouped quizzes still visible below groups |
