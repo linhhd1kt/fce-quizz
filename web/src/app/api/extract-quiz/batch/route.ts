@@ -47,6 +47,18 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const client = new OpenAI({ baseURL: 'https://models.inference.ai.azure.com', apiKey });
 
+  const TARGET = 15;
+
+  function chunkEvenly<T>(arr: T[]): T[][] {
+    const n = arr.length;
+    if (n <= 16) return [arr];
+    const numParts = Math.round(n / TARGET);
+    const size = Math.ceil(n / numParts);
+    const chunks: T[][] = [];
+    for (let i = 0; i < n; i += size) chunks.push(arr.slice(i, i + size));
+    return chunks;
+  }
+
   const created: { id: string; title: string; questionCount: number }[] = [];
 
   for (const range of ranges) {
@@ -57,17 +69,22 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const [quiz] = await db.insert(quizzes).values({
-        teacherId,
-        title: range.name || title || file.name.replace(/\.pdf$/i, ''),
-        description: `AI-extracted from pages ${range.from}–${range.to}`,
-        source: file.name,
-        timePerQuestion,
-        questions,
-        skippedSections: null,
-      }).returning();
+      const baseName = range.name || title || file.name.replace(/\.pdf$/i, '');
+      const chunks = chunkEvenly(questions);
 
-      created.push({ id: quiz.id, title: quiz.title, questionCount: questions.length });
+      for (let i = 0; i < chunks.length; i++) {
+        const chunkTitle = chunks.length === 1 ? baseName : `${baseName} (${i + 1}/${chunks.length})`;
+        const [quiz] = await db.insert(quizzes).values({
+          teacherId,
+          title: chunkTitle,
+          description: `AI-extracted from pages ${range.from}–${range.to}`,
+          source: file.name,
+          timePerQuestion,
+          questions: chunks[i],
+          skippedSections: null,
+        }).returning();
+        created.push({ id: quiz.id, title: quiz.title, questionCount: chunks[i].length });
+      }
     } catch (e) {
       console.error(`[extract-quiz/batch] Failed for range ${range.from}-${range.to}:`, e instanceof Error ? e.message : e);
     }
