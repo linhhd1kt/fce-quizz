@@ -42,6 +42,7 @@ function QuizzesContent() {
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     const [qRes, sRes] = await Promise.all([
@@ -62,6 +63,27 @@ function QuizzesContent() {
     const matchesFilter = filter !== 'recent' || quizIdsWithSessions.has(q.id);
     return matchesSearch && matchesFilter;
   });
+
+  // Group by source
+  const sourceMap = new Map<string, QuizRow[]>();
+  const ungrouped: QuizRow[] = [];
+  for (const q of filtered) {
+    if (q.source) {
+      if (!sourceMap.has(q.source)) sourceMap.set(q.source, []);
+      sourceMap.get(q.source)!.push(q);
+    } else {
+      ungrouped.push(q);
+    }
+  }
+  const groups = Array.from(sourceMap.entries());
+
+  function toggleCollapse(source: string) {
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      next.has(source) ? next.delete(source) : next.add(source);
+      return next;
+    });
+  }
 
   async function handleCreate(quizId: string) {
     setCreatingFor(quizId);
@@ -216,8 +238,8 @@ function QuizzesContent() {
         <button className="text-sm text-slate-400 dark:text-slate-600">Archived (0)</button>
       </div>
 
-      {/* Quiz list */}
-      {filtered.length === 0 ? (
+      {/* Empty state */}
+      {filtered.length === 0 && (
         <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
           <p className="text-slate-500 text-sm">{search ? 'No quizzes match your search.' : 'No quiz sets yet.'}</p>
           {!search && (
@@ -226,69 +248,148 @@ function QuizzesContent() {
             </Link>
           )}
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((quiz) => (
-            <div key={quiz.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-slate-900 dark:text-white font-semibold truncate">{quiz.title}</p>
-                <p className="text-slate-500 text-xs mt-0.5">
-                  {quiz.questions.length} questions · {quiz.time_per_question}s/q{quiz.source ? ` · ${quiz.source}` : ''}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {confirmDelete === quiz.id ? (
-                  <>
-                    <span className="text-xs text-slate-400">Delete quiz + all room data?</span>
-                    <button
-                      onClick={() => handleDelete(quiz.id, quiz.title)}
-                      disabled={deleting}
-                      className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-                    >
-                      {deleting ? '…' : 'Delete'}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(null)}
-                      className="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setConfirmDelete(quiz.id)}
-                      className="px-2 py-2 text-slate-400 hover:text-red-400 text-sm transition-colors"
-                    >
-                      🗑
-                    </button>
-                    <Link
-                      href={`/teacher/quizzes/${quiz.id}`}
-                      className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleCreate(quiz.id)}
-                      disabled={!!creatingFor}
-                      className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-                    >
-                      {creatingFor === quiz.id ? '…' : '▶ Start'}
-                    </button>
-                    <button
-                      onClick={() => handleCreateBatch(quiz.id)}
-                      disabled={!!creatingFor}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-                    >
-                      {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
-                    </button>
-                  </>
+      )}
+
+      {/* Quiz list: grouped + ungrouped */}
+      {filtered.length > 0 && (
+        <div className="space-y-4">
+          {groups.map(([source, groupQuizzes]) => {
+            const isCollapsed = collapsed.has(source);
+            const displayName = source.replace(/\.pdf$/i, '');
+            return (
+              <div key={source} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <button
+                  onClick={() => toggleCollapse(source)}
+                  className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                >
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate flex-1 mr-3">
+                    {isCollapsed ? '▶' : '▼'}&nbsp;&nbsp;{displayName}
+                  </span>
+                  <span className="text-xs text-slate-400 shrink-0">
+                    {groupQuizzes.length} game{groupQuizzes.length !== 1 ? 's' : ''}
+                  </span>
+                </button>
+                {!isCollapsed && (
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                    {groupQuizzes.map((quiz) => (
+                      <QuizRowItem
+                        key={quiz.id}
+                        quiz={quiz}
+                        creatingFor={creatingFor}
+                        confirmDelete={confirmDelete}
+                        deleting={deleting}
+                        onStart={() => handleCreate(quiz.id)}
+                        onBatch={() => handleCreateBatch(quiz.id)}
+                        onDelete={() => handleDelete(quiz.id, quiz.title)}
+                        onConfirmDelete={() => setConfirmDelete(quiz.id)}
+                        onCancelDelete={() => setConfirmDelete(null)}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
+            );
+          })}
+
+          {/* Ungrouped */}
+          {ungrouped.length > 0 && (
+            <div className="space-y-3">
+              {groups.length > 0 && (
+                <p className="text-xs font-semibold text-slate-400 dark:text-slate-600 uppercase tracking-wider">Other</p>
+              )}
+              {ungrouped.map((quiz) => (
+                <div key={quiz.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                  <QuizRowItem
+                    quiz={quiz}
+                    creatingFor={creatingFor}
+                    confirmDelete={confirmDelete}
+                    deleting={deleting}
+                    onStart={() => handleCreate(quiz.id)}
+                    onBatch={() => handleCreateBatch(quiz.id)}
+                    onDelete={() => handleDelete(quiz.id, quiz.title)}
+                    onConfirmDelete={() => setConfirmDelete(quiz.id)}
+                    onCancelDelete={() => setConfirmDelete(null)}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+interface QuizRowItemProps {
+  quiz: QuizRow;
+  creatingFor: string | null;
+  confirmDelete: string | null;
+  deleting: boolean;
+  onStart: () => void;
+  onBatch: () => void;
+  onDelete: () => void;
+  onConfirmDelete: () => void;
+  onCancelDelete: () => void;
+}
+
+function QuizRowItem({ quiz, creatingFor, confirmDelete, deleting, onStart, onBatch, onDelete, onConfirmDelete, onCancelDelete }: QuizRowItemProps) {
+  return (
+    <div className="p-5 flex items-center justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <p className="text-slate-900 dark:text-white font-semibold truncate">{quiz.title}</p>
+        <p className="text-slate-500 text-xs mt-0.5">
+          {quiz.questions.length} questions · {quiz.time_per_question}s/q
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {confirmDelete === quiz.id ? (
+          <>
+            <span className="text-xs text-slate-400">Delete quiz + all room data?</span>
+            <button
+              onClick={onDelete}
+              disabled={deleting}
+              className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              {deleting ? '…' : 'Delete'}
+            </button>
+            <button
+              onClick={onCancelDelete}
+              className="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={onConfirmDelete}
+              className="px-2 py-2 text-slate-400 hover:text-red-400 text-sm transition-colors"
+            >
+              🗑
+            </button>
+            <Link
+              href={`/teacher/quizzes/${quiz.id}`}
+              className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
+            >
+              Edit
+            </Link>
+            <button
+              onClick={onStart}
+              disabled={!!creatingFor}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              {creatingFor === quiz.id ? '…' : '▶ Start'}
+            </button>
+            <button
+              onClick={onBatch}
+              disabled={!!creatingFor}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

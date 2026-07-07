@@ -57,7 +57,7 @@ export function parsePageRange(input: string): PageRange[] {
     });
 }
 
-async function detectMCQPageRanges(buffer: Buffer): Promise<PageRange[]> {
+export async function detectMCQPageRanges(buffer: Buffer): Promise<PageRange[]> {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pdfdetect-'));
   const pdfPath = path.join(tmpDir, 'input.pdf');
   try {
@@ -223,6 +223,43 @@ async function callAI(
   });
   const text = response.choices[0]?.message?.content ?? '{}';
   return extractJSON(text);
+}
+
+export async function extractQuestionsFromRange(
+  buffer: Buffer,
+  range: { from: number; to: number },
+  client: OpenAI,
+): Promise<{ title?: string; questions: Record<string, unknown>[] }> {
+  const images = await pdfToJpegBase64(buffer, [range]);
+  if (images.length === 0) return { questions: [] };
+
+  const BATCH = 5;
+  let aiResult: { title?: string; questions?: unknown[] } = {};
+  let questionOffset = 0;
+
+  for (let i = 0; i < images.length; i += BATCH) {
+    const batch = images.slice(i, i + BATCH);
+    const content: OpenAI.Chat.ChatCompletionContentPart[] = [
+      {
+        type: 'text',
+        text: `Pages ${i + 1}–${i + batch.length}. Continue from q-${questionOffset + 1}. Extract ALL MCQ questions with A/B/C/D options. Skip non-MCQ sections.`,
+      },
+      ...batch.map((url): OpenAI.Chat.ChatCompletionContentPartImage => ({
+        type: 'image_url',
+        image_url: { url, detail: 'high' },
+      })),
+    ];
+    const result = await callAI(client, VISION_PROMPT, content);
+    if (!aiResult.title) aiResult.title = result.title;
+    const batchQs = result.questions ?? [];
+    aiResult.questions = [...(aiResult.questions ?? []), ...batchQs];
+    questionOffset += batchQs.length;
+  }
+
+  return {
+    title: aiResult.title,
+    questions: validate(aiResult.questions ?? []),
+  };
 }
 
 export async function POST(req: NextRequest) {
