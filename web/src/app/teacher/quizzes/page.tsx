@@ -109,18 +109,6 @@ function QuizzesContent() {
     setCreatingFor(null);
   }
 
-  async function handleCreateBatch(quizId: string) {
-    setCreatingFor(quizId + ':batch');
-    const res = await fetch('/api/sessions/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quizId }),
-    });
-    if (!res.ok) toast.error('Failed to create batch.');
-    await load();
-    setCreatingFor(null);
-  }
-
   async function handleDelete(id: string, title: string) {
     setDeleting(true);
     const res = await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
@@ -236,7 +224,6 @@ function QuizzesContent() {
                         deleting={deleting}
                         copiedCode={copiedCode}
                         onStart={() => handleCreate(quiz.id)}
-                        onBatch={() => handleCreateBatch(quiz.id)}
                         onDelete={() => handleDelete(quiz.id, quiz.title)}
                         onConfirmDelete={() => setConfirmDelete(quiz.id)}
                         onCancelDelete={() => setConfirmDelete(null)}
@@ -265,7 +252,6 @@ function QuizzesContent() {
                     deleting={deleting}
                     copiedCode={copiedCode}
                     onStart={() => handleCreate(quiz.id)}
-                    onBatch={() => handleCreateBatch(quiz.id)}
                     onDelete={() => handleDelete(quiz.id, quiz.title)}
                     onConfirmDelete={() => setConfirmDelete(quiz.id)}
                     onCancelDelete={() => setConfirmDelete(null)}
@@ -289,7 +275,6 @@ interface QuizCardProps {
   deleting: boolean;
   copiedCode: string | null;
   onStart: () => void;
-  onBatch: () => void;
   onDelete: () => void;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
@@ -302,7 +287,7 @@ function statusBadge(status: string) {
   return <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400"><span className="w-1.5 h-1.5 rounded-full bg-slate-400" />Finished</span>;
 }
 
-function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copiedCode, onStart, onBatch, onDelete, onConfirmDelete, onCancelDelete, onCopy }: QuizCardProps) {
+function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copiedCode, onStart, onDelete, onConfirmDelete, onCancelDelete, onCopy }: QuizCardProps) {
   return (
     <div>
       {/* Quiz row */}
@@ -347,13 +332,6 @@ function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copied
               >
                 {creatingFor === quiz.id ? '…' : '▶ Start'}
               </button>
-              <button
-                onClick={onBatch}
-                disabled={!!creatingFor}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-              >
-                {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
-              </button>
             </>
           )}
         </div>
@@ -389,7 +367,7 @@ function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copied
       {/* No sessions yet */}
       {sessions.length === 0 && (
         <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-2 bg-slate-50 dark:bg-slate-950">
-          <p className="text-xs text-slate-400 italic">No games yet — click ▶ Start or + Batch to create one</p>
+          <p className="text-xs text-slate-400 italic">No games yet — click ▶ Start to create one</p>
         </div>
       )}
     </div>
