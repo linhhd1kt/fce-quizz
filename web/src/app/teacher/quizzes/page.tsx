@@ -15,13 +15,16 @@ interface QuizRow {
 
 interface SessionRow {
   id: string;
+  code: string;
+  status: string;
+  isActive: boolean;
+  createdAt: string;
+  quizTitle: string | null;
   quizId: string;
-}
-
-interface BatchResult {
-  batchId: string;
-  quizTitle: string;
-  parts: { id: string; code: string; batchOrder: number; questionCount: number }[];
+  batchId: string | null;
+  batchOrder: number | null;
+  lobbyCount: number;
+  finishedCount: number;
 }
 
 export default function QuizzesPage() {
@@ -37,12 +40,10 @@ function QuizzesContent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
-  const [newSessionCode, setNewSessionCode] = useState<string | null>(null);
-  const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
-  const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [qRes, sRes] = await Promise.all([
@@ -77,6 +78,17 @@ function QuizzesContent() {
   }
   const groups = Array.from(sourceMap.entries());
 
+  // Index sessions by quizId
+  const sessionsByQuizId = new Map<string, SessionRow[]>();
+  for (const s of sessions) {
+    if (!sessionsByQuizId.has(s.quizId)) sessionsByQuizId.set(s.quizId, []);
+    sessionsByQuizId.get(s.quizId)!.push(s);
+  }
+  // Sort newest first within each quiz
+  for (const arr of sessionsByQuizId.values()) {
+    arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
   function toggleCollapse(source: string) {
     setCollapsed(prev => {
       const next = new Set(prev);
@@ -92,12 +104,8 @@ function QuizzesContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quizId }),
     });
-    if (res.ok) {
-      const s = await res.json() as { code: string };
-      setNewSessionCode(s.code);
-      setBatchResult(null);
-      await load();
-    }
+    if (!res.ok) toast.error('Failed to create game room.');
+    await load();
     setCreatingFor(null);
   }
 
@@ -108,12 +116,8 @@ function QuizzesContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quizId }),
     });
-    if (res.ok) {
-      const result = await res.json() as BatchResult;
-      setBatchResult(result);
-      setNewSessionCode(null);
-      await load();
-    }
+    if (!res.ok) toast.error('Failed to create batch.');
+    await load();
     setCreatingFor(null);
   }
 
@@ -147,8 +151,8 @@ function QuizzesContent() {
     } else {
       fallback();
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   }
 
   if (loading) {
@@ -163,55 +167,6 @@ function QuizzesContent() {
 
   return (
     <div className="px-6 py-6 max-w-4xl mx-auto space-y-6">
-      {/* New session banner */}
-      {newSessionCode && (
-        <div className="bg-emerald-950 border border-emerald-700 rounded-2xl p-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-emerald-400 font-bold text-sm">✓ Room created!</p>
-            <p className="text-white font-mono text-3xl font-black mt-1 tracking-widest">{newSessionCode}</p>
-            <p className="text-emerald-600 text-xs mt-1">{window.location.origin}/s/{newSessionCode}</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => copyLink(newSessionCode)}
-              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-xl font-semibold transition-colors"
-            >
-              {copied ? '✓ Copied' : 'Copy link'}
-            </button>
-            <button
-              onClick={() => setNewSessionCode(null)}
-              className="text-xs text-slate-500 hover:text-slate-300"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Batch banner */}
-      {batchResult && (
-        <div className="bg-blue-950 border border-blue-700 rounded-2xl p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-blue-400 font-bold text-sm">
-              ✓ Batch created — {batchResult.parts.length} parts · {batchResult.quizTitle}
-            </p>
-            <button onClick={() => setBatchResult(null)} className="text-slate-500 hover:text-slate-300 text-xl leading-none">×</button>
-          </div>
-          <div className="space-y-2">
-            {batchResult.parts.map((part) => (
-              <div key={part.id} className="flex items-center gap-3 bg-blue-900/30 rounded-xl px-4 py-2.5">
-                <span className="text-blue-300 text-xs font-semibold w-14 shrink-0">Part {part.batchOrder}/{batchResult.parts.length}</span>
-                <span className="font-mono font-black text-white text-lg tracking-widest w-20">{part.code}</span>
-                <span className="text-slate-400 text-xs flex-1">{part.questionCount} questions</span>
-                <button onClick={() => copyLink(part.code)} className="text-xs text-blue-400 hover:text-blue-200 transition-colors">
-                  Copy
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Search + Add quiz */}
       <div className="flex items-center gap-3">
         <input
@@ -250,7 +205,7 @@ function QuizzesContent() {
         </div>
       )}
 
-      {/* Quiz list: grouped + ungrouped */}
+      {/* Quiz list */}
       {filtered.length > 0 && (
         <div className="space-y-4">
           {groups.map(([source, groupQuizzes]) => {
@@ -272,17 +227,20 @@ function QuizzesContent() {
                 {!isCollapsed && (
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                     {groupQuizzes.map((quiz) => (
-                      <QuizRowItem
+                      <QuizCard
                         key={quiz.id}
                         quiz={quiz}
+                        sessions={sessionsByQuizId.get(quiz.id) ?? []}
                         creatingFor={creatingFor}
                         confirmDelete={confirmDelete}
                         deleting={deleting}
+                        copiedCode={copiedCode}
                         onStart={() => handleCreate(quiz.id)}
                         onBatch={() => handleCreateBatch(quiz.id)}
                         onDelete={() => handleDelete(quiz.id, quiz.title)}
                         onConfirmDelete={() => setConfirmDelete(quiz.id)}
                         onCancelDelete={() => setConfirmDelete(null)}
+                        onCopy={copyLink}
                       />
                     ))}
                   </div>
@@ -299,16 +257,19 @@ function QuizzesContent() {
               )}
               {ungrouped.map((quiz) => (
                 <div key={quiz.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-                  <QuizRowItem
+                  <QuizCard
                     quiz={quiz}
+                    sessions={sessionsByQuizId.get(quiz.id) ?? []}
                     creatingFor={creatingFor}
                     confirmDelete={confirmDelete}
                     deleting={deleting}
+                    copiedCode={copiedCode}
                     onStart={() => handleCreate(quiz.id)}
                     onBatch={() => handleCreateBatch(quiz.id)}
                     onDelete={() => handleDelete(quiz.id, quiz.title)}
                     onConfirmDelete={() => setConfirmDelete(quiz.id)}
                     onCancelDelete={() => setConfirmDelete(null)}
+                    onCopy={copyLink}
                   />
                 </div>
               ))}
@@ -320,76 +281,117 @@ function QuizzesContent() {
   );
 }
 
-interface QuizRowItemProps {
+interface QuizCardProps {
   quiz: QuizRow;
+  sessions: SessionRow[];
   creatingFor: string | null;
   confirmDelete: string | null;
   deleting: boolean;
+  copiedCode: string | null;
   onStart: () => void;
   onBatch: () => void;
   onDelete: () => void;
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
+  onCopy: (code: string) => void;
 }
 
-function QuizRowItem({ quiz, creatingFor, confirmDelete, deleting, onStart, onBatch, onDelete, onConfirmDelete, onCancelDelete }: QuizRowItemProps) {
+function statusBadge(status: string) {
+  if (status === 'active') return <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Active</span>;
+  if (status === 'waiting') return <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Waiting</span>;
+  return <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400"><span className="w-1.5 h-1.5 rounded-full bg-slate-400" />Finished</span>;
+}
+
+function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copiedCode, onStart, onBatch, onDelete, onConfirmDelete, onCancelDelete, onCopy }: QuizCardProps) {
   return (
-    <div className="p-5 flex items-center justify-between gap-4">
-      <div className="flex-1 min-w-0">
-        <p className="text-slate-900 dark:text-white font-semibold truncate">{quiz.title}</p>
-        <p className="text-slate-500 text-xs mt-0.5">
-          {quiz.questions.length} questions · {quiz.time_per_question}s/q
-        </p>
+    <div>
+      {/* Quiz row */}
+      <div className="p-4 flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-slate-900 dark:text-white font-semibold truncate">{quiz.title}</p>
+          <p className="text-slate-500 text-xs mt-0.5">
+            {quiz.questions.length} questions · {quiz.time_per_question}s/q
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {confirmDelete === quiz.id ? (
+            <>
+              <span className="text-xs text-slate-400">Delete quiz + all room data?</span>
+              <button
+                onClick={onDelete}
+                disabled={deleting}
+                className="px-3 py-1.5 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                {deleting ? '…' : 'Delete'}
+              </button>
+              <button
+                onClick={onCancelDelete}
+                className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={onConfirmDelete} className="px-2 py-1.5 text-slate-400 hover:text-red-400 text-sm transition-colors">🗑</button>
+              <Link
+                href={`/teacher/quizzes/${quiz.id}`}
+                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
+              >
+                Edit
+              </Link>
+              <button
+                onClick={onStart}
+                disabled={!!creatingFor}
+                className="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                {creatingFor === quiz.id ? '…' : '▶ Start'}
+              </button>
+              <button
+                onClick={onBatch}
+                disabled={!!creatingFor}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        {confirmDelete === quiz.id ? (
-          <>
-            <span className="text-xs text-slate-400">Delete quiz + all room data?</span>
-            <button
-              onClick={onDelete}
-              disabled={deleting}
-              className="px-3 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-            >
-              {deleting ? '…' : 'Delete'}
-            </button>
-            <button
-              onClick={onCancelDelete}
-              className="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={onConfirmDelete}
-              className="px-2 py-2 text-slate-400 hover:text-red-400 text-sm transition-colors"
-            >
-              🗑
-            </button>
-            <Link
-              href={`/teacher/quizzes/${quiz.id}`}
-              className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-colors"
-            >
-              Edit
-            </Link>
-            <button
-              onClick={onStart}
-              disabled={!!creatingFor}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-            >
-              {creatingFor === quiz.id ? '…' : '▶ Start'}
-            </button>
-            <button
-              onClick={onBatch}
-              disabled={!!creatingFor}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
-            >
-              {creatingFor === quiz.id + ':batch' ? '…' : '+ Batch'}
-            </button>
-          </>
-        )}
-      </div>
+
+      {/* Sessions under quiz */}
+      {sessions.length > 0 && (
+        <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+          {sessions.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+              <span className="font-mono font-bold text-slate-900 dark:text-white text-sm tracking-widest w-20 shrink-0">{s.code}</span>
+              <div className="w-20 shrink-0">{statusBadge(s.status)}</div>
+              <span className="text-xs text-slate-400 flex-1">
+                👥 {s.finishedCount}/{s.lobbyCount} played
+              </span>
+              <button
+                onClick={() => onCopy(s.code)}
+                className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+              >
+                {copiedCode === s.code ? '✓ Copied' : 'Copy link'}
+              </button>
+              <Link
+                href={`/teacher/sessions/${s.id}`}
+                className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+              >
+                {s.isActive ? '→ Live' : '→ Results'}
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* No sessions yet */}
+      {sessions.length === 0 && (
+        <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-2 bg-slate-50 dark:bg-slate-950">
+          <p className="text-xs text-slate-400 italic">No games yet — click ▶ Start or + Batch to create one</p>
+        </div>
+      )}
     </div>
   );
 }
