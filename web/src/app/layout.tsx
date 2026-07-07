@@ -3,6 +3,7 @@ import { Geist } from 'next/font/google';
 import './globals.css';
 import Providers from '@/components/Providers';
 import NavBar from '@/components/NavBar';
+import NProgressProvider from '@/components/NProgressProvider';
 
 const geist = Geist({ subsets: ['latin'] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${geist.className} bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen`}>
         <Providers>
+          <NProgressProvider />
           <NavBar />
           <main>{children}</main>
         </Providers>

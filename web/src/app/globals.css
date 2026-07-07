@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+#nprogress .bar { background: #3b82f6; height: 3px; }
+#nprogress .peg { box-shadow: 0 0 10px #3b82f6, 0 0 5px #3b82f6; }
+
 @variant dark (&:where(.dark, .dark *));
 
 :root {
