@@ -3854,22 +3854,22 @@ Add a "👁 Lobby" link button next to "▶ Start" for sessions with `status ===
 
 **Spec:** §15
 
-- [ ] **Task 15.1: Export shared extraction logic from route.ts**
+- [x] **Task 15.1: Export shared extraction logic from route.ts**
   - Modify `web/src/app/api/extract-quiz/route.ts`
   - Export `detectMCQPageRanges`, add + export `extractQuestionsFromRange`
 
-- [ ] **Task 15.2: Create detect endpoint**
+- [x] **Task 15.2: Create detect endpoint**
   - Create `web/src/app/api/extract-quiz/detect/route.ts`
 
-- [ ] **Task 15.3: Create batch endpoint**
+- [x] **Task 15.3: Create batch endpoint**
   - Create `web/src/app/api/extract-quiz/batch/route.ts`
 
-- [ ] **Task 15.4: Rewrite upload page (two-step)**
+- [x] **Task 15.4: Rewrite upload page (two-step)**
   - Modify `web/src/app/teacher/quizzes/new/page.tsx`
 
-- [ ] **Task 15.5: Grouped quizzes page**
+- [x] **Task 15.5: Grouped quizzes page**
   - Modify `web/src/app/teacher/quizzes/page.tsx`
 
-- [ ] **Task 15.6: E2E tests + deploy**
+- [x] **Task 15.6: E2E tests + deploy**
   - Add `web/e2e/quiz-grouping.spec.ts`
   - Push + verify
