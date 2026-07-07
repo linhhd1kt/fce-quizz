@@ -17,7 +17,6 @@ interface SessionRow {
   id: string;
   code: string;
   status: string;
-  isActive: boolean;
   createdAt: string;
   quizTitle: string | null;
   quizId: string;
@@ -84,7 +83,6 @@ function QuizzesContent() {
     if (!sessionsByQuizId.has(s.quizId)) sessionsByQuizId.set(s.quizId, []);
     sessionsByQuizId.get(s.quizId)!.push(s);
   }
-  // Sort newest first within each quiz
   for (const arr of sessionsByQuizId.values()) {
     arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
@@ -109,7 +107,7 @@ function QuizzesContent() {
     setCreatingFor(null);
   }
 
-  async function handleDelete(id: string, title: string) {
+  async function handleDeleteQuiz(id: string, title: string) {
     setDeleting(true);
     const res = await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
     if (!res.ok) {
@@ -121,6 +119,16 @@ function QuizzesContent() {
     }
     setConfirmDelete(null);
     setDeleting(false);
+  }
+
+  async function handleDeleteSession(id: string, code: string) {
+    const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      toast.error(`Failed to delete room ${code}`);
+    } else {
+      toast.success(`Deleted room ${code}`);
+      await load();
+    }
   }
 
   function copyLink(code: string) {
@@ -209,7 +217,7 @@ function QuizzesContent() {
                     {isCollapsed ? '▶' : '▼'}&nbsp;&nbsp;{displayName}
                   </span>
                   <span className="text-xs text-slate-400 shrink-0">
-                    {groupQuizzes.length} game{groupQuizzes.length !== 1 ? 's' : ''}
+                    {groupQuizzes.length} part{groupQuizzes.length !== 1 ? 's' : ''}
                   </span>
                 </button>
                 {!isCollapsed && (
@@ -224,10 +232,11 @@ function QuizzesContent() {
                         deleting={deleting}
                         copiedCode={copiedCode}
                         onStart={() => handleCreate(quiz.id)}
-                        onDelete={() => handleDelete(quiz.id, quiz.title)}
+                        onDelete={() => handleDeleteQuiz(quiz.id, quiz.title)}
                         onConfirmDelete={() => setConfirmDelete(quiz.id)}
                         onCancelDelete={() => setConfirmDelete(null)}
                         onCopy={copyLink}
+                        onDeleteSession={handleDeleteSession}
                       />
                     ))}
                   </div>
@@ -252,10 +261,11 @@ function QuizzesContent() {
                     deleting={deleting}
                     copiedCode={copiedCode}
                     onStart={() => handleCreate(quiz.id)}
-                    onDelete={() => handleDelete(quiz.id, quiz.title)}
+                    onDelete={() => handleDeleteQuiz(quiz.id, quiz.title)}
                     onConfirmDelete={() => setConfirmDelete(quiz.id)}
                     onCancelDelete={() => setConfirmDelete(null)}
                     onCopy={copyLink}
+                    onDeleteSession={handleDeleteSession}
                   />
                 </div>
               ))}
@@ -279,6 +289,7 @@ interface QuizCardProps {
   onConfirmDelete: () => void;
   onCancelDelete: () => void;
   onCopy: (code: string) => void;
+  onDeleteSession: (id: string, code: string) => void;
 }
 
 function statusBadge(status: string) {
@@ -287,7 +298,15 @@ function statusBadge(status: string) {
   return <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400"><span className="w-1.5 h-1.5 rounded-full bg-slate-400" />Finished</span>;
 }
 
-function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copiedCode, onStart, onDelete, onConfirmDelete, onCancelDelete, onCopy }: QuizCardProps) {
+function sessionLink(s: SessionRow): { href: string; label: string } {
+  if (s.status === 'waiting') return { href: `/teacher/sessions/${s.id}/lobby`, label: '→ Lobby' };
+  if (s.status === 'active') return { href: `/teacher/sessions/${s.id}/live`, label: '→ Live' };
+  return { href: `/teacher/sessions/${s.id}`, label: '→ Results' };
+}
+
+function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copiedCode, onStart, onDelete, onConfirmDelete, onCancelDelete, onCopy, onDeleteSession }: QuizCardProps) {
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState<string | null>(null);
+
   return (
     <div>
       {/* Quiz row */}
@@ -340,27 +359,56 @@ function QuizCard({ quiz, sessions, creatingFor, confirmDelete, deleting, copied
       {/* Sessions under quiz */}
       {sessions.length > 0 && (
         <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
-          {sessions.map((s) => (
-            <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0">
-              <span className="font-mono font-bold text-slate-900 dark:text-white text-sm tracking-widest w-20 shrink-0">{s.code}</span>
-              <div className="w-20 shrink-0">{statusBadge(s.status)}</div>
-              <span className="text-xs text-slate-400 flex-1">
-                👥 {s.finishedCount}/{s.lobbyCount} played
-              </span>
-              <button
-                onClick={() => onCopy(s.code)}
-                className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
-              >
-                {copiedCode === s.code ? '✓ Copied' : 'Copy link'}
-              </button>
-              <Link
-                href={`/teacher/sessions/${s.id}`}
-                className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
-              >
-                {s.isActive ? '→ Live' : '→ Results'}
-              </Link>
-            </div>
-          ))}
+          {sessions.map((s) => {
+            const { href, label } = sessionLink(s);
+            return (
+              <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                <span className="font-mono font-bold text-slate-900 dark:text-white text-sm tracking-widest w-20 shrink-0">{s.code}</span>
+                <div className="w-20 shrink-0">{statusBadge(s.status)}</div>
+                <span className="text-xs text-slate-400 flex-1">
+                  👥 {s.finishedCount}/{s.lobbyCount} played
+                </span>
+                {confirmDeleteSession === s.id ? (
+                  <>
+                    <span className="text-xs text-slate-400">Delete room?</span>
+                    <button
+                      onClick={() => { onDeleteSession(s.id, s.code); setConfirmDeleteSession(null); }}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-red-700 hover:bg-red-600 text-white transition-colors shrink-0"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteSession(null)}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => onCopy(s.code)}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                    >
+                      {copiedCode === s.code ? '✓ Copied' : 'Copy link'}
+                    </button>
+                    <Link
+                      href={href}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                    >
+                      {label}
+                    </Link>
+                    <button
+                      onClick={() => setConfirmDeleteSession(s.id)}
+                      className="text-slate-400 hover:text-red-400 text-xs transition-colors shrink-0"
+                    >
+                      🗑
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
